@@ -187,7 +187,7 @@ async function main() {
 
     const dbMember = await prisma.member.create({
       data: {
-        memberNumber: m.nro,
+        memberNumber: m.nro.toString(),
         firstName: firstName || lastName,
         lastName: lastName,
         dni: (Math.floor(Math.random() * 20000000) + 10000000).toString(),
@@ -202,25 +202,59 @@ async function main() {
     })
 
     // Seed 2025 payments
-    if (m.activos === 1 && !isBaja) {
+    if (!isBaja) {
+      // 2025 full year
       for (let month = 1; month <= 12; month++) {
-        // Only if joined before or in this month
         if (new Date(2025, month - 1, 1).getTime() >= dbMember.joinDate.getTime()) {
-           const fee = month <= 6 ? 4000 : 5000
-           if (Math.random() > 0.05) {
-             await prisma.membershipFee.create({
-               data: {
-                 memberId: dbMember.id,
-                 periodMonth: month,
-                 periodYear: 2025,
-                 amountDue: fee,
-                 amountPaid: fee,
-                 paymentDate: new Date(2025, month - 1, 10),
-                 paymentStatus: "PAID",
-                 paymentMethod: "EFECTIVO"
-               }
-             })
-           }
+           const fee = 5000
+           await prisma.membershipFee.create({
+             data: {
+               memberId: dbMember.id,
+               periodMonth: month,
+               periodYear: 2025,
+               amountDue: fee,
+               amountPaid: fee,
+               paymentDate: new Date(2025, month - 1, 10),
+               paymentStatus: "PAID",
+               paymentMethod: "EFECTIVO"
+             }
+           })
+        }
+      }
+
+      // 2026 payments - Specifically for the 17 "Al Día"
+      // Let's pick the first 17 active members
+      if (i < 17) {
+        // Paid Jan, Feb, March 2026
+        for (let month = 1; month <= 3; month++) {
+          await prisma.membershipFee.create({
+            data: {
+              memberId: dbMember.id,
+              periodMonth: month,
+              periodYear: 2026,
+              amountDue: 6000,
+              amountPaid: 6000,
+              paymentDate: new Date(2026, month - 1, 5),
+              paymentStatus: "PAID",
+              paymentMethod: "EFECTIVO"
+            }
+          })
+        }
+      } else if (i < 40) {
+        // En Mora (paid jan/feb but not march)
+        for (let month = 1; month <= 2; month++) {
+          await prisma.membershipFee.create({
+            data: {
+              memberId: dbMember.id,
+              periodMonth: month,
+              periodYear: 2026,
+              amountDue: 6000,
+              amountPaid: 6000,
+              paymentDate: new Date(2026, month - 1, 5),
+              paymentStatus: "PAID",
+              paymentMethod: "EFECTIVO"
+            }
+          })
         }
       }
     }
