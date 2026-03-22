@@ -1,6 +1,6 @@
 import { db } from "@/lib/db"
 import Link from "next/link"
-import { ArrowLeft, Edit, CheckCircle2, Mail, Users, AlertCircle, History, MapPin, Phone, User, CreditCard, Clock } from "lucide-react"
+import { ArrowLeft, Edit, CheckCircle2, Mail, Users, AlertCircle, History, MapPin, Phone, User, CreditCard, Clock, Trophy, Medal } from "lucide-react"
 import { notFound } from "next/navigation"
 import { DeactivateMemberButton } from "./DeactivateButton"
 import { WelcomeMessageButton } from "./WelcomeMessageButton"
@@ -24,7 +24,8 @@ export default async function FichaSocioPage(props: any) {
       fees: { orderBy: [{ periodYear: "desc" }, { periodMonth: "desc" }], include: { recordedBy: true } },
       communications: { orderBy: { sentAt: "desc" } },
       partner: true,
-      eventRegistrations: true
+      eventRegistrations: true,
+      championshipResults: { include: { championship: true } }
     }
   }) as any
 
@@ -139,6 +140,36 @@ export default async function FichaSocioPage(props: any) {
                    <p className="text-zinc-600 text-[8px] font-black uppercase mb-1 tracking-wider">Asistencias</p>
                    <p className="text-xl font-black text-white">{(member as any).eventRegistrations?.length || 0}</p>
                 </div>
+             </div>
+          </div>
+
+          {/* Awards / Logros */}
+          <div className="bg-zinc-900/50 border border-white/10 rounded-[32px] p-6 backdrop-blur-md">
+             <div className="flex items-center gap-2 mb-4 text-amber-500">
+               <Trophy size={16} />
+               <h3 className="text-xs font-black uppercase tracking-widest italic">Logros Vientos de Tango</h3>
+             </div>
+             
+             <div className="space-y-3">
+                {member.championshipResults.length === 0 ? (
+                  <p className="text-[10px] text-zinc-600 italic text-center py-4 bg-black/20 rounded-xl border border-dashed border-white/5 uppercase font-black tracking-widest">Sin logros registrados</p>
+                ) : (
+                  member.championshipResults.map((award: any) => (
+                    <div key={award.id} className="flex gap-3 items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
+                         award.place === 1 ? "bg-amber-500/20 border-amber-500/30 text-amber-500" : "bg-zinc-700/20 border-zinc-700/30 text-zinc-500"
+                       }`}>
+                          <Medal size={16} />
+                       </div>
+                       <div>
+                          <p className="text-white font-bold text-[11px] tracking-tight">{award.category} {award.championship.year}</p>
+                          <p className="text-[9px] text-amber-500/70 font-black uppercase">
+                             {award.place === 1 ? "🥇 Campeón" : award.place === 2 ? "🥈 2do Puesto" : "🥉 3er Puesto"}
+                          </p>
+                       </div>
+                    </div>
+                  ))
+                )}
              </div>
           </div>
         </div>

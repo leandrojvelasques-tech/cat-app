@@ -55,8 +55,10 @@ model Member {
   communications   Communication[]
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+  avatarUrl        String?  // For digital ID
   deactivatedAt    DateTime?
   eventRegistrations EventRegistration[]
+  championshipResults ChampionshipResult[] @relation("MemberAwards")
 }
 
 model Communication {
@@ -188,6 +190,38 @@ model EventRegistration {
   source          String   @default("MANAGEMENT") // WEB, MANAGEMENT
   recordedById    String?
   recordedBy      User?    @relation("RecordedBy", fields: [recordedById], references: [id])
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Championship {
+  id          String   @id @default(uuid())
+  year        Int
+  name        String   @default("Vientos de Tango")
+  results     ChampionshipResult[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([year, name])
+}
+
+model ChampionshipResult {
+  id              String   @id @default(uuid())
+  championshipId  String
+  championship    Championship @relation(fields: [championshipId], references: [id])
+  
+  category        String   // TANGO PISTA, MILONGA, VALS, TANGO ESCENARIO
+  place           Int      // 1, 2, 3
+  
+  // Link to member if they are a current member
+  memberId        String?
+  member          Member?  @relation("MemberAwards", fields: [memberId], references: [id])
+  
+  // Names of the couple (since one or both might not be members)
+  firstName       String
+  lastName        String
+  partnerName     String?
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
