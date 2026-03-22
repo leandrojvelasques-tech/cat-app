@@ -1,0 +1,414 @@
+1	MORON MARIA DOLORES	doloresmoron3@gmail.com		Socio Activo	27/11/2002
+4	ITURRIOZ SUSANA			Socio Activo	27/11/2002
+7	VILARDO JORGE SALVADOR			Socio Activo	29/11/2002
+14	GONZALEZ NIDIA	nidiacdr@hotmail.com		Socio de Baja	30/11/2002
+25	VALENZUELA VICTOR HUGO			Socio Activo	30/11/2002
+29	CAMARD AMALIA Falleció			Socio de Baja	30/11/2002
+31	SARTORIO DANIEL			Socio Activo	30/11/2002
+35	MOLINA GRACIELA	molingra@hotmail.com		Socio Activo	2/12/2002
+36	SOTOMAYOR MANUEL	manueldsotomayor@hotmail.com		Socio Activo	10/1/2003
+38	AMUINAHUEL SILVIA ADRIANA			Socio Activo	12/1/2003
+39	TAVIANSKY OMAR ALEJANDRO			Socio Activo	12/1/2003
+40	FERREYRA  DANIEL (viviendo epuyen)			Socio Activo	12/1/2003
+46	VALENCIA ANA			Socio Activo	8/2/2003
+49	MARTIN  NORBERTO			Socio Activo	15/1/2003
+58	SOSA EDUARDO "LALO"			Socio Activo	22/3/2003
+62	MANSILLA HECTOR HUGO			Socio Activo	27/2/2003
+63	FIDALGO VIRGINIA			Socio Activo	28/2/2003
+66	BAYON  NORMA		154005679	Socio Activo	4/4/2003
+67	LOPEZ MODESTO VICENTE falleció		156244652	Socio de Baja	24/4/2003
+68	FERRERO NORMA LUISA		154007328	Socio Activo	24/4/2003
+69	GAMBOA MONICA LILIANA	monick_79@hotmail.com	4557512	Socio Activo	
+71	VIGO GALLEGO RUBEN 	rvigo@argenova.com.ar	297-44770094	Socio Activo	5/8/2003
+72	DIAZ MARTIN	diazmartin75@hotmail.com	4480785	Socio Activo	5/8/2003
+73	BENA CARLOS ENRIQUE	carlosbena2003@yahoo.com.ar	4466268	Socio Activo	5/8/2003
+74	MODESTO ALICIA SAAVEDRA	scottcapacitacion@ciudad.com.ar	1142531377	Socio Activo	12/11/2002
+75	MARIA DE LAS NIEVES DIAZ TONIN	marianieves50@hotmail.com	4482077	Socio Activo	20/5/2003
+76	LAGO GABRIELA ALEJANDRA	gaby_lago@yahoo.com.ar	297-154017917	Socio Activo	22/5/2023
+77	FRAILE ROBERTO CARLOS	robertofraile@hotmail.com	280-15660665	Socio Activo	22/5/2023
+78	ZULAN DE FRAILE ROSA	No tiene	No tiene	Socio Activo	22/5/2023
+79	PAILAHUEQUE LAUTARO	lautaropublicidad@yahoo.com.ar	0297-4471574	Socio Activo	14/5/2023
+80	VARGAS MIGUEL ANGEL	miguelvargas@infovia.com.ar	0297-4558168	Socio Activo	16/5/2023
+81	CALARCO DE VARGAS SANTA	No tiene	No tiene	Socio Activo	16/5/2003
+82	ALMIRON VIVIANA RAQUEL	petrotango@hotmail.com		Socio Activo	15/5/2003
+83	MANZZONI @	No tiene		Socio Activo	29/8/2003
+84	CELI AMERICA	No tiene		Sin definir	29/8/2003
+85	CELULAR RICARDO			Socio de Baja	29/8/2003
+86	MAC KARTHY NANCY	No tiene		Socio Activo	29/8/2003
+87	ALMONACID NANCY	no tiene		Socio Activo	12/12/2003
+88	SANCHEZ DANTE	dantesanchez@yahoo.com.ar		Socio Activo	13/12/2003
+89	ZARATE MARCOS	marcostone_87@hotmail.com		Socio Activo	13/12/2003
+90	ALMONACID RODRIGO	el_rodrigoal@hotmail.com		Socio Activo	13/12/2003
+91	MONLLOR CARLOS ANDRÉS	k_lito3000@yahoo.com		Socio Activo	13/12/2003
+92	MENA DIEGO	no lo tiene actualizado		Socio Activo	16/4/2004
+93	PEREYRA JORGE RUBÉN	pereyra@nuevosur.com.ar		Socio Activo	18/4/2004
+94	ZEGARRA VICTOR MANUEL	vmzegarra@hotmail.com		Socio Activo	18/4/2004
+95	ESMITH ANA MARIA	esmithpsa@argentina.com		Socio Activo	18/4/2004
+96	ANTIZZA LILIANA Falleció	lili_antizza@hotmail.com		Socio de Baja	18/4/2004
+97	GOLDAR MARIA CRISTINA			Socio Activo	18/4/2004
+98	DE ORTA GRACIELA	checheladeo@hotmail.com	TEL:4473250	Socio Activo	18/4/2004
+99	RUIZ MIGUEL ANGEL	cheladeo@hotmail.com		Socio Activo	18/4/2004
+100	MARTIN LAURO BATISTA	batistamartin2003@gmail.com		Socio Activo	18/4/2004
+101	RAUL ALBERTO DOMINGUEZ		TEL:448-5584 CEL:2976-254-698	Socio Activo	18/4/2004
+102	SONIA ALICIA DORIO	soniad23@hotmail.com	TEL:446-1875	Socio Activo	18/4/2204
+103	CATTO CARLOS ALBERTO	nombrecatto@gmail.com		Socio Activo	18/4/2004
+103	DANIEL RETTI Falleció		tel:455-7140	Socio de Baja	23/4/2004
+105	MARIA CRISTINA VIEGAS 		TEL:447-7795	Socio Activo	25/4/2006
+106	VIRGINIA PATTERI		TEL: 444-2436	Socio Activo	25/4/2004
+107	OSCAR BERNARDINO RUIZ		TEL:444-2436 CEL:2975-923-513	Socio Activo	25/4/2004
+108	DANIEL ALFREDO JENSEN	djensen@vermaz.com.ar	CEL 2974-034-415	Socio Activo	25/4/2004
+109	HERRERA ESTELA MARIS	stellas-s@hotmail.com		Socio Activo	25/4/2004
+110	ROBERTO CARLO SZYMANSKY	verticesrl@uolsinectis.com.ar	TEL:446-6700 CEL:2975-920-933	Socio Activo	25/4/2004
+111	CARLOS MARIO MARINA 	carlosmarina51@hotmail.com	CEL:2975-941556	Socio Activo	30/4/2004
+112	ROSA DIAS		CEL.2974-294-246	Socio Activo	
+113	PLACENCIO NURY 	rdelcpb@hotmail.cpm	 CEL:2974-048-075	Socio Activo	16/2/2012
+114	GABRIEL CLEMENTE 		TEL: 446-9069	Socio Activo	1/4/2005
+115	ACOSTA NESTOR	acostanest@hotmail.com	 2975 06-7482	Socio Activo	1/4/2005
+116	ALBERTO LAMBERTI 		TEL: 444-3383	Socio Activo	1/4/2005
+117	MARTINA AVELAR	avelarmartinaqhotmail.com	tel:446-5714	Socio Activo	1/7/2006
+118	DANIEL JORGE DIAS FONTANEZ		TEL:456-0814	Socio Activo	1/4/2005
+119	CORREIA PABLO	pablodcorreia@hotmail.es		Socio Activo	6/8/2004
+120	JAVIER GUILLERMO ARIAS 	javierarias74@hotmail.com	TEL 447-4160	Socio Activo	16/4/2005
+121	OLRLANDO CALVO 		TEL:448-2072	Socio Activo	22/5/2004
+122	JULIA SOLEDAD COLOMBO	julita2287@hotmail.com	TEL:455-0930	Socio Activo	5/6/2005
+123	ELENA LUCIA DE CASTRO 	edecas@infovia.com.ar	TEL.446-3554	Socio Activo	22/5/2004
+124	DIAZ IRIBARNE LILIANA	diaziribarne@yahoo.com.ar		Socio Activo	7/5/2005
+125	ELIANA GOMEZ 	elimirasolqhotmail.com	TEL:446-2640	Socio Activo	15/4/2005
+126	GENOVEVA FEIJOO	genoveva01@speedy.com.ar	TEL:447-1471	Socio Activo	28/4/2005
+127	ELDA MARLENE FLAGE LDE RUIZ		TEL:448-5726	Socio Activo	23/4/2005
+128	MONICA LIDIA GARCIA		TEL. 448-4212	Socio Activo	15/4/2005
+129	ESTHER MARIA SANCHEZ 		TEL 453-5131	Socio Activo	30/4/2005
+130	PABLO GRANE 	pgrane@hotmail.com	TEL: 444-4388	Socio Activo	1/5/2005
+131	ORFELIA KLIVIA GONZALEZ		TEL 455-0306	Socio Activo	15/4/2005
+132	JAIDE JASSANIE		CEL2965-421-339	Socio Activo	16/0472005
+133	DINA ZOZZI		TEL. 448-2187	Socio Activo	30/4/2005
+134	GRACIELA HERNANDEZ Falleció	giasur2002@yahoo.com.ar	TEL 447-1552	Socio de Baja	25/4/2005
+135	HERNAN HERNANDEZ 		TEL 4471085	Socio Activo	22/5/2004
+136	DANIELA LEBRUN 	francod@sinectis.com.ar	TEL: 448-5584	Socio Activo	18/4/2004
+137	PAOLA CINTIA MARCOS 	marcipao@hotmail.com	TEL:444-3512	Socio Activo	15/4/2005
+138	ANALIA VERONICA MAZZOLA	analiamazzola@hotmail.com	TEL: 447-7695	Socio Activo	5/7/2005
+139	MILEVA NURNBERG	teomiro@sinectis.com.ar	TEL; 446-1056	Socio Activo	5/7/2005
+140	morales 	viento470@yahoo.com.ar	TEL 446-1056	Socio Activo	5/7/2005
+141	MIRTA ESTELA REARTES	mirtareartes296@hotmail.com	TEL: 447-3943	Socio Activo	30/4/2005
+142	JUAN CARLOS RODRIGUEZ		TEL 455-7212	Socio Activo	4/11/2002
+143	NESTOR ALBERTO RUIZ 	bochinestor@arnet.com.ar	TEL. 448-5726	Socio Activo	23/4/2005
+144	HUGO OSCAR SANDOVAL 		TEL 444-7309 CEL 2974-083-918	Socio Activo	16/4/2005
+145	MISAEL JUSTICIA SUAREZ	edecas@infovia.com.ar	TEL 446-8114  CEL 297-6-255-896	Socio Activo	22/5/2005
+146	LAURA WILLHUBER	laurawillhbur@yahoo.com.ar	TEL 447-4239 	Socio Activo	23/4/2005
+147	ROSARO DEL CARMEN BAEZ		TEL 446-2874	Socio Activo	21/5/2005
+148	MARIELA ROXANA OYARZUN	marielaoyarzun@infovia.com.ar	TEL 446-1870 CEL 2974-125-957	Socio Activo	21/5/2005
+149	HEROLD MARIA ELENA	mariaelenaherold@yahoo.com.ar		Socio Activo	21/5/2005
+150	MONICA SUSANA BERTERREIX	monicasb@infovia.com.ar	TEL 446-5789 CEL 2974-044-844	Socio Activo	21/5/2005
+151	MARINO MORES MARTINEZ			Socio Honorario	14/5/2005
+152	GRACIELA OLIVIERI	gracielaolivieri@speedy.com.ar	TEL:444-5249 CEL: 2976-243-154	Socio Activo	24/5/2005
+153	PEDRO REIMUNDO ALVAREZ	pedroalvarez@speddy.com.ar	TEL 444-5249	Socio Activo	24/5/2005
+154	ITATI MARIANA TOLEDO	itatimariana@yahoo.com.ar	TEL 4474322	Socio Activo	24/5/2005
+155	NELIDA BAJBUJ		TEL 4472581	Socio Activo	24/5/2005
+156	NATALIA GABRIELA BURGOS	contactosnburgos@hotmail.com	TEL 446-1186	Socio Activo	6/3/2005
+157	ALFREDO OSMAN 	nayla2@infovia.com.ar	CEL: 297 5-094-860	Socio Activo	6/3/2005
+158	JUAN CARLOS GONZALEZ			Socio Activo	6/4/2005
+159	JUANA MARIA CASAS		TEL 455-7208	Socio Activo	5/4/2005
+160	MARIA ISABEL GIMENEZ		TEL 447-2750 CEL 2974-120-535	Socio Activo	6/4/2005
+161	BLANCA LILIA CAAMAÑO		TEL 447-2750 CEL 297 4-120-535	Socio Activo	6/4/2005
+162	LUISA INES ANACLERIO DE CARTERY			Socio Honorario	17/6/2005
+163	CARTERY OSVALDO ERNESTO			Socio de Baja	17/6/2005
+164	VELASQUES LEANDRO	leandrojvelasques@gmail.com	2975014552	Socio Activo	18/6/2005
+165	BRAVO FLORENCIA	winy53qhotmail.com	TEL 4559964 CEL 297-6219-313	Socio Activo	18/6/2005
+166	GUTIERREZ CARLOS M.	carlos50302004@yahoo.com.ar	CEL 297-4036-897	Socio Activo	19/6/2005
+167	HERNANDEZ LORELEY	loreley.n.hernandez@gmail.com		Socio Activo	18/6/2005
+193	TORRES OSCAR EDUARDO	mariaelenaherold@yahoo.com.ar		Socio Activo	13/8/2005
+205	MATUS  ALICIA	matus.aliciadelc@gmail.com		Socio Activo	30/9/2005
+206	GOMEZ VERONICA			Socio Activo	30/9/2005
+207	LARROCA NORBERTO	pablodcorreia@hotmail.es		Socio Activo	1/10/2005
+212	PICON DANIEL			Socio Activo	12/11/2005
+227	MAYORGA SANCHEZ ANGEL OSCAR (Angelito)	gabiluna4@gmail.com		Socio Activo	1/1/2006
+257	ABDALA ELIAS			Socio Activo	1/4/2006
+267	DIAZ MARIO JUSTO 	mario_justo@yahoo.com.ar	CEL 297-4010-560	Sin definir	5/6/2007
+268	EFFTIMOFF ROBERTO	romale@uolsinectis.com.ar		Socio Activo	20/5/2006
+269	LOHR NORA MARTA	romale@uolsinectis.com.ar		Socio Activo	20/5/2006
+270	CARRIZO JOSE RAMON		CEL 297-6249-864	Sin definir	14/5/2006
+271	BALGANE SANDRA VIVIANA	axelporsiempre1@hotmail.com	TEL 4486214	Sin definir	27/5/2006
+272	FAZEKAS JUAN CARLOS	fazecasjuan@hotmail.com	CEL 297422-0660	Sin definir	17/5/2006
+273	VIDAL  ANGELES	ANGELESVIDAL@TUTOPIA.COM	TEL 448-5192	Sin definir	17/6/2006
+274	GUIGUES ROXANA	roxanacr1@hotmail.com		Sin definir	17/6/2006
+275	 ALVAREZ ROSSI  HUGO 		 CEL 297-4238-743	Sin definir	24/6/2006
+276	YAUC RAUL 		CEL 297 420-6406	Sin definir	8/5/2006
+277	IGLESIAS ROLANDO OMAR		CEL297 400 6841	Sin definir	8/5/2006
+278	LOPEZ SILVIO DARIO		TEL 444-0636	Sin definir	8/5/2006
+279	LUBIK ALEJANDRO ANGEL	lubik74@hotmail.com		Sin definir	8/5/2006
+280	GOMEZ PABLO ERNESTO	gomyna@hotmail.com		Sin definir	8/5/2006
+281	SIARES VLADIMIR AGUSTIN		TEL 444-2899 SIN CARGO. TENIA 10 DIASDE VIDA	Sin definir	18/8/2006
+283	LOPEZ  CONSUELO		TEL 446 2687	Sin definir	28/9/2006
+284	DUNAJ JOSE	jd-srl@satlink.com		Sin definir	28/9/2006
+285	ORTIZ MARIA ESPERANZA	maryelpablo@yahoo.com.ar		Sin definir	11/10/2006
+286	FONDOVIK LUISA LIDIA		TEL 447-1016	Sin definir	29/11/2006
+287	RUANO PEDRO PLEGUEZUELO		TEL 447-1016	Sin definir	29/11/2006
+288	FRIAS RENATO	renatofrias@hotmail.com	TEL 446-5309	Sin definir	10/7/2006
+289	ASTIZ JORGE		TEL 445-2062	Sin definir	16/9/2006
+290	ESCUDERO ANGEL OMAR	omarescudero@hotmailcom		Socio Honorario	16/12/2006
+292	PERUJO ANTONIO Falleció		TEL 446-5210	Socio de Baja	20/1/2007
+293	FLIGIOMENI MARIA DE LOS ANGELES	mosa_f@hotmail.com		Sin definir	2/4/2007
+295	TZENCA TODOROVA GUENOVA	tocardp@uolsinectis.com.ar	TEL 454-8405 CEL 297-625-2299	Sin definir	31/3/2007
+296	ABRIGO  MARIA LUISA		TEL 2965-443204	Sin definir	31/3/2007
+297	ARRAIGADA ALFREDO RAUL Falleció		TEL 2965-443204	Socio de Baja	31/3/2007
+298	GIANETTO CARLOS NORBERTO	tocardo@uolsinectis.com		Sin definir	31/3/2007
+299	VELAZQUEZ LEANDRO			Socio Activo	4/7/2007
+300	BARRIA GERONIMO	boquita333@hotmail.com		Socio Activo	29/4/2007
+302	ANDRADA MARCELA	marcelaandrada@gmail.com		Socio Activo	1/10/2007
+303	PEREZ JOSE CEFERINO	ceferinoperezquolsinectis.com.ar		Sin definir	15/3/2007
+304	GUTIERREZ RIGOBERTO		TEL 444-0869	Sin definir	15/3/2007
+305	PARADA ALBERTO		TEL 446-8614	Sin definir	15/3/2007
+306	CARO GERONIMO		TEL 446-5888	Sin definir	15/3/2007
+307	VARAS  BLANCA			Sin definir	15/3/2007
+308	LEFIL MARDONE  FRANCISCO		TEL 456-0103	Sin definir	15/3/2007
+309	ARIZMENDI OMAR		TEL 448-2631	Sin definir	21/3/2007
+310	GONZALES ROSA	corporacionjuridica.crd@gmail.com		Sin definir	21/3/2007
+312	MAMANI LEONOR 			Sin definir	21/3/2007
+313	ANDRADE  SUSANA		TEL 446-1583	Sin definir	21/3/2007
+314	HOIMAN LUCY		TEL 455-0873	Sin definir	21/3/2007
+315	TORRES ALICIA CARMEN 			Sin definir	21/3/2007
+316	NAYA ANGEL LUIS	nayatuc@yahoo.com.ar		Socio Activo	6/4/2007
+317	FERREYRA  JORGE		CEL 297-413-0810	Sin definir	6/5/2008
+318	AMADO  FRANCO GASPAR	franco-amado@hotmail.com		Sin definir	7/5/2008
+319	VARGAS DANIEL			Sin definir	7/5/2008
+320	VILARDO JULIAN	julv_cabj@hotmail.com		Sin definir	7/6/2008
+321	DE ZEN EDUARDO ANTONIO	eduardoadezen@yahoo.com		Socio Activo	28/6/2008
+322	OVIEDO  GUILLERMINA 	conigui@yahoo.com.ar		Socio Activo	6/12/2088
+323	SANCHEZ PILAR	Pilarinesanchez@gmail.com		Socio Activo	12/7/2008
+324	ALARCON  GLORIA ELIZABETH	lorya2006@hotmail.com		Socio Activo	6/12/2008
+325	ROBLEDO LEANDRO MATIAS	elemerre@hotmail.com		Socio Activo	13/7/2008
+326	MARTINEZ TERESA CRISTINA	kristyn-tere81@hotmail.com		Socio Activo	13/7/2008
+327	TOLEDO  LUIS EDUARDO Falleció	tango@sergrstion.com.ar		Socio de Baja	14/7/2008
+328	DEL MAR ARNALDO			Socio Activo	26/8/2008
+329	PORTA BEATRIZ	Beatrizporta1946@gmail.com	2974 92-5448	Socio Activo	26/7/2008
+330	QUIEDO SEGUNDO	laloviedo@yahoo.com.ar		Socio Activo	16/7/2008
+331	MEDINA CECILIA VERONICA	checmed@hotmail.com		Socio Activo	16/9/2008
+332	THEODHARI CATHERINA	cattheo@hotmail.com		Socio Activo	21/9/2008
+333	OLIMA PEDRO ANDRES	tangonia@hotmail.com		Socio Activo	21/9/2008
+334	PANZARDI JUAN IGNACIO	juanignaciop@hotmail.com		Socio Activo	25/9/2008
+335	MATTEO LILIANA	lilitango@hotmail.com		Socio Activo	10/4/2008
+336	PADILLA NATALIA	natalia_n_padilla@hotmail.com		Socio Activo	5/10/2008
+337	RIQUELME  FEDERICO	fred_fr7@hotmail.com		Socio Activo	29/11/2008
+338	BALDINI ALBERTO JAVIER	ajbmembrana@gmail.com		Socio Activo	29/11/2008
+339	SEGURA  DIEGO HORACIO		CEL 297-430-0095	Socio Activo	29/11/2008
+340	BORQUEZ DARLING NICOLE	darlingb_ct505@hotmail.com		Socio Activo	28/12/2008
+341	COSTARELLI ADRIANA		CEL 297-461-1953	Socio Activo	8/10/2008
+342	CASAS MATILDE	matica-09qhotmail.com		Socio Activo	26/4/2009
+343	BOGGI MARIANO	mboggi@bolland.com.ar		Socio Activo	26/4/2009
+344	BRAVO LUIS EDUARDO			Socio Activo	8/8/2009
+345	ALMENDRA JESSICA PAOLA		TEL448-1834	Socio Activo	8/8/2009
+346	HERRERA  DAVID ALEJANDRO			Socio Activo	8/8/2008
+347	ARRATIA MAXIMILIANO	maxiarratia@gmail.com		Socio Activo	8/8/2009
+348	GONZALEZ YANINA LEONOR 	yaninagonzalez08@hotmail.com		Socio Activo	8/8/2009
+349	JALIFE PEDRERO HECTOR GASTON			Socio Activo	8/8/2009
+350	REYNOSO IRMA ISABEL			Socio Activo	8/8/2009
+351	JALIFE REYNOSO ANDREA MARCELA	andrea.jalifereynoso@gmail.com		Socio Activo	8/8/2009
+352	MALDONADO JULIETA	julium_92@hotmail.com		Socio Activo	8/8/2009
+353	ROBLEDO  CLAUDIA	clrobledo77@hotmail.com		Socio Activo	8/8/2009
+354	VILLEGAS CRISTINA ANDREA		TEL 297-430-2469	Socio Activo	8/8/2009
+355	VILARDO RUBEN OSCAR	rubenvilardo@tecpetrol.com		Socio Activo	8/7/2009
+356	ZUILIS MARIA ROSA	toti1983421@hotmail.com		Socio Activo	8/8/2009
+357	ESPOSITO MARTA	espomar57@hotmail.com		Socio Activo	8/8/2009
+358	CEJAS JORGE ALEJANDRO	ale_will3@hotmail.com		Socio Activo	8/5/2009
+359	MOREIRA IVANA	moreira_ivana@yahoo.com.ar		Socio Activo	8/12/2009
+360	SOSA CRISTINA	crisnoe@hotmail.com		Socio Activo	26/9/2009
+362	CONSOLI GRACIA GENOVEVA		TEL 447-6032	Socio Activo	4/1/2012
+363	SOTO  BRENDA			Socio Activo	12/6/2011
+364	CORREA  HORTENCIA	hortencia correa@hotmail.com		Socio Activo	14/6/2011
+365	MARQUES  ANA 			Socio Activo	8/12/2011
+366	CHAVEZ ANDREA PIERINA	andreeachqhotmail.com-		Socio Activo	8/12/2011
+367	MARA LEGUIZA	maaru.fl@hotmail.com		Socio Activo	8/12/2011
+368	ALARCON  MARCELA	angelvia69qhotmail.com		Socio Activo	10/8/2011
+369	QUINTEROS GERARDO	ge_quin@hotmail.com		Socio Activo	10/8/2011
+370	ARCE OLGA	juandfelippa@gmail.com		Socio de Baja	1/10/2011
+371	FELIPPA JUAN	juandfelippa@gmail.com	2974300987	Socio de Baja	1/10/2011
+372	ALVAREZ MARIA VICTORIA	marivik_a@hotmail.com		Socio Activo	10/8/2011
+373	SARMIENTO MICAELA AILEN 	mik_sank_554@hotmail.com		Socio Activo	10/9/2011
+374	MAYORGA  VALERIA	val322@hotmail.com		Socio Activo	10/8/2011
+375	ALVAREZ GERMAN ALBERTO			Socio Activo	10/8/2011
+376	ANTOGNOLI MONICA BEATRIZ	monicaantognoli_@hotmail.com		Socio Activo	10/9/2011
+377	MERAKAPPES VALESKA			Socio Activo	1/10/2011
+380	MONTEROS YANINA			Socio Activo	22/1/2012
+381	ULBRICH FERNANDO			Socio Activo	22/1/2012
+382	ULBRICH KARINA ANDREA	karina.ulbrich@hotmail.com			22/1/2012
+383	RUIZ RAMIRO JOSE	ramirojrruiz@hotmail.com			1/4/2012
+384	TORRES FANNY ADELA	fannyadelatorres@yahoo.com			1/4/2012
+385	BUSTOS BERNARDO ESTEBAN 	bebelectrinica@hotmail.com			1/4/2012
+386	TORRES GABRIELA PATRICIA 	gapahu@hotmail.com.com			1/4/2012
+387	AHUMADA JOSE ELADIO		297-4548806		1/4/2012
+388	BARRIENTOS MARTA	marbarria@live.com.ar			1/4/2012
+389	CORDOBA CESAR MIGUEL		297-4321095		1/4/2012
+390	BEHM MAUJ	maribem@hotmail.com			1/4/2012
+391	RIVERA FLORISA			Socio Activo	1/4/2012
+392	MOREIRA NORBERTO	beto.more56@gmail.com		Socio Activo	1/4/2012
+393	ROJAS VERONICA VALERIA	vale_vero28@hotmail.com	4486488		15/4/2012
+394	ALAM JOSE			Socio Activo	18/4/2012
+395	BECERRA DARIO			Socio Activo	21/4/2012
+396	ECHANIZ OSCAR JOSE		4560413		21/4/2012
+397	VIEGAS DE SOUSA DELIA			Socio Activo	21/4/2012
+398	CARRIZO MARIA LOURDES			Socio Activo	21/4/2012
+399	FORQUERA FRANCISCO	info@mariposita.com.ar	011-43003247		28/4/2012
+400	BONAVENTURA CAROLINA	info@mariposita.com.ar	011-43003247		28/4/2012
+401	FERNANDEZ JUAN MANUEL	milongafina@yahoo.com			28/4/2012
+402	REGO MARIA NIEVE		4555-3477		28/4/2012
+403	RAMIREZ NORA SILVIA 	viara_200145@yahoo.com.ar	011-40942116		1/5/2012
+404	RODRIGUEZ JUAN CARLOS	junasunogmail.com			1/5/2012
+405	AGUILAR HORTENCIA MARGARITA	ruly_16f@hotmail.com			9/6/2012
+406	BARROS HUGO ARNALDO				2/5/2012
+407	DIAZ LEONOR			Socio Activo	20/5/2012
+408	ELLY  CAMILA GISELLE	Camu.elly@gmail.com		Socio Activo	9/6/2012
+409	RAMOS LUCAS 	luca_tango15@hotmail.com			6/6/1997
+410	MARIQUEO OSCAR			Socio Activo	1/5/2012
+411	MUJICA PABLO ARIEL	pabloamujicaqhotmail.com 			10/6/2012
+412	PICUNTUREO TERESITA DE LOURDES		4535525		12-O5-2012
+413	ZUNIGA ALEJANDRO	alezu10@hotmail.com			12-O5-2012
+414	MERCADO DIANA	diamamer2012@gmail.com		Socio Activo	1/5/2012
+415	ROST EGON IVAN 	egonivanrost@hotmail.com			24/7/2012
+416	UNQUEN LUCAS JOAQUIN 	lucas_lju@hotmail.com	297-4010206		24/7/2012
+417	BITSCH BARBARA			Socio Activo	24/6/2012
+418	VELASQUEZ ALEXIS	alexis_22velasquez@hotmail.com			12/7/2012
+419	MOSCOSO VICTOR RICARDO 		297-4119060		12/7/2012
+420	BARRIA ZAPATA JOSE ANIBAL		4464731		12/7/2012
+421	MARTINEZ INES			Socio Activo	12/7/2012
+422	QUINTANILLA SAMUEL LUIS	samuelq30@hotmail.com	297-313956		12-O7-2012
+423	MiLLER OLGA DEL CARMEN 	olgamiller722qhotmail.com			12/7/2012
+424	TORMO ADRIANA MARIA 	adraianatormo@yahoo.com.ar			14/7/2012
+425	FUENTES CYNTHIA VANESA 	rubior87@hotmail.com			17/7/2012
+426	GONZALEZ DANIEL OSCAR				,21-07-2012
+430	BELKO BLANCO	beleko@hotmail.com			22/7/2012
+431	PIOVANO NATALIA	natypio25@hotmail.com			22/7/2012
+432	ALCARAZ VICTOR DAMIAN	vdamianalcaraz@gmail.com		Socio Activo	22/7/2012
+433	GIRARDI ANDREA SOLEDAD 	sol_girardi@hotmail.com			5/8/2012
+434	AGUILAR RICARDO ANDRES 	aguilar_comodorohotmail.com	297-4127226		5/8/2012
+435	TEJERO CARLOS ALBERTO		297-4016951		11/8/2012
+436	AVILA MIGUEL EZEQUIEL	truncado66@hotmail.com			11/8/2012
+438	QUINTEROS FRANCO	franco64q@hotmail.com			11/8/2012
+440	URIBE PATRICIA	patydev@hotmail.com			8/9/2012
+441	COLEHAUE MONICA LORENA 	mlcoleahue@gmail.com			8/9/2012
+442	PEREZ NORMA HAYDEE	abunorma200847@hotmail.com			8/9/2012
+443	HILLAN SUSANA			Socio Activo	8/9/2012
+444	CEBALLOS DOMINGA 		4481405		22/9/2012
+445	ASSAD LUIS		4481405		22/9/2012
+446	FLORES MARIANELA ANDREA	flomarianela@hotmail.com			20/10/2012
+447	CEJAS MAIDANA CARLA FLORENCIA			Socio Activo	20/10/2012
+448	PELICON PAULA			Socio Activo	3/11/2012
+449	LOPEZ SERGIO	sedalocomriv@hotmail.com		Socio Activo	3/11/2012
+451	SANTANA XIMENA MARISOL	xim3azul@hotmail.com	297-4941377		8/12/2012
+452	SEPULVEDA MAURICIO	masepulveda@hotmail.com			8/12/2012
+453	EHIJO RAUL FABRICIO	tito.rfe@hotmail.com	297-4197457		8/12/2012
+454	YACCARIO FLAVIA	flaviayac@yahoo.com			19/1/2013
+455	NAVARRO VERÓNICA			Socio Activo	20/1/2013
+456	ALVARADO  ELIANA			Socio Activo	25/5/2013
+457	ALANIS PABLO			Socio Activo	25/5/2013
+458	MARIANO DIANA CAROL		297-6255428		15/6/2013
+459	ROLANDO PANTOJA	mrpantoja@hotmail.com			19/6/2013
+460	SOTO DANIEL ALBERTO	malajuntatango@hotmail.com			22/6/2013
+461	CABRERA MIRYAM	bcmiryam@hotmail.com			22/6/2013
+462	ALVAREZ MARIA SOLEDAD	sol_alv_860@hotmail.com	297-4622606		29/6/2013
+463	ANDRES HUENULLAMCA		297- 4480664		29/6/2013
+465	SANDOVAL RAFAEL		297-40832213		14/7/2013
+466	AVALOS PATRICIA CINTIA	av.pat@hotmail.com	11-34399495		14/6/2013
+467	GOMEZ VANINA ROXANA			Socio Activo	28/7/2013
+468	HERNANDEZ ESTEBAN 	hernandezesteban@gmail.com	297-4399420		14/1/2014
+471	CRUZ LEONARDO MANUEL	pokerdeaz@gmail.com	297-4724497		14-092013
+472	SALDAÑO DANIELA PAOLA 	danips1986@hotmail.com			18/10/2013
+473	CASTILLO ROXANA	elenar2035@gmail.com			9/11/2013
+474	ESQUIVEL MARIA EUGENIA	eugeniaesqui@gmail.com	297-4115772		9/11/2013
+475	MARCINKEVICIUS GONZALO	G.MARCINKEVICIUS@GMAIL.COM			16/10/2013
+476	NIEVAS MARIA CECILIA	cecy.nievas@gmail.com		Socio Activo	16/11/2013
+478	VILAR ANDREA MARTA 	andreavilar72@hotmail.com	297-4040539		17/10/2013
+480	DAS NEVES GUERREIRO RICARDO	ridasne@gmail.com		Socio Activo	5/7/2014
+482	ALAM MIGUEL ALFREDO	miguelalam@gmail.com	297-4261658	Socio Activo	27/2/2015
+484	WILLIAMS ROBERTO	cafewilliams@yahoo.com.ar	297-582317		2/4/2015
+485	PEIRANO CECILIA	mpeirano@slb.com		Socio Activo	2/4/2015
+486	RIOS TANIA	taniarioscrv@hotmail.com		Socio Activo	11/9/2015
+487	OJEDA MAURO N.			Socio Activo	11/9/2015
+488	FERRANTE SUSANA	susanaferrante@hotmail.com			11/9/2015
+489	REBOLLEDO BERNARDINA			Socio Activo	8/9/2015
+490	HAROS ALICIA	alicollage@gmai..com	4485703	Socio Activo	8/9/2015
+491	HARO DELFINA			Socio Activo	8/9/2015
+492	NAGLI MARGARITA INES	marrganagly@hotmailcom	297-6256111 / 4485896	Socio Activo	8/9/2015
+493	RASJIDO MONICA VIRGINIA	monicavirgin@hotmail.com	297-4549160	Socio Activo	8/9/2015
+494	GALESI MARIA ANGELICA			Socio Activo	8/9/2015
+495	OSTERTAG MIRTA AZUCENA			Socio Activo	8/9/2015
+496	CAPELLO MARIA INES			Socio Activo	8/9/2015
+497	BECERRA ARTIEDA ANIBAL FERNANDO	becerra@unpata.edu.ar		Socio Activo	15/9/2015
+498	ANKUDOWICZ ROSA MARIA			Socio Activo	15/9/2015
+499	RIVERA ANALIA 		297-5169053	Socio Activo	25/9/2015
+500	OLIVERI MARTA 			Socio Activo	3/10/2015
+501	MORALES CLAUDIO FEDERICO			Socio Activo	4/10/2015
+502	MANQUICHEO SERGIO	manquicheo@yahoo.com.ar	297-5605226	Socio Activo	4/10/2015
+503	POBLETE ANAHI	anahi.poblete@hotmail.com		Socio Activo	25/3/2016
+504	RIVAROLA ANTONIO	 		Socio Activo	25/3/2016
+505	SASTRIA MARIA LAURA			Socio Honorario	23/4/2016
+506	ESTIGARRIBIA CARLOS JAVIER	charly_16_9@hotmail.com	297-4113720	Socio Honorario	23/4/2016
+507	JENSEN MABEL ELENA			Socio Activo	23/4/2016
+508	LUNA NORA	norabe08@hotmail.com		Socio Activo	23/4/2016
+509	NIEVA FRANCO RAUL	profesorfranconieva@gmail.com	2966-605141	Socio Activo	4/6/2016
+510	MORALES BARBARA ELIZABETH	bitbiti.b@hotmail.com		Socio Activo	14/3/2017
+511	BLANCO JOAQUIN ARIEL			Socio Activo	14/3/2017
+512	RODRIGUEZ PATRICIA	patitopar11@gmail.com	297-6241785	Socio Activo	11/12/2016
+513	DIAZ MARGOT			Socio Activo	26/5/2017
+514	SANCHEZ LUCRECIA			Socio Activo	26/5/2017
+515	VILLALOBOS GRACIELA	gra.vi@hotmail.com	297-4044670	Socio Activo	26/5/2017
+516	MELIS MARIA SOLEDAD			Socio Activo	26/5/2017
+517	GARZON MIGUEL	miguel.garzon@live.com	297-5174880	Socio Activo	26/5/2017
+518	OSTERTAG MARTA			Socio Activo	2/6/2017
+519	COLL CYNTHIA JUDITH	cynthy_arq.981@hotmail.com	297-4434010	Socio Activo	5/6/2017
+520	NITOR JOSE ARIEL			Socio Activo	5/6/2017
+521	GUTIERREZ ELIDA		297-6247246	Socio Activo	5/6/2017
+522	SILVA ANTONIA		4480748	Socio Activo	5/6/2017
+523	LABAT RAMON			Socio Activo	6/6/2017
+524	VALERO MARIA ALEJANDRA	alejandra81ar@yahoo.com.ar	297-4360972	Socio Activo	6/6/2017
+525	DEOCARETS DELIA			Socio Activo	7/6/2017
+526	BARRIENTOS NESTOR			Socio Activo	7/6/2017
+527	RETAMOZO RAMON			Socio Activo	9/6/2017
+528	HAGA NORMA			Socio Activo	12/6/2017
+529	MENDOZA CLOTILDE			Socio Activo	12/6/2017
+530	MILLAMAN MARIA			Socio Activo	14/6/2017
+531	STEINBACH ELVIRA			Socio Activo	14/6/2017
+532	CARDOSO VIDAL SILVIA NOEMI	silvianoemi12@live.com.ar	2966-220813	Socio Activo	23/6/2017
+533	MORALES PEDRO ISIDORO			Socio Activo	2/7/2017
+534	CEJAS CRISTINA	cristinacejas@yahoo.com.ar		Socio Activo	16/9/2017
+535	OYARZO NOEMI (MIMI)			Socio Activo	1/10/2017
+536	AMUINAHUEL JORGE			Socio Activo	15/5/2018
+537	ANTUNEZ CLAUDIA			Socio Activo	21/5/2018
+538	ROLDAN LUCAS			Socio Activo	21/5/2018
+539	ARTEAGA JOSE ALBERTO			Socio Activo	9/9/2018
+540	PONS MARCOS			Socio Activo	26/4/2019
+541	GOROSITO VERONICA			Socio Activo	24/6/2019
+542	MENDOZA JULIAN	ajulianmendoza@hotmail.com		Socio Activo	10/12/2020
+543	LORENZO DIANA	Ddiana_mlor@hotmail.com	2975 06-0147	Socio Activo	19/9/2020
+544	RIVERO ROBERTO GABRIEL	robertogabrielrivero@gmail.com	 2920 55-0345	Socio Activo	19/7/2023
+545	LESLYBETT GALLE V	leslybeth.galle@fb.edu.ar	2974 74-5324	Socio Activo	19/7/2023
+546	SANDANDER FLAVIA	fsandander@hotmail.com		Socio Activo	8/8/2023
+547	ZAHIRA MOLMANTI	Zahiramolinamatteu@gmail.Com		Socio Activo	8/8/2023
+548	VELAZCO ANDREA	velazcoandrea08@gmail.com	2974 14-4652	Socio Activo	8/8/2023
+549	MARINELLI LAURA	lauramarinelli@hotmail.com	2976 23-5246	Socio Activo	8/8/2023
+550	MURUA LUCIA	lucy.murua.2001@gmail.com	297-4643769	Socio Activo	12/8/2023
+551	ROMAN AGOSTINA	agosromanve36@gmail.com		Socio Activo	15/8/2023
+552	MOYA MARCELA	mmarcelamoya@gmail.com		Socio Activo	19/8/2023
+553	CANEPA LILIANA			Socio Activo	24/8/2023
+554	AZCONA MARCELA GLADYS	marceiansol2517@gmail.com	3624054545	Socio Activo	7/9/2023
+555	GOMEZ JAVIER ANGEL	javiergomez0771@gmail.com	1157072097	Socio Activo	7/9/2023
+556	SEPULVEDA DANTE MATIAS	maty.89.02@hotmail.com	2974047371		
+557	VILLARROEL HEBE			Socio Activo	12/9/2023
+558	NIEVA, MARIA OFELIA	ophelnieva@gmail.com		Socio Activo	9/11/2023
+559	GALLEGOS, SERGIO DIEGO	sgallegos@pan-energy.com	2976248249	Socio Activo	10/11/2023
+560	RUA, ESTELA BEATRIZ	stelabe@hotmail.com	2974220264	Socio Activo	6/11/2023
+561	MAURO MARCINKEIVCIUS	msmarcin@gmail.com	2974 13-8033	Socio Activo	16/11/2023
+562	LOPEZ MIGUEL	 miloalfredolopez2007@gmail.com	2974434473	Socio Activo	10/1/2024
+563	DIAZ VIRGINIA CELESTE			Socio Activo	20/1/2024
+564	ESAINS MAURO	mauroesains@gmail.com		Socio Activo	22/1/2024
+565	QUERCIA VERONICA	veroquercia09@gmail.com		Socio Activo	22/1/2024
+566	PANASIUK MARIELA	mpana71@hotmail.com	2974056425	Socio Activo	1/3/2024
+567	SIERRA MELISSA ALEJANDRA	melisa.alesierra@gmail.com	2974748654	Socio Activo	5/3/2024
+568	NATALIA SOLEDAD HERNANDEZ			Socio Activo	3/6/2024
+569	NIEVA MARIANA	mariananievarw@gmail.com		Socio Activo	26/7/2014
+570	CERATI CAROLINA CONSTANZA	carocerati@hotmail.com	2944812721	Socio Activo	2/11/2024
+571	URIBE NAVARRO JOSE RUPERTO	uriejose55@gmail.com	2976248757	Socio Activo	8/11/2024
+572	YARILLO CINTIA MICAELA	cintia.cmm♦gmail.com	2216029547	Socio Activo	9/11/2024
+573	TOGNETTI CONRADO	conradotog@gmail.com	2944904107	Socio Activo	9/11/2024
+574	CARRERA SONIA LILIAN	soniacarrera18@hotmail.com	2974295974	Socio Activo	7/12/2024
+575	ORTIZ YANINA PAOLA	yanina.p.ortiz@gmail	2974299475	Socio Activo	12/12/2024
+576	GARRIDO ARACELI	kingssgarrido@gmail.com	2945653007	Socio Activo	1/2/2025

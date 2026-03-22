@@ -1,0 +1,194 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  name          String?
+  passwordHash  String
+  role          String   @default("MEMBER") // ADMIN, BOARD, MEMBER
+  position      String?  // Presidente, Tesorero, etc.
+  isBoardMember Boolean  @default(false)
+  member        Member?
+  
+  // Track registrations recorded by this user
+  recordedRegistrations EventRegistration[] @relation("RecordedBy")
+  recordedFees          MembershipFee[]     @relation("FeeRecordedBy")
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Member {
+  id               String   @id @default(uuid())
+  memberNumber     Int      
+  firstName        String
+  lastName         String
+  dni              String   @unique
+  address          String?
+  city             String?
+  email            String?
+  phone            String?
+  joinDate         DateTime @default(now())
+  birthDate        DateTime?
+  type             String   @default("ACTIVO") // ACTIVO, HONORARIO
+  status           String   @default("ACTIVE") // ACTIVE, INACTIVE, DEBTOR, SUSPENDED, DECEASED, RESIGNED
+  
+  // New: Family Discount (50%)
+  isFamilyDiscount Boolean  @default(false)
+  partnerId        String?
+  partner          Member?   @relation("MemberPartner", fields: [partnerId], references: [id])
+  partnerOf        Member[]  @relation("MemberPartner")
+
+  wantsMailing     Boolean  @default(true)
+  notes            String?  
+  userId           String?  @unique
+  user             User?    @relation(fields: [userId], references: [id])
+  
+  fees             MembershipFee[]
+  communications   Communication[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  deactivatedAt    DateTime?
+  eventRegistrations EventRegistration[]
+}
+
+model Communication {
+  id          String   @id @default(uuid())
+  memberId    String
+  member      Member   @relation(fields: [memberId], references: [id])
+  type        String   // WELCOME, DEBT_REMINDER, EVENT_INFO, GENERAL
+  subject     String
+  content     String
+  sentBy      String?
+  sentAt      DateTime @default(now())
+  status      String   @default("SENT") // SENT, FAILED, PENDING
+  channel     String   @default("EMAIL") // EMAIL, WHATSAPP, MANUAL
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model MembershipFee {
+  id            String   @id @default(uuid())
+  memberId      String
+  member        Member   @relation(fields: [memberId], references: [id])
+  periodYear    Int
+  periodMonth   Int
+  amountDue     Float
+  amountPaid    Float
+  paymentDate   DateTime
+  paymentMethod String?
+  paymentStatus String   // PAID, PARTIAL
+  notes         String?
+  
+  // Track recording user for fees too
+  recordedById  String?
+  recordedBy    User?    @relation("FeeRecordedBy", fields: [recordedById], references: [id])
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([memberId, periodYear, periodMonth])
+}
+
+model Announcement {
+  id          String   @id @default(uuid())
+  title       String
+  content     String
+  status      String   @default("DRAFT")
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Setting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model Teacher {
+  id        String   @id @default(uuid())
+  name      String
+  bio       String?
+  events    Event[]  @relation("EventTeachers")
+}
+
+model Event {
+  id              String   @id @default(uuid())
+  title           String
+  description     String?
+  startDate       DateTime
+  endDate         DateTime?
+  location        String?  @default("Sede Central CAT")
+  type            String   // MILONGA, WORKSHOP, BOTH
+  
+  // Specific Schedules and Locations
+  milongaStart    DateTime?
+  milongaEnd      DateTime?
+  milongaLocation String?
+  tangoDJ         String?
+  
+  workshopStart   DateTime?
+  workshopEnd     DateTime?
+  workshopLocation String?
+  workshopClasses String? // JSON String with [{name, start, end, description}]
+  
+  organizer       String   @default("Centro Amigos del Tango")
+  
+  // Pricing
+  priceSocioMilonga    Float?
+  priceNonSocioMilonga Float?
+  priceSocioWorkshop   Float?
+  priceNonSocioWorkshop Float?
+  priceSocioFull       Float?
+  priceNonSocioFull    Float?
+  
+  status          String   @default("OPEN") // OPEN, CLOSED, ARCHIVED
+  isPublic        Boolean  @default(true)   // For website visibility
+  eventBanner     String?  // URL/Path to designed banner image
+  
+  teachers        Teacher[] @relation("EventTeachers")
+  registrations   EventRegistration[]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model EventRegistration {
+  id              String   @id @default(uuid())
+  eventId         String
+  event           Event    @relation(fields: [eventId], references: [id])
+  
+  // Link to member if exists, otherwise manual data
+  memberId        String?
+  member          Member?  @relation(fields: [memberId], references: [id])
+  
+  firstName       String
+  lastName        String
+  dni             String?
+  email           String?
+  phone           String?
+  
+  registrationType String  // MILONGA, WORKSHOP, FULL
+  amountPaid      Float    @default(0)
+  paymentStatus   String   @default("PENDING") // PENDING, PAID
+  paymentMethod   String?  // CASH, TRANSFER, etc
+  paymentProof    String?  // URL/Path to image
+  
+  // Source tracking
+  source          String   @default("MANAGEMENT") // WEB, MANAGEMENT
+  recordedById    String?
+  recordedBy      User?    @relation("RecordedBy", fields: [recordedById], references: [id])
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
