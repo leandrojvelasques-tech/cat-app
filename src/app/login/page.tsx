@@ -5,8 +5,8 @@ import { authenticate } from "@/app/actions/auth"
 import { LogIn, Info } from "lucide-react"
 
 export default function LoginPage() {
-  // Simplificamos omitiendo useActionState temporalmente para asegurar el envío
-  // En React 19 / Next 16 beta/canary, esto ayudará a depurar si el problema es el hook
+  const [errorMessage, formAction, isPending] = useActionState(authenticate, undefined)
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-zinc-950 relative overflow-hidden">
       {/* Background gradients */}
@@ -20,7 +20,7 @@ export default function LoginPage() {
         </div>
 
         <div className="backdrop-blur-xl bg-white/5 border border-white/10 p-8 rounded-3xl shadow-2xl">
-          <form action={authenticate} className="flex flex-col gap-6">
+          <form action={formAction} className="flex flex-col gap-6">
             
             <div className="space-y-2">
               <label className="text-sm font-medium text-zinc-300" htmlFor="email">Email / Usuario</label>
@@ -46,14 +46,20 @@ export default function LoginPage() {
               />
             </div>
 
-
+            {errorMessage && (
+              <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 p-4 rounded-xl text-red-400 text-sm animate-in fade-in zoom-in-95">
+                <Info className="w-4 h-4" />
+                <p>{errorMessage}</p>
+              </div>
+            )}
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-amber-600 to-red-800 hover:from-amber-500 hover:to-red-700 text-white font-medium py-3.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 group mt-4 shadow-lg shadow-red-900/20"
+              disabled={isPending}
+              className="w-full bg-gradient-to-r from-amber-600 to-red-800 hover:from-amber-500 hover:to-red-700 text-white font-medium py-3.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 group mt-4 shadow-lg shadow-red-900/20 disabled:opacity-50"
             >
               <LogIn className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-              <span>Ingresar</span>
+              <span>{isPending ? 'Ingresando...' : 'Ingresar'}</span>
             </button>
           </form>
         </div>

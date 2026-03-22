@@ -5,6 +5,7 @@ import { AuthError } from "next-auth"
 import { db } from "@/lib/db"
 
 export async function authenticate(
+  prevState: string | undefined,
   formData: FormData,
 ) {
   try {
