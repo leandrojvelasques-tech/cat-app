@@ -1,11 +1,13 @@
 import { db } from "@/lib/db"
 import Link from "next/link"
-import { ArrowLeft, Edit, CheckCircle2, Mail, Users, AlertCircle, History, MapPin, Phone, User, CreditCard, Clock, Trophy, Medal } from "lucide-react"
+import { ArrowLeft, Edit, CheckCircle2, Mail, Users, AlertCircle, History, MapPin, Phone, User, CreditCard, Clock, Trophy, Medal, Star, X } from "lucide-react"
 import { notFound } from "next/navigation"
 import { DeactivateMemberButton } from "./DeactivateButton"
 import { WelcomeMessageButton } from "./WelcomeMessageButton"
 import { FamilyDiscountToggle } from "./FamilyDiscountToggle"
 import { RegisterFeeForm } from "./RegisterFeeForm"
+import { AddBoardHistoryForm } from "./AddBoardHistoryForm"
+import { deleteBoardHistory } from "@/app/actions/board-history"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { calculateMemberStatus, getStatusBadgeStyles } from "@/lib/member-utils"
@@ -25,7 +27,8 @@ export default async function FichaSocioPage(props: any) {
       communications: { orderBy: { sentAt: "desc" } },
       partner: true,
       eventRegistrations: true,
-      championshipResults: { include: { championship: true } }
+      championshipResults: { include: { championship: true } },
+      boardHistory: { orderBy: { periodStart: "desc" } }
     }
   }) as any
 
@@ -155,18 +158,56 @@ export default async function FichaSocioPage(props: any) {
                   <p className="text-[10px] text-zinc-600 italic text-center py-4 bg-black/20 rounded-xl border border-dashed border-white/5 uppercase font-black tracking-widest">Sin logros registrados</p>
                 ) : (
                   member.championshipResults.map((award: any) => (
-                    <div key={award.id} className="flex gap-3 items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                    <div key={award.id} className="flex gap-3 items-center bg-white/5 p-3 rounded-xl border border-white/5 group">
                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
-                         award.place === 1 ? "bg-amber-500/20 border-amber-500/30 text-amber-500" : "bg-zinc-700/20 border-zinc-700/30 text-zinc-500"
+                         award.place === 1 ? "bg-amber-500/20 border-amber-500/30 text-amber-500" : 
+                         award.place === 2 ? "bg-zinc-300/20 border-zinc-300/30 text-zinc-300" :
+                         "bg-orange-800/20 border-orange-800/30 text-orange-800"
                        }`}>
                           <Medal size={16} />
                        </div>
-                       <div>
+                       <div className="flex-1">
                           <p className="text-white font-bold text-[11px] tracking-tight">{award.category} {award.championship.year}</p>
-                          <p className="text-[9px] text-amber-500/70 font-black uppercase">
+                          <p className="text-[9px] text-zinc-500 font-black uppercase">
                              {award.place === 1 ? "🥇 Campeón" : award.place === 2 ? "🥈 2do Puesto" : "🥉 3er Puesto"}
                           </p>
                        </div>
+                    </div>
+                  ))
+                )}
+             </div>
+          </div>
+
+          {/* Board History / Gestión */}
+          <div className="bg-zinc-900/50 border border-white/10 rounded-[32px] p-6 backdrop-blur-md">
+             <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2 text-blue-400">
+                  <Star size={16} />
+                  <h3 className="text-xs font-black uppercase tracking-widest italic">Gestión Institucional</h3>
+                </div>
+                <AddBoardHistoryForm memberId={member.id} name={member.firstName} />
+             </div>
+             
+             <div className="space-y-3">
+                {member.boardHistory.length === 0 ? (
+                  <p className="text-[10px] text-zinc-600 italic text-center py-4 bg-black/20 rounded-xl border border-dashed border-white/5 uppercase font-black tracking-widest">Sin historial de gestión</p>
+                ) : (
+                  member.boardHistory.map((history: any) => (
+                    <div key={history.id} className="flex gap-3 items-center bg-white/5 p-3 rounded-xl border border-white/5 group">
+                       <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20">
+                          <Star size={16} />
+                       </div>
+                       <div className="flex-1">
+                          <p className="text-white font-bold text-[11px] tracking-tight uppercase">{history.position}</p>
+                          <p className="text-[9px] text-zinc-500 font-black uppercase">
+                             {history.periodStart}{history.periodEnd ? ` - ${history.periodEnd}` : ''}
+                          </p>
+                       </div>
+                       <form action={async () => { "use server"; await deleteBoardHistory(history.id, member.id) }}>
+                          <button className="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-500 transition-all">
+                             <X size={14} />
+                          </button>
+                       </form>
                     </div>
                   ))
                 )}

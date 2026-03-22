@@ -17,7 +17,8 @@ export default async function PortalSocioPage() {
       member: { 
         include: { 
           fees: { orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }] },
-          championshipResults: { include: { championship: true } }
+          championshipResults: { include: { championship: true } },
+          boardHistory: { orderBy: { periodStart: 'desc' } }
         } 
       } 
     }
@@ -97,14 +98,16 @@ export default async function PortalSocioPage() {
                    member.championshipResults.map((award: any) => (
                      <div key={award.id} className="flex gap-4 items-center bg-white/5 p-4 rounded-2xl border border-white/5 hover:border-amber-500/30 transition-all group">
                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center border shadow-lg ${
-                           award.place === 1 ? "bg-amber-500/20 border-amber-500/30 text-amber-500 shadow-amber-500/10" : "bg-zinc-700/20 border-zinc-700/30 text-zinc-400 shadow-zinc-900"
+                           award.place === 1 ? "bg-amber-500/20 border-amber-500/30 text-amber-500 shadow-amber-500/10" : 
+                           award.place === 2 ? "bg-zinc-700/20 border-zinc-700/30 text-zinc-300 shadow-zinc-900" :
+                           "bg-orange-900/20 border-orange-900/30 text-orange-800 shadow-orange-900/20"
                         }`}>
                            <Medal size={24} />
                         </div>
                         <div>
                            <p className="text-white font-black text-sm tracking-tight">{award.category}</p>
                            <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest italic">Edición {award.championship.year}</p>
-                           <p className="text-[10px] text-amber-500/70 font-black uppercase mt-1">
+                           <p className="text-[10px] text-zinc-400 font-black uppercase mt-1">
                               {award.place === 1 ? "🥇 CAMAPEON" : award.place === 2 ? "🥈 2DO PUESTO" : "🥉 3ER PUESTO"}
                            </p>
                         </div>
@@ -113,6 +116,30 @@ export default async function PortalSocioPage() {
                  )}
               </div>
            </div>
+
+           {/* Institution Commitment / Board History */}
+           {member.boardHistory?.length > 0 && (
+              <div className="bg-white/5 border border-white/10 p-8 rounded-[40px] backdrop-blur-md">
+                 <h2 className="text-xs font-black uppercase tracking-[0.2em] text-blue-400 flex items-center gap-2 mb-6 italic">
+                    <Star size={14} /> Gestión Institucional
+                 </h2>
+                 <div className="space-y-4">
+                    {member.boardHistory.map((history: any) => (
+                       <div key={history.id} className="flex gap-4 items-center p-4 rounded-2xl bg-white/5 border border-white/5">
+                          <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20">
+                             <CheckCircle2 size={20} />
+                          </div>
+                          <div>
+                             <p className="text-white font-bold text-sm uppercase">{history.position}</p>
+                             <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest italic">
+                                Período {history.periodStart}{history.periodEnd ? ` - ${history.periodEnd}` : ''}
+                             </p>
+                          </div>
+                       </div>
+                    ))}
+                 </div>
+              </div>
+           )}
 
            {/* Personal Info Box */}
            <div className="bg-white/5 border border-white/10 p-8 rounded-[40px] backdrop-blur-md">

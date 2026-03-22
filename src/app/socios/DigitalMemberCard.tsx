@@ -100,13 +100,29 @@ export function DigitalMemberCard({ member, awards }: { member: any, awards: any
                  <span className="text-[7px] uppercase font-black tracking-widest text-zinc-600">Validez</span>
                  <span className="text-[9px] font-bold text-emerald-400">AL DIA</span>
               </div>
+              
+              {/* Historical Context Badge */}
+              {member.boardHistory?.some((h: any) => h.position.includes("Presidente")) && (
+                <div className="flex flex-col border-l border-white/10 pl-3">
+                   <span className="text-[7px] uppercase font-black tracking-widest text-amber-500/50">Legado</span>
+                   <span className="text-[9px] font-bold text-amber-500 uppercase">Ex-Presidente</span>
+                </div>
+              )}
            </div>
            
            {/* Mini Medal Shelf */}
-           <div className="flex gap-1">
-              {awards.slice(0, 3).map((award, i) => (
-                <div key={i} title={`${award.category} ${award.championship.year}`} className="w-5 h-5 bg-white/5 rounded-md flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform">
-                   <Star size={10} className={award.place === 1 ? "text-amber-500" : "text-zinc-500"} />
+           <div className="flex gap-1.5">
+              {awards.map((award, i) => (
+                <div 
+                  key={i} 
+                  title={`${award.category} ${award.championship.year}`} 
+                  className={`w-6 h-6 rounded-lg flex items-center justify-center border shadow-lg group-hover:scale-110 transition-transform ${
+                    award.place === 1 ? "bg-amber-500/20 border-amber-500/30 text-amber-500" :
+                    award.place === 2 ? "bg-zinc-300/20 border-zinc-300/30 text-zinc-300" :
+                    "bg-orange-800/20 border-orange-800/30 text-orange-800"
+                  }`}
+                >
+                   <Medal size={14} />
                 </div>
               ))}
            </div>

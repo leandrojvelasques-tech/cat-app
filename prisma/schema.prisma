@@ -63,6 +63,7 @@ model Member {
   deactivatedAt    DateTime?
   eventRegistrations EventRegistration[]
   championshipResults ChampionshipResult[] @relation("MemberAwards")
+  boardHistory        BoardHistory[]
 }
 
 model Communication {
@@ -229,4 +230,16 @@ model ChampionshipResult {
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+model BoardHistory {
+  id          String   @id @default(uuid())
+  memberId    String
+  member      Member   @relation(fields: [memberId], references: [id])
+  position    String   // e.g. "Presidente", "Vocal"
+  periodStart String?  // e.g. "2012"
+  periodEnd   String?  // e.g. "2023"
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
