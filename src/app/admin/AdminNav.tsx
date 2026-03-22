@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Users, CreditCard, LayoutDashboard, Bell, Settings, Archive, Calendar, Trophy } from "lucide-react"
+import { Users, CreditCard, LayoutDashboard, Settings, Archive, Calendar, Trophy, ShieldCheck } from "lucide-react"
 
 export function AdminNav() {
   const pathname = usePathname()
@@ -12,8 +12,8 @@ export function AdminNav() {
     { href: "/admin/socios", icon: Users, label: "Directorio de Socios" },
     { href: "/admin/cuotas", icon: CreditCard, label: "Cobranzas" },
     { href: "/admin/eventos", icon: Calendar, label: "Eventos" },
-    { href: "/admin/novedades", icon: Bell, label: "Novedades" },
     { href: "/admin/vientos-de-tango", icon: Trophy, label: "Vientos de Tango" },
+    { href: "/admin/usuarios", icon: ShieldCheck, label: "Usuarios" },
     { href: "/admin/configuracion", icon: Settings, label: "Ajustes" },
   ]
 
