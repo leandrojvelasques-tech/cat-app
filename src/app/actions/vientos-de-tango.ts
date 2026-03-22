@@ -48,3 +48,42 @@ export async function deleteChampionshipResult(id: string) {
      revalidatePath("/socios")
   }
 }
+export async function updateChampionshipResult(id: string, data: {
+  championshipId?: string
+  category?: string
+  place?: number
+  firstName?: string
+  lastName?: string
+  partnerName?: string
+  memberId?: string | null
+}) {
+  const result = await db.championshipResult.update({
+    where: { id },
+    data: {
+      championshipId: data.championshipId,
+      category: data.category,
+      place: data.place,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      partnerName: data.partnerName,
+      memberId: data.memberId === undefined ? undefined : data.memberId
+    }
+  })
+  revalidatePath("/admin/vientos-de-tango")
+  if (result.memberId) {
+     revalidatePath(`/admin/socios/${result.memberId}`)
+     revalidatePath("/socios")
+  }
+}
+
+export async function linkChampionshipResult(resultId: string, memberId: string | null) {
+  const result = await db.championshipResult.update({
+    where: { id: resultId },
+    data: { memberId }
+  })
+  revalidatePath("/admin/vientos-de-tango")
+  if (memberId) {
+     revalidatePath(`/admin/socios/${memberId}`)
+     revalidatePath("/socios")
+  }
+}

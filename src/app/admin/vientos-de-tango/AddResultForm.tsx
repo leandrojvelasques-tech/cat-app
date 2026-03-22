@@ -48,7 +48,7 @@ export function AddResultForm({
         onClick={() => setIsOpen(true)}
         className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5"
       >
-        <Plus size={14} /> Cargar Ganador {year}
+        <Plus size={14} /> Agregar Podio {year}
       </button>
     )
   }
