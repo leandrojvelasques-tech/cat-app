@@ -1,0 +1,12 @@
+sync_march.ts
+register_2026_payments.ts
+migrate_csv.ts
+update_members_text.ts
+tmp_members.txt
+logs/
+.env
+.clauderules
+GEMINI.md
+AGENTS.md
+rules/
+scripts/

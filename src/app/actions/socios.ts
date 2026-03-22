@@ -27,9 +27,9 @@ export async function createMember(formData: FormData) {
     orderBy: { memberNumber: "desc" },
   })
   
-  const nextMemberNumber = lastMember && lastMember.memberNumber >= 1000 
-    ? lastMember.memberNumber + 1 
-    : 1000
+  const nextMemberNumber = lastMember && !isNaN(Number(lastMember.memberNumber))
+    ? (Number(lastMember.memberNumber) + 1).toString()
+    : "1000"
 
   await db.member.create({
     data: {
