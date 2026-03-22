@@ -26,7 +26,7 @@ export default async function FichaSocioPage(props: any) {
       partner: true,
       eventRegistrations: true
     }
-  } as any)
+  }) as any
 
   if (!member) return notFound()
 
