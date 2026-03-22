@@ -153,3 +153,12 @@ export async function sendCommunication(data: {
   revalidatePath(`/admin/socios/${data.memberId}`)
   return communication
 }
+export async function updateMemberAvatar(memberId: string, avatarUrl: string | null) {
+  await db.member.update({
+    where: { id: memberId },
+    data: { avatarUrl }
+  })
+  revalidatePath(`/admin/socios/${memberId}`)
+  revalidatePath("/socios")
+  return { success: true }
+}

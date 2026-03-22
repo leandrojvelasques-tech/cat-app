@@ -42,7 +42,7 @@ export default async function VientosDeTangoPage() {
                </div>
                <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 mb-0.5">Podios Cargados</p>
-                  <p className="text-2xl font-black text-white">{championships.reduce((acc: number, c: any) => acc + c.results.length, 0)}</p>
+                   <p className="text-2xl font-black text-white">{championships.reduce((acc: number, c: any) => acc + (c.results?.length || 0), 0)}</p>
                </div>
             </div>
         </div>

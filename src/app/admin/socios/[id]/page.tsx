@@ -12,6 +12,8 @@ import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { calculateMemberStatus, getStatusBadgeStyles } from "@/lib/member-utils"
 
+import { AvatarUpload } from "../components/AvatarUpload"
+
 export default async function FichaSocioPage(props: any) {
   const params = await props.params
   const id = params?.id || props?.params?.id
@@ -60,13 +62,16 @@ export default async function FichaSocioPage(props: any) {
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-5xl mx-auto pb-20">
       {/* Header and Actions */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white/5 p-8 rounded-[40px] border border-white/10 backdrop-blur-md relative overflow-hidden shadow-2xl">
-        <div className="flex items-center gap-6 relative z-10">
+        <div className="flex items-center gap-8 relative z-10">
           <Link 
             href="/admin/socios"
             className="w-12 h-12 bg-white/5 hover:bg-white/10 rounded-2xl flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-white/5"
           >
             <ArrowLeft size={20} />
           </Link>
+          
+          <AvatarUpload memberId={member.id} currentAvatar={member.avatarUrl} />
+
           <div>
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-3xl font-black text-white tracking-tight uppercase">
