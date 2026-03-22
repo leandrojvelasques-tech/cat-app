@@ -36,6 +36,14 @@ export function DigitalMemberCard({ member, awards }: { member: any, awards: any
                </div>
             </div>
           )}
+          
+          {member.isBoardMember && !isChampion && (
+            <div className="flex flex-col items-end">
+               <div className="bg-white/10 text-white text-[9px] font-black px-3 py-1 rounded-full flex items-center gap-1 border border-white/20">
+                 <Star size={10} className="text-amber-500" /> {member.position?.toUpperCase() || "COMISIÓN"}
+               </div>
+            </div>
+          )}
         </div>
 
         {/* Center Content */}

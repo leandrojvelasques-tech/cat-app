@@ -40,6 +40,10 @@ model Member {
   type             String   @default("ACTIVO") // ACTIVO, HONORARIO
   status           String   @default("ACTIVE") // ACTIVE, INACTIVE, DEBTOR, SUSPENDED, DECEASED, RESIGNED
   
+  // Board status
+  isBoardMember    Boolean  @default(false)
+  position         String?  // e.g. "Vocal", "Presidente"
+
   // New: Family Discount (50%)
   isFamilyDiscount Boolean  @default(false)
   partnerId        String?
