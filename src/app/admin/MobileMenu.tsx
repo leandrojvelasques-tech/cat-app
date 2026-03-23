@@ -58,11 +58,18 @@ export function MobileMenu({ user }: MobileMenuProps) {
           </button>
         </div>
         
-        <div className="flex-1 overflow-y-auto">
-          <SidebarContent 
-            user={user} 
-            onNavigate={() => setIsOpen(false)} 
-          />
+        <div className="flex-1 overflow-y-auto px-6 py-8">
+           <div className="mb-8">
+              <span className="text-[10px] font-black tracking-[0.2em] text-amber-500 uppercase">Administración</span>
+              <h2 className="text-xl font-bold text-white mt-1">Opciones</h2>
+           </div>
+           
+           <div className="space-y-6">
+              <SidebarContent 
+                user={user} 
+                onNavigate={() => setIsOpen(false)} 
+              />
+           </div>
         </div>
       </div>
     </>
