@@ -45,25 +45,26 @@ export function MobileMenu({ user }: MobileMenuProps) {
 
       {/* Sidebar Drawer */}
       <div className={`
-        fixed top-0 left-0 bottom-0 w-4/5 max-w-[300px] bg-zinc-950 border-r border-white/5 z-[100] 
+        fixed top-0 left-0 bottom-0 w-[320px] max-w-[85vw] bg-zinc-950 border-r border-white/5 z-[100] 
         transition-transform duration-300 ease-in-out transform flex flex-col shadow-[20px_0_50px_rgba(0,0,0,0.8)]
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
-        <div className="flex justify-between items-center p-4 border-b border-white/5 shrink-0 bg-black/40">
-          <div className="flex items-center gap-2 px-2">
-             <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-                <span className="text-amber-500 font-bold text-xs uppercase">Menú</span>
+        <div className="flex justify-between items-center p-3 px-6 border-b border-white/5 shrink-0 bg-black/60">
+          <div className="flex items-center gap-2">
+             <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-zinc-950 font-black text-xs shadow-lg shadow-amber-900/40">
+                <span>C</span>
              </div>
+             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Menú</span>
           </div>
           <button 
             onClick={() => setIsOpen(false)}
-            className="p-2 text-zinc-500 hover:text-white rounded-xl hover:bg-white/5 transition-colors"
+            className="p-2 text-zinc-500 hover:text-white rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/10"
           >
             <X size={24} />
           </button>
         </div>
         
-        <div className="flex-1 overflow-y-auto bg-zinc-950 px-6 py-8">
+        <div className="flex-1 overflow-y-auto bg-zinc-950 px-5 py-6">
            <SidebarContent 
              user={user} 
              onNavigate={() => setIsOpen(false)} 

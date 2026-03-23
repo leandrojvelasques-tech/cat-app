@@ -38,7 +38,7 @@ export function AdminNav() {
           <Link 
             key={link.href}
             href={link.href} 
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+            className={`flex items-center gap-3 px-4 py-4 rounded-xl transition-all duration-200 ${
               isActive 
                 ? "bg-amber-600/10 text-amber-500 border border-amber-600/10" 
                 : "text-zinc-300 hover:text-white hover:bg-white/10"
