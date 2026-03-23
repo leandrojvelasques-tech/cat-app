@@ -41,7 +41,7 @@ export function AdminNav() {
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
               isActive 
                 ? "bg-amber-600/10 text-amber-500 border border-amber-600/10" 
-                : "text-zinc-400 hover:text-zinc-100 hover:bg-white/5"
+                : "text-zinc-300 hover:text-white hover:bg-white/10"
             }`}
           >
             <Icon size={20} className={isActive ? "text-amber-500" : ""} />
