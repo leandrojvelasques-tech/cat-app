@@ -46,19 +46,19 @@ export function MobileMenu({ user }: MobileMenuProps) {
       {/* Sidebar Drawer */}
       <div className={`
         fixed top-0 left-0 bottom-0 w-[280px] bg-zinc-900 border-r border-white/10 z-[60] 
-        transition-transform duration-300 ease-in-out transform
+        transition-transform duration-300 ease-in-out transform flex flex-col
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
-        <div className="flex justify-end p-4 border-b border-white/5">
+        <div className="flex justify-end p-4 border-b border-white/5 shrink-0">
           <button 
             onClick={() => setIsOpen(false)}
-            className="p-2 text-zinc-500 hover:text-white"
+            className="p-2 text-zinc-500 hover:text-white rounded-xl hover:bg-white/5 transition-colors"
           >
             <X size={24} />
           </button>
         </div>
         
-        <div className="h-[calc(100%-64px)] overflow-y-auto">
+        <div className="flex-1 overflow-y-auto">
           <SidebarContent 
             user={user} 
             onNavigate={() => setIsOpen(false)} 
