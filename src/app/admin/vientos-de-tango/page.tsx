@@ -119,9 +119,9 @@ export default async function VientosDeTangoPage() {
                               "use server"
                               await deleteChampionshipResult(result.id)
                           }}>
-                             <button 
+                              <button 
                                type="submit"
-                               className="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white p-2.5 rounded-xl transition-all opacity-0 group-hover/res:opacity-100"
+                               className="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white p-2.5 rounded-xl transition-all md:opacity-0 md:group-hover/res:opacity-100"
                              >
                                 <Trash2 size={16} />
                              </button>
