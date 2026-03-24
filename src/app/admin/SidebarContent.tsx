@@ -18,12 +18,12 @@ export function SidebarContent({ user, onNavigate }: SidebarContentProps) {
   return (
     <div className="flex flex-col gap-6 w-full">
       <div className="space-y-8">
-        <div className="flex items-center gap-4 px-2">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500 flex items-center justify-center shadow-xl shadow-amber-900/40">
+        <div className="hidden md:flex items-center gap-4 px-2">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500 flex items-center justify-center shadow-xl shadow-amber-900/40 shrink-0">
             <span className="font-black text-2xl text-zinc-950">C</span>
           </div>
-          <div>
-            <h1 className="font-black text-2xl tracking-tighter text-white m-0 uppercase italic">Amigos del Tango</h1>
+          <div className="flex flex-col">
+            <h1 className="font-black text-2xl tracking-tighter text-white m-0 uppercase italic leading-none whitespace-nowrap">Amigos del Tango</h1>
             <p className="text-[10px] text-amber-500 uppercase font-black tracking-[0.2em] m-0">Admin Panel</p>
           </div>
         </div>

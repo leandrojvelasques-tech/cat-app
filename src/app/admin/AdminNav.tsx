@@ -38,14 +38,21 @@ export function AdminNav() {
           <Link 
             key={link.href}
             href={link.href} 
-            className={`flex items-center gap-3 px-4 py-4 rounded-xl transition-all duration-200 ${
+            className={`flex items-center gap-4 px-5 py-4.5 rounded-2xl transition-all duration-300 group border ${
               isActive 
-                ? "bg-amber-600/10 text-amber-500 border border-amber-600/10" 
-                : "text-zinc-300 hover:text-white hover:bg-white/10"
+                ? "bg-amber-600/10 text-amber-500 border-amber-600/20 shadow-lg shadow-amber-900/5 ring-1 ring-amber-500/20" 
+                : "text-zinc-400 hover:text-white hover:bg-white/5 border-transparent hover:border-white/10"
             }`}
           >
-            <Icon size={20} className={isActive ? "text-amber-500" : ""} />
-            <span className="font-medium">{link.label}</span>
+            <div className={`p-2 rounded-xl transition-colors ${
+              isActive ? "bg-amber-500 text-zinc-950 shadow-lg shadow-amber-900/40" : "bg-white/5 text-zinc-500 group-hover:text-white group-hover:bg-white/10"
+            }`}>
+              <Icon size={18} className={isActive ? "" : "group-hover:scale-110 transition-transform"} />
+            </div>
+            <span className={`font-bold tracking-tight text-base ${isActive ? "text-white" : ""}`}>{link.label}</span>
+            {isActive && (
+              <div className="ml-auto w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.8)]" />
+            )}
           </Link>
         )
       })}
