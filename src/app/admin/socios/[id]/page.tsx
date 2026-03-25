@@ -11,7 +11,7 @@ import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { calculateMemberStatus, getStatusBadgeStyles } from "@/lib/member-utils"
 
-import { AvatarUpload } from "../components/AvatarUpload"
+
 
 export default async function FichaSocioPage(props: any) {
   const params = await props.params
@@ -72,7 +72,13 @@ export default async function FichaSocioPage(props: any) {
             <ArrowLeft size={20} />
           </Link>
           
-          <AvatarUpload memberId={member.id} currentAvatar={member.avatarUrl} />
+          <div className="w-24 h-24 md:w-32 md:h-32 shrink-0 rounded-[32px] overflow-hidden border-4 border-white/5 bg-zinc-800 flex items-center justify-center shadow-2xl relative">
+            {member.avatarUrl ? (
+              <img src={member.avatarUrl} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <User className="text-zinc-600" size={40} />
+            )}
+          </div>
 
           <div>
             <div className="flex items-center gap-3 flex-wrap">

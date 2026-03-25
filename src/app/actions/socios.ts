@@ -177,6 +177,7 @@ export async function updateMember(id: string, formData: FormData) {
   const birthDateStr = formData.get("birthDate") as string
   const joinDateStr = formData.get("joinDate") as string
   const wantsMailing = formData.get("wantsMailing") === "on"
+  const avatarUrl = formData.get("avatarUrl") as string
 
   // Dates
   const birthDate = birthDateStr ? new Date(birthDateStr) : null
@@ -197,7 +198,8 @@ export async function updateMember(id: string, formData: FormData) {
       notes,
       birthDate,
       joinDate,
-      wantsMailing
+      wantsMailing,
+      avatarUrl: avatarUrl || null
     }
   })
 

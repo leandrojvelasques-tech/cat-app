@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { updateMember } from "@/app/actions/socios"
 import { ArrowLeft, Save } from "lucide-react"
 import Link from "next/link"
+import { AvatarFormInput } from "../../components/AvatarFormInput"
 
 export default async function EditarSocioPage(props: any) {
   const params = await props.params
@@ -34,7 +35,12 @@ export default async function EditarSocioPage(props: any) {
       </div>
 
       <div className="bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-md shadow-2xl">
-        <form action={updateMemberWithId} className="flex flex-col gap-6">
+        <form action={updateMemberWithId} className="flex flex-col gap-8">
+          {/* Avatar Selection */}
+          <div className="flex justify-center pb-4 border-b border-white/5">
+            <AvatarFormInput defaultValue={member.avatarUrl} />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-zinc-300">Nombre *</label>
