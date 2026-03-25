@@ -159,7 +159,7 @@ export async function updateMemberAvatar(memberId: string, avatarUrl: string | n
     data: { avatarUrl }
   })
   revalidatePath(`/admin/socios/${memberId}`)
-  revalidatePath("/socios")
+  revalidatePath("/admin/socios")
   return { success: true }
 }
 

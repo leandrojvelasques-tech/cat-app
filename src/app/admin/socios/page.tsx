@@ -129,8 +129,12 @@ export default async function SociosPage({
                     <tr key={member.id} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors group">
                       <td className="py-4 pl-6">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-white/10 to-white/5 rounded-2xl flex items-center justify-center text-zinc-300 font-black text-xs ring-1 ring-white/10 group-hover:ring-white/20 transition-all shadow-lg">
-                            {member.firstName[0]}{member.lastName[0]}
+                          <div className="w-12 h-12 bg-gradient-to-br from-white/10 to-white/5 rounded-2xl flex items-center justify-center text-zinc-300 font-black text-xs ring-1 ring-white/10 group-hover:ring-white/20 transition-all shadow-lg overflow-hidden">
+                            {member.avatarUrl ? (
+                              <img src={member.avatarUrl} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <>{member.firstName[0]}{member.lastName[0]}</>
+                            )}
                           </div>
                           <div>
                             <p className="text-zinc-100 font-bold group-hover:text-amber-400 transition-colors">{member.lastName}, {member.firstName}</p>

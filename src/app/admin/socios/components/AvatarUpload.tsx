@@ -3,19 +3,20 @@
 import { useState, useRef } from "react"
 import { Camera, X, Check, Loader2, User } from "lucide-react"
 import { updateMemberAvatar } from "@/app/actions/socios"
-import Image from "next/image"
+import { useRouter } from "next/navigation"
 
 export function AvatarUpload({ memberId, currentAvatar }: { memberId: string, currentAvatar: string | null }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [preview, setPreview] = useState<string | null>(currentAvatar)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Limit size to 1MB (increased from 500KB to be safe)
+    // Limit size to 1MB
     if (file.size > 1024 * 1024) {
       alert("La imagen es demasiado pesada. Máximo 1MB.")
       return
@@ -25,7 +26,7 @@ export function AvatarUpload({ memberId, currentAvatar }: { memberId: string, cu
     reader.onloadend = async () => {
       const base64 = reader.result as string
       setPreview(base64)
-      setIsOpen(true) // Open confirm/preview modal after selecting file
+      setIsOpen(true)
     }
     reader.readAsDataURL(file)
   }
@@ -35,6 +36,7 @@ export function AvatarUpload({ memberId, currentAvatar }: { memberId: string, cu
     setIsUploading(true)
     try {
       await updateMemberAvatar(memberId, preview)
+      router.refresh()
       setIsOpen(false)
     } catch (e) {
       alert("Error al subir imagen")
@@ -48,6 +50,7 @@ export function AvatarUpload({ memberId, currentAvatar }: { memberId: string, cu
     try {
       await updateMemberAvatar(memberId, null)
       setPreview(null)
+      router.refresh()
       setIsOpen(false)
     } finally {
       setIsUploading(false)
