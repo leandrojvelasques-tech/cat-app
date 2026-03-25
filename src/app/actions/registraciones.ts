@@ -2,8 +2,6 @@
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
-import { writeFileSync, existsSync, mkdirSync } from "fs"
-import { join } from "path"
 
 export async function registerAttendee(formData: FormData) {
   const session = await auth()
@@ -25,18 +23,13 @@ export async function registerAttendee(formData: FormData) {
 
   let paymentProofUrl = ""
   if (file && file.size > 0) {
-    // Ensure upload directory exists
-    const uploadDir = join(process.cwd(), "public", "uploads")
-    if (!existsSync(uploadDir)) {
-      mkdirSync(uploadDir, { recursive: true })
+    if (file.size > 1024 * 1024 * 2) { // 2MB limit
+      throw new Error("El archivo es demasiado grande. Máximo 2MB.")
     }
-
+    
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-    const uniqueName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`
-    const filepath = join(uploadDir, uniqueName)
-    writeFileSync(filepath, buffer)
-    paymentProofUrl = `/uploads/${uniqueName}`
+    paymentProofUrl = `data:${file.type};base64,${buffer.toString("base64")}`
   }
 
   await db.eventRegistration.create({

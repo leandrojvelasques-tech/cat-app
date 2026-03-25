@@ -3,8 +3,6 @@ import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
-import { writeFileSync, existsSync, mkdirSync } from "fs"
-import { join } from "path"
 
 export async function getActiveEvents() {
   return await db.event.findMany({
@@ -122,20 +120,15 @@ export async function processMemberPayment(memberId: string, formData: FormData)
   const payload = JSON.parse(payloadString)
   const file = formData.get("paymentProof") as File | null
 
-  // Ensure upload directory exists
-  const uploadDir = join(process.cwd(), "public", "uploads")
-  if (!existsSync(uploadDir)) {
-    mkdirSync(uploadDir, { recursive: true })
-  }
-
   let finalNotes = payload.notes || ""
   if (file && file.size > 0) {
+    if (file.size > 1024 * 1024 * 2) {
+      throw new Error("El comprobante es demasiado grande. Máximo 2MB.")
+    }
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-    const uniqueName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`
-    const filepath = join(uploadDir, uniqueName)
-    writeFileSync(filepath, buffer)
-    finalNotes = `[COMPROBANTE: /uploads/${uniqueName}]\n${finalNotes}`
+    const base64 = `data:${file.type};base64,${buffer.toString("base64")}`
+    finalNotes = `[COMPROBANTE: ${base64}]\n${finalNotes}`
   }
 
   // Logic to create multiple MembershipFee records
