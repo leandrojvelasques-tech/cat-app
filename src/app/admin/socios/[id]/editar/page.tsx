@@ -3,7 +3,7 @@ import { notFound } from "next/navigation"
 import { updateMember } from "@/app/actions/socios"
 import { ArrowLeft, Save } from "lucide-react"
 import Link from "next/link"
-import { AvatarFormInput } from "../../components/AvatarFormInput"
+import { AvatarFormInput } from "@/components/AvatarFormInput"
 
 export default async function EditarSocioPage(props: any) {
   const params = await props.params

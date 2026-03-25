@@ -7,6 +7,8 @@ import { calculateMemberStatus, getStatusBadgeStyles } from "@/lib/member-utils"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 
+import { EditProfileModal } from "./EditProfileModal"
+
 export default async function PortalSocioPage() {
   const session = await auth()
   if (!session || !session.user) redirect("/login")
@@ -27,10 +29,10 @@ export default async function PortalSocioPage() {
   // If the admin logs into the portal accidentally or a user has no member record yet
   if (!userWithMember?.member) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-center">
-        <AlertCircle size={48} className="text-amber-500 mb-4" />
-        <h2 className="text-xl font-semibold mb-2 text-white">Padrón de Socio no Encontrado</h2>
-        <p className="text-zinc-500">Comuníquese con administración para vincular su cuenta.</p>
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-center bg-white/5 rounded-[48px] border border-white/10 p-10 m-4">
+        <AlertCircle size={48} className="text-amber-500 mb-6 animate-pulse" />
+        <h2 className="text-2xl font-black mb-2 text-white italic uppercase tracking-tighter">Padrón no Encontrado</h2>
+        <p className="text-zinc-500 max-w-sm mx-auto">Comuníquese con administración para vincular su cuenta de usuario con su ficha de socio.</p>
       </div>
     )
   }
@@ -55,9 +57,24 @@ export default async function PortalSocioPage() {
          <div className="absolute right-0 top-0 w-[400px] h-[400px] bg-amber-500/10 rounded-full blur-[120px] -mr-32 -mt-32" />
          
          <div className="relative z-10">
-           <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic leading-none mb-4">
-              Hola, <span className="text-amber-500 font-black">{member.firstName}</span>
-           </h1>
+           <div className="flex items-center gap-6 mb-8">
+              <div className="w-20 h-20 md:w-24 md:h-24 shrink-0 rounded-[28px] overflow-hidden border-4 border-white/5 bg-zinc-800 flex items-center justify-center shadow-2xl relative">
+                {member.avatarUrl ? (
+                  <img src={member.avatarUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="text-zinc-600" size={32} />
+                )}
+              </div>
+              <div>
+                <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic leading-none mb-2">
+                    Hola, <span className="text-amber-500 font-black">{member.firstName}</span>
+                </h1>
+                <div className="flex items-center gap-3">
+                  <EditProfileModal member={member} />
+                </div>
+              </div>
+           </div>
+
            <p className="text-zinc-400 text-lg mb-8 max-w-sm">
               Bienvenido a su portal personal. Aquí tiene su carnet digital y su historial de logros en la institución.
            </p>

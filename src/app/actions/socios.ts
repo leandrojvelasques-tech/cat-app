@@ -207,3 +207,35 @@ export async function updateMember(id: string, formData: FormData) {
   revalidatePath("/admin/socios")
   redirect(`/admin/socios/${id}`)
 }
+import { auth } from "@/auth"
+
+export async function updateMemberProfile(memberId: string, formData: FormData) {
+  const session = await auth()
+  if (!session || !session.user) throw new Error("No autorizado")
+
+  // Verify the user owns this member record
+  const member = await db.member.findUnique({
+    where: { id: memberId },
+    select: { userId: true }
+  })
+
+  if (!member || member.userId !== session.user.id) {
+    throw new Error("No tiene permisos para editar este perfil")
+  }
+
+  const email = formData.get("email") as string
+  const phone = formData.get("phone") as string
+  const avatarUrl = formData.get("avatarUrl") as string
+
+  await db.member.update({
+    where: { id: memberId },
+    data: {
+      email: email || null,
+      phone: phone || null,
+      avatarUrl: avatarUrl || null
+    }
+  })
+
+  revalidatePath("/socios")
+  return { success: true }
+}
