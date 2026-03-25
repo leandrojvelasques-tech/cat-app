@@ -1,245 +1,249 @@
 import { db } from "@/lib/db"
-import { CreditCard, Search, Calendar, UserCheck, UserX, AlertCircle, DollarSign, Filter, TrendingUp, AlertTriangle } from "lucide-react"
+import { 
+  CreditCard, 
+  Search, 
+  Calendar, 
+  UserCheck, 
+  UserX, 
+  AlertCircle, 
+  DollarSign, 
+  Filter, 
+  TrendingUp, 
+  AlertTriangle,
+  History,
+  Eye,
+  ChevronRight,
+  Info
+} from "lucide-react"
 import Link from "next/link"
-import { calculateMemberStatus, getStatusBadgeStyles } from "@/lib/member-utils"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
 import { CobranzasFilters } from "./CobranzasFilters"
-
-async function getSetting(key: string, defaultValue: string = "") {
-  const setting = await db.setting.findUnique({ where: { key } })
-  return setting?.value || defaultValue
-}
+import { PaymentDetailModal } from "./PaymentDetailModal"
 
 export default async function CobranzasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; year?: string; query?: string; filter?: string }>
+  searchParams: Promise<{ month?: string; year?: string; query?: string; type?: string; eventId?: string; eventType?: string }>
 }) {
-  const { month, year, query = "", filter = "all" } = await searchParams
+  const { month, year, query = "", type = "all", eventId = "", eventType = "all" } = await searchParams
   
   const now = new Date()
   const currentMonth = month ? parseInt(month) : now.getMonth() + 1
   const currentYear = year ? parseInt(year) : now.getFullYear()
-  
-  const cuotaMensual = parseFloat(await getSetting("cuota_mensual", "6000"))
-  
-  // Get all members with their entire history
-  const membersData = await db.member.findMany({
+
+  // 1. Fetch Membership Fees
+  const fees = await db.membershipFee.findMany({
     where: {
       AND: [
+        month ? { periodMonth: parseInt(month) } : {},
+        year ? { periodYear: parseInt(year) } : {},
         query ? {
-          OR: [
-            { firstName: { contains: query } },
-            { lastName: { contains: query } },
-            { dni: { contains: query } },
-          ]
+          member: {
+            OR: [
+              { firstName: { contains: query, mode: 'insensitive' } },
+              { lastName: { contains: query, mode: 'insensitive' } },
+            ]
+          }
         } : {},
+        type === 'fee' || type === 'all' ? {} : { id: 'none' }
       ]
     },
     include: {
-      fees: true,
-      eventRegistrations: true
+      member: true,
+      recordedBy: true
     },
-    orderBy: { memberNumber: 'asc' }
-  } as any) as any[]
-
-  // Recalculate collection metrics specifically for the selected month
-  const currentMonthFees = await db.membershipFee.findMany({
-    where: { periodMonth: currentMonth, periodYear: currentYear }
-  })
-  
-  const totalCollected = currentMonthFees.reduce((acc, fee) => acc + fee.amountPaid, 0)
-  
-  // Dynamic Global Statuses for counters
-  let countAlDiaTotal = 0
-  let countDeudoresTotal = 0
-  let countInactivosTotal = 0
-  let countSuspendidosTotal = 0
-  let countBajaTotal = 0
-
-  membersData.forEach(m => {
-    const status = calculateMemberStatus(m, now)
-    if (status === 'AL DIA') countAlDiaTotal++
-    else if (status === 'EN MORA') countDeudoresTotal++
-    else if (status === 'INACTIVO') countInactivosTotal++
-    else if (status === 'SUSPENDIDO') countSuspendidosTotal++
-    else if (status === 'BAJA') countBajaTotal++
+    orderBy: { paymentDate: 'desc' }
   })
 
-  // Apply payment status filter for the list (contextual to the selected month)
-  const filteredMembers = membersData.filter(member => {
-    // If we are looking for non-archived pool:
-    const status = calculateMemberStatus(member, now)
-    if (status === 'BAJA') return false
-
-    const hasPaidSelectedMonth = member.fees.some((f: any) => f.periodMonth === currentMonth && f.periodYear === currentYear && f.paymentStatus === 'PAID')
-    
-    if (filter === 'paid') return hasPaidSelectedMonth
-    if (filter === 'debtor') return !hasPaidSelectedMonth
-    return true
+  // 2. Fetch Event Registrations
+  const registrations = await db.eventRegistration.findMany({
+    where: {
+      AND: [
+        month ? { createdAt: { gte: new Date(currentYear, currentMonth - 1, 1), lt: new Date(currentYear, currentMonth, 1) } } : {},
+        eventId ? { eventId } : {},
+        eventType !== 'all' ? { registrationType: eventType } : {},
+        query ? {
+          OR: [
+            { firstName: { contains: query, mode: 'insensitive' } },
+            { lastName: { contains: query, mode: 'insensitive' } },
+            { member: { firstName: { contains: query, mode: 'insensitive' } } },
+            { member: { lastName: { contains: query, mode: 'insensitive' } } },
+            { event: { title: { contains: query, mode: 'insensitive' } } }
+          ]
+        } : {},
+        type === 'event' || type === 'all' ? {} : { id: 'none' }
+      ],
+      paymentStatus: 'PAID'
+    },
+    include: {
+      member: true,
+      event: true,
+      recordedBy: true
+    },
+    orderBy: { createdAt: 'desc' }
   })
 
-  const totalPossible = (countAlDiaTotal + countDeudoresTotal) * cuotaMensual
+  // 3. Unify and Map Data
+  const unifiedHistory = [
+    ...fees.map(f => ({
+      id: f.id,
+      paymentId: f.id,
+      type: 'CUOTA',
+      date: f.paymentDate,
+      amount: f.amountPaid,
+      method: f.paymentMethod || 'EFECTIVO',
+      reason: `Cuota Social - ${format(new Date(f.periodYear, f.periodMonth - 1, 1), 'MMMM yyyy', { locale: es })}`,
+      payerName: `${f.member.lastName}, ${f.member.firstName}`,
+      memberId: f.member.id,
+      isMember: true,
+      recordedBy: f.recordedBy?.name || 'Sistema',
+      fullData: f
+    })),
+    ...registrations.map(r => ({
+      id: r.id,
+      paymentId: r.id,
+      type: 'EVENTO',
+      date: r.createdAt,
+      amount: r.amountPaid,
+      method: r.paymentMethod || 'EFECTIVO',
+      reason: `Entrada: ${r.event.title} (${r.registrationType})`,
+      payerName: r.member ? `${r.member.lastName}, ${r.member.firstName}` : `${r.lastName}, ${r.firstName}`,
+      memberId: r.member?.id || null,
+      isMember: !!r.member,
+      recordedBy: r.recordedBy?.name || 'Sistema',
+      fullData: r
+    }))
+  ].sort((a, b) => b.date.getTime() - a.date.getTime())
+
+  const totalCollected = unifiedHistory.reduce((acc, curr) => acc + curr.amount, 0)
+  const feeCount = fees.length
+  const eventCount = registrations.length
+
+  const events = await db.event.findMany({
+    orderBy: { startDate: 'desc' },
+    select: { id: true, title: true, startDate: true }
+  })
 
   return (
-    <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto">
       
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-black text-white italic uppercase tracking-tighter">Historial de Cobranzas</h1>
+          <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-1">Registro unificado de todos los ingresos de la institución</p>
+        </div>
+      </div>
+
       <CobranzasFilters 
         currentMonth={currentMonth} 
         currentYear={currentYear} 
-        currentQuery={query} 
+        currentQuery={query}
+        currentType={type}
+        currentEventType={eventType}
+        currentEventId={eventId}
+        events={events}
       />
 
       {/* Stats Summary Panel */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white/5 border border-white/10 rounded-[32px] p-6 backdrop-blur-md">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white/5 border border-white/10 rounded-[32px] p-6 backdrop-blur-md relative overflow-hidden group">
+          <div className="absolute right-0 top-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl -mr-12 -mt-12 transition-all group-hover:bg-blue-500/10"></div>
           <div className="flex justify-between items-start mb-4">
             <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-400">
               <TrendingUp size={20} />
             </div>
-            <span className="text-[10px] font-black text-blue-500/50 uppercase tracking-widest">Recaudación</span>
+            <span className="text-[10px] font-black text-blue-500/50 uppercase tracking-widest">Total Recaudado</span>
           </div>
-          <p className="text-2xl font-black text-white">${totalCollected.toLocaleString()}</p>
-          <p className="text-xs text-zinc-500 mt-1 uppercase font-bold tracking-tighter">Cobrado este mes</p>
+          <p className="text-3xl font-black text-white">${totalCollected.toLocaleString()}</p>
+          <p className="text-xs text-zinc-500 mt-1 uppercase font-bold tracking-tighter">Período seleccionado</p>
         </div>
 
-        <div className="bg-white/5 border border-white/10 rounded-[32px] p-6 backdrop-blur-md">
+        <div className="bg-white/5 border border-white/10 rounded-[32px] p-6 backdrop-blur-md relative overflow-hidden group">
+          <div className="absolute right-0 top-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl -mr-12 -mt-12 transition-all group-hover:bg-emerald-500/10"></div>
           <div className="flex justify-between items-start mb-4">
             <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400">
               <UserCheck size={20} />
             </div>
-            <Link 
-               href="?filter=paid" 
-               className="text-[10px] font-black text-emerald-500/50 uppercase tracking-widest hover:text-emerald-400 transition-colors"
-            >
-              Ver Pagados
-            </Link>
           </div>
-          <div className="flex items-baseline gap-2">
-            <p className="text-2xl font-black text-white">{countAlDiaTotal}</p>
-            <span className="text-xs text-zinc-500 font-bold">Socios</span>
-          </div>
-          <p className="text-xs text-zinc-500 mt-1 uppercase font-bold tracking-tighter">Al día con la cuota</p>
+          <p className="text-3xl font-black text-white">{feeCount}</p>
+          <p className="text-xs text-zinc-500 mt-1 uppercase font-bold tracking-tighter">Cuotas de Socios</p>
         </div>
 
-        <div className="bg-white/5 border border-white/10 rounded-[32px] p-6 backdrop-blur-md">
+        <div className="bg-white/5 border border-white/10 rounded-[32px] p-6 backdrop-blur-md relative overflow-hidden group">
+          <div className="absolute right-0 top-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl -mr-12 -mt-12 transition-all group-hover:bg-amber-500/10"></div>
           <div className="flex justify-between items-start mb-4">
             <div className="p-3 bg-amber-500/10 rounded-2xl text-amber-400">
-              <AlertTriangle size={20} />
+              <Calendar size={20} />
             </div>
-            <Link 
-               href="?filter=debtor" 
-               className="text-[10px] font-black text-amber-500/50 uppercase tracking-widest hover:text-amber-400 transition-colors"
-            >
-              Ver Deudores
-            </Link>
           </div>
-          <div className="flex items-baseline gap-2">
-            <p className="text-2xl font-black text-white">{countDeudoresTotal}</p>
-            <span className="text-xs text-zinc-500 font-bold">Socios</span>
-          </div>
-          <p className="text-xs text-zinc-500 mt-1 uppercase font-bold tracking-tighter">En mora (&lt; 3 meses)</p>
-        </div>
-
-        <div className="bg-white/5 border border-white/10 rounded-[32px] p-6 backdrop-blur-md">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-red-500/10 rounded-2xl text-red-400">
-              <UserX size={20} />
-            </div>
-            <span className="text-[10px] font-black text-red-500/50 uppercase tracking-widest">Suspendidos</span>
-          </div>
-          <div className="flex items-baseline gap-2">
-            <p className="text-2xl font-black text-white">{countSuspendidosTotal}</p>
-            <span className="text-xs text-zinc-500 font-bold">Socios</span>
-          </div>
-          <p className="text-xs text-zinc-500 mt-1 uppercase font-bold tracking-tighter">Sin actividad &gt; 12 meses</p>
+          <p className="text-3xl font-black text-white">{eventCount}</p>
+          <p className="text-xs text-zinc-500 mt-1 uppercase font-bold tracking-tighter">Entradas a Eventos</p>
         </div>
       </div>
 
-      {/* Main Table Section */}
-      <div className="bg-white/5 border border-white/10 rounded-[40px] overflow-hidden backdrop-blur-md shadow-2xl">
-        <div className="p-8 border-b border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex-1">
-             {/* Search input is now inside CobranzasFilters for interactivity */}
-          </div>
-          
-          <div className="flex gap-4 items-center">
-            <div className="flex gap-1.5 p-1 bg-white/5 rounded-2xl border border-white/10">
-              <Link href="/admin/cuotas" className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${filter === 'all' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}>Todos</Link>
-              <Link href="?filter=paid" className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${filter === 'paid' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-900/20' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}>Pagados</Link>
-              <Link href="?filter=debtor" className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${filter === 'debtor' ? 'bg-amber-600 text-white shadow-lg shadow-amber-900/20' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}>Deudores</Link>
-            </div>
-          </div>
-        </div>
-
+      {/* Unified History table */}
+      <div className="bg-white/5 border border-white/10 rounded-[40px] overflow-hidden backdrop-blur-md shadow-2xl pb-4">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="bg-white/[0.02] border-b border-white/10">
-                <th className="py-5 pl-8 text-[10px] font-black uppercase tracking-widest text-zinc-500">Socio</th>
-                <th className="py-5 text-[10px] font-black uppercase tracking-widest text-zinc-500">Estado Real</th>
-                <th className="py-5 text-[10px] font-black uppercase tracking-widest text-zinc-500">Estado Mes</th>
-                <th className="py-5 text-[10px] font-black uppercase tracking-widest text-zinc-500">Cuota Est.</th>
-                <th className="py-5 pr-8 text-right text-[10px] font-black uppercase tracking-widest text-zinc-500">Acciones</th>
+                <th className="py-6 pl-10 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Fecha / Hora</th>
+                <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Pagador</th>
+                <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Categoría</th>
+                <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Concepto</th>
+                <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Monto</th>
+                <th className="py-6 pr-10 text-right text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Detalles</th>
               </tr>
             </thead>
-            <tbody>
-              {filteredMembers.map((member: any) => {
-                const monthFee = member.fees.find((f: any) => f.periodMonth === currentMonth && f.periodYear === currentYear)
-                const isPaid = monthFee?.paymentStatus === 'PAID'
-                const calculatedStatus = calculateMemberStatus(member, now)
-                
-                return (
-                  <tr key={member.id} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
-                    <td className="py-6 pl-8">
-                      <div className="flex flex-col">
-                        <span className="text-zinc-100 font-bold group-hover:text-amber-400 transition-colors uppercase tracking-tight">{member.lastName}, {member.firstName}</span>
-                        <span className="text-[10px] text-zinc-600 font-black tracking-widest">#{member.memberNumber} | {member.dni}</span>
-                      </div>
-                    </td>
-                    <td className="py-6">
-                       <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase border shadow-sm ${getStatusBadgeStyles(calculatedStatus)}`}>
-                         {calculatedStatus}
-                       </span>
-                    </td>
-                    <td className="py-6">
-                       {isPaid ? (
-                         <div className="flex items-center gap-2 text-emerald-400">
-                           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                           <span className="text-[10px] font-black uppercase tracking-widest">PAGO REGISTRADO</span>
-                         </div>
-                       ) : (
-                         <div className="flex items-center gap-2 text-zinc-600">
-                           <div className="w-1.5 h-1.5 rounded-full bg-zinc-700"></div>
-                           <span className="text-[10px] font-black uppercase tracking-widest">PENDIENTE</span>
-                         </div>
-                       )}
-                    </td>
-                    <td className="py-6">
-                      <span className="text-white font-mono text-sm">${(member.isFamilyDiscount ? cuotaMensual/2 : cuotaMensual).toLocaleString()}</span>
-                    </td>
-                    <td className="py-6 pr-8 text-right">
-                       <div className="flex justify-end gap-2">
-                          <Link 
-                            href={`/admin/cobrar?socioId=${member.id}`}
-                            className="bg-white text-black px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:bg-zinc-200 active:scale-95 shadow-lg"
-                          >
-                            COBRAR
-                          </Link>
-                          <Link 
-                            href={`/admin/socios/${member.id}`}
-                            className="bg-white/5 hover:bg-white/10 text-white border border-white/10 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-                          >
-                            VER
-                          </Link>
-                       </div>
-                    </td>
-                  </tr>
-                )
-              })}
-              {filteredMembers.length === 0 && (
+            <tbody className="divide-y divide-white/5">
+              {unifiedHistory.map((item: any) => (
+                <tr key={item.id} className="hover:bg-white/[0.03] transition-colors group">
+                  <td className="py-6 pl-10">
+                    <div className="flex flex-col">
+                      <span className="text-white font-bold text-sm">{format(item.date, "dd/MM/yyyy", { locale: es })}</span>
+                      <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{format(item.date, "HH:mm")} hs</span>
+                    </div>
+                  </td>
+                  <td className="py-6">
+                    <div className="flex flex-col">
+                      {item.isMember ? (
+                        <Link href={`/admin/socios/${item.memberId}`} className="text-amber-500 hover:text-amber-400 font-black text-xs uppercase tracking-tight transition-colors flex items-center gap-1 group/link">
+                          {item.payerName} <ChevronRight size={10} className="group-hover/link:translate-x-1 transition-transform" />
+                        </Link>
+                      ) : (
+                        <span className="text-zinc-300 font-black text-xs uppercase tracking-tight">{item.payerName}</span>
+                      )}
+                      <span className={`text-[9px] font-black tracking-widest mt-1 ${item.isMember ? 'text-zinc-600' : 'text-zinc-500 italic'}`}>
+                        {item.isMember ? 'SOCIO ACTIVO' : 'NO SOCIO'}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="py-6">
+                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+                      item.type === 'CUOTA' 
+                        ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
+                        : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                    }`}>
+                      {item.type}
+                    </span>
+                  </td>
+                  <td className="py-6">
+                    <p className="text-zinc-400 text-xs font-medium max-w-[200px] truncate">{item.reason}</p>
+                  </td>
+                  <td className="py-6">
+                    <span className="text-white font-black tracking-widest text-sm">${item.amount.toLocaleString()}</span>
+                  </td>
+                  <td className="py-6 pr-10 text-right">
+                    <PaymentDetailModal payment={item} />
+                  </td>
+                </tr>
+              ))}
+              {unifiedHistory.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-20 text-center text-zinc-600 italic">
-                    No se encontraron socios con los filtros actuales.
+                  <td colSpan={6} className="py-32 text-center text-zinc-600 italic">
+                    <Info size={40} className="mx-auto mb-4 opacity-10" />
+                    <p className="uppercase font-black tracking-widest text-xs">No se encontraron movimientos</p>
                   </td>
                 </tr>
               )}
