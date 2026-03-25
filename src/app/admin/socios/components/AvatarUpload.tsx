@@ -54,7 +54,7 @@ export function AvatarUpload({ memberId, currentAvatar }: { memberId: string, cu
 
   return (
     <div className="relative group">
-       <div className="w-32 h-32 rounded-[32px] overflow-hidden border-4 border-white/5 bg-zinc-800 flex items-center justify-center shadow-2xl transition-all group-hover:scale-105">
+        <div className="w-32 h-32 rounded-[32px] overflow-hidden border-4 border-white/5 bg-zinc-800 flex items-center justify-center shadow-2xl transition-all group-hover:scale-105 relative">
           {preview ? (
             <img src={preview} alt="Avatar" className="w-full h-full object-cover" />
           ) : (
@@ -63,9 +63,10 @@ export function AvatarUpload({ memberId, currentAvatar }: { memberId: string, cu
           
           <button 
             onClick={() => setIsOpen(true)}
-            className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+            className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity"
           >
-             <Camera className="text-white" size={24} />
+             <Camera className="text-white mb-1" size={24} />
+             <span className="text-[8px] text-white font-black uppercase tracking-widest">Cargar Foto</span>
           </button>
        </div>
 

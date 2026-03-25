@@ -1,9 +1,8 @@
 import { db } from "@/lib/db"
 import Link from "next/link"
-import { ArrowLeft, Edit, CheckCircle2, Mail, Users, AlertCircle, History, MapPin, Phone, User, CreditCard, Clock, Trophy, Medal, Star, X } from "lucide-react"
+import { ArrowLeft, Edit, CheckCircle2, Mail, Users, AlertCircle, History, MapPin, Phone, User, CreditCard, Clock, Trophy, Medal, Star, X, Calendar } from "lucide-react"
 import { notFound } from "next/navigation"
 import { DeactivateMemberButton } from "./DeactivateButton"
-import { WelcomeMessageButton } from "./WelcomeMessageButton"
 import { FamilyDiscountToggle } from "./FamilyDiscountToggle"
 import { RegisterFeeForm } from "./RegisterFeeForm"
 import { AddBoardHistoryForm } from "./AddBoardHistoryForm"
@@ -28,7 +27,10 @@ export default async function FichaSocioPage(props: any) {
       fees: { orderBy: [{ periodYear: "desc" }, { periodMonth: "desc" }], include: { recordedBy: true } },
       communications: { orderBy: { sentAt: "desc" } },
       partner: true,
-      eventRegistrations: true,
+      eventRegistrations: { 
+        include: { event: true },
+        orderBy: { createdAt: "desc" }
+      },
       championshipResults: { include: { championship: true } },
       boardHistory: { orderBy: { periodStart: "desc" } }
     }
@@ -86,7 +88,6 @@ export default async function FichaSocioPage(props: any) {
         </div>
 
         <div className="flex gap-2 flex-wrap items-center relative z-10">
-          <WelcomeMessageButton member={member} feeAmount={feeAmount} />
           <Link href={`/admin/socios/${member.id}/editar`} className="bg-white/5 hover:bg-white/10 text-white px-5 py-2.5 rounded-2xl text-xs font-bold border border-white/5 transition-all">
             Editar
           </Link>
@@ -297,10 +298,60 @@ export default async function FichaSocioPage(props: any) {
                           </span>
                        </div>
                     </div>
-                  ))
-                )}
-             </div>
-          </div>
+                   ))
+                 )}
+              </div>
+           </div>
+
+           {/* Recent Events Section */}
+           <div className="bg-white/5 border border-white/10 rounded-[40px] p-10 backdrop-blur-md shadow-2xl">
+              <h3 className="text-lg font-bold text-white mb-8 flex items-center gap-2">
+                <div className="w-1 h-6 bg-amber-500/50 rounded-full"></div>
+                Asistencia a Eventos (Último Año)
+              </h3>
+              
+              <div className="space-y-4">
+                 {(member.eventRegistrations || []).filter((reg: any) => {
+                    const eventDate = new Date(reg.event.startDate)
+                    const oneYearAgo = new Date()
+                    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1)
+                    return eventDate > oneYearAgo
+                 }).length === 0 ? (
+                   <p className="text-center py-10 text-zinc-600 italic">No se registran asistencias en el último año.</p>
+                 ) : (
+                   (member.eventRegistrations || [])
+                    .filter((reg: any) => {
+                        const eventDate = new Date(reg.event.startDate)
+                        const oneYearAgo = new Date()
+                        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1)
+                        return eventDate > oneYearAgo
+                    })
+                    .map((reg: any) => (
+                      <div key={reg.id} className="flex justify-between items-center bg-black/20 p-5 rounded-[24px] border border-white/5 hover:border-white/10 transition-all group">
+                         <div className="flex items-center gap-4">
+                            <div className="p-3 rounded-xl bg-amber-500/10 text-amber-400">
+                               <Calendar size={18} />
+                            </div>
+                            <div>
+                               <p className="text-zinc-200 font-bold uppercase tracking-tight">
+                                  {reg.event.title}
+                               </p>
+                               <p className="text-[10px] text-zinc-600 font-black uppercase tracking-widest">
+                                  {format(new Date(reg.event.startDate), "d 'de' MMMM, yyyy", { locale: es })}
+                               </p>
+                            </div>
+                         </div>
+                         <div className="text-right">
+                            <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-1">{reg.registrationType}</p>
+                            <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${reg.paymentStatus === 'PAID' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                               {reg.paymentStatus === 'PAID' ? 'PAGO' : 'PENDIENTE'}
+                            </span>
+                         </div>
+                      </div>
+                    ))
+                 )}
+              </div>
+           </div>
         </div>
       </div>
     </div>

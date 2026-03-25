@@ -162,3 +162,46 @@ export async function updateMemberAvatar(memberId: string, avatarUrl: string | n
   revalidatePath("/socios")
   return { success: true }
 }
+
+export async function updateMember(id: string, formData: FormData) {
+  const firstName = formData.get("firstName") as string
+  const lastName = formData.get("lastName") as string
+  const dni = formData.get("dni") as string
+  const email = formData.get("email") as string
+  const phone = formData.get("phone") as string
+  const city = formData.get("city") as string
+  const address = formData.get("address") as string
+  const status = formData.get("status") as string
+  const type = formData.get("type") as string || "ACTIVO"
+  const notes = formData.get("notes") as string
+  const birthDateStr = formData.get("birthDate") as string
+  const joinDateStr = formData.get("joinDate") as string
+  const wantsMailing = formData.get("wantsMailing") === "on"
+
+  // Dates
+  const birthDate = birthDateStr ? new Date(birthDateStr) : null
+  const joinDate = joinDateStr ? new Date(joinDateStr) : new Date()
+
+  await db.member.update({
+    where: { id },
+    data: {
+      firstName,
+      lastName,
+      dni,
+      email: email || null,
+      phone: phone || null,
+      city: city || null,
+      address: address || null,
+      status,
+      type,
+      notes,
+      birthDate,
+      joinDate,
+      wantsMailing
+    }
+  })
+
+  revalidatePath(`/admin/socios/${id}`)
+  revalidatePath("/admin/socios")
+  redirect(`/admin/socios/${id}`)
+}

@@ -1,11 +1,12 @@
 "use client"
 
 import { createPayment } from "@/app/actions/cuotas"
-import { CreditCard, Send, Plus } from "lucide-react"
-import { useTransition } from "react"
+import { CreditCard, Send, Plus, CheckCircle2 } from "lucide-react"
+import { useTransition, useState } from "react"
 
 export function RegisterFeeForm({ socioId, lastFee }: { socioId: string, lastFee?: any }) {
   const [isPending, startTransition] = useTransition()
+  const [showSuccess, setShowSuccess] = useState(false)
   
   // Suggest next period based on last fee or current date
   const suggestMonth = lastFee ? (lastFee.periodMonth === 12 ? 1 : lastFee.periodMonth + 1) : new Date().getMonth() + 1
@@ -15,10 +16,32 @@ export function RegisterFeeForm({ socioId, lastFee }: { socioId: string, lastFee
     startTransition(async () => {
       try {
         await createPayment(socioId, formData)
+        setShowSuccess(true)
+        setTimeout(() => setShowSuccess(false), 3000)
       } catch (e: any) {
+        // Handle Next.js redirect "error"
+        if (e.message === 'NEXT_REDIRECT') {
+          setShowSuccess(true)
+          setTimeout(() => setShowSuccess(false), 3000)
+          return
+        }
         alert(e.message || "Error al registrar el pago")
       }
     })
+  }
+
+  if (showSuccess) {
+    return (
+      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-[32px] p-8 flex flex-col items-center justify-center gap-4 animate-in zoom-in duration-300">
+        <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/20">
+          <CheckCircle2 className="text-white" size={32} />
+        </div>
+        <div className="text-center">
+          <h3 className="text-emerald-400 font-black uppercase tracking-tighter italic text-xl">¡Pago Procesado!</h3>
+          <p className="text-emerald-500/60 text-[10px] font-bold uppercase tracking-widest mt-1">El cobro se registró con éxito</p>
+        </div>
+      </div>
+    )
   }
 
   return (

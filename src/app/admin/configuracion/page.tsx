@@ -37,6 +37,7 @@ export default async function SettingsPage() {
   
   const msgPagoCuota = await getSetting("msg_pago_confirmado_cuota", "¡Gracias por su pago! Su comprobante ha sido registrado. Estado de cuenta: {estado}.")
   const msgPagoEvento = await getSetting("msg_pago_confirmado_evento", "¡Gracias por acompañarnos! Confirmamos la recepción de su pago para el evento: {evento}.")
+  const msgBienvenida = await getSetting("msg_bienvenida", "¡Bienvenido/a {nombre} al Centro Amigos del Tango! 💃🕺\n\nEs un gran placer darte la bienvenida como socio/a de nuestra querida casa de tango.\nTu ficha ha sido procesada con éxito y ya formas parte de nuestra comunidad oficial.\n\n📌 Tu número de socio es: #{socio}\n\n💬 Te invitamos a participar de nuestras milongas, clases y seminarios.\n¡Nos vemos pronto en la pista!")
 
   const mesesDeudaMora = await getSetting("meses_deuda_mora", "1")
   const mesesSuspension = await getSetting("meses_suspension", "3")
@@ -198,6 +199,16 @@ export default async function SettingsPage() {
                   rows={3}
                   className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 focus:border-amber-500/50 outline-none text-sm"
                 />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-zinc-500 uppercase tracking-wider">Mensaje de Bienvenida</label>
+                <textarea 
+                  name="msg_bienvenida"
+                  defaultValue={msgBienvenida}
+                  rows={6}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 focus:border-amber-500/50 outline-none text-sm"
+                />
+                <p className="text-[9px] text-zinc-600 uppercase font-black italic">Variables: {'{nombre}'}, {'{socio}'}</p>
               </div>
             </div>
           </div>
