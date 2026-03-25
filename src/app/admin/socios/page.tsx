@@ -21,17 +21,31 @@ export default async function SociosPage({
   const membersData = await db.member.findMany({
     where: {
       AND: [
-        query
-          ? {
-              OR: [
-                { firstName: { contains: query } },
-                { lastName: { contains: query } },
-                { dni: { contains: query } },
-                { email: { contains: query } },
-              ],
-            }
-          : {},
-      ],
+        query ? {
+          OR: [
+            { firstName: { contains: query, mode: 'insensitive' } },
+            { lastName: { contains: query, mode: 'insensitive' } },
+            { dni: { contains: query, mode: 'insensitive' } },
+            { email: { contains: query, mode: 'insensitive' } },
+            { memberNumber: { contains: query, mode: 'insensitive' } },
+            // Handle space separated terms (Name Surname)
+            ...(query.includes(' ') ? [
+              {
+                AND: [
+                  { firstName: { contains: query.split(' ')[0], mode: 'insensitive' } },
+                  { lastName: { contains: query.split(' ')[1], mode: 'insensitive' } }
+                ]
+              },
+              {
+                AND: [
+                  { lastName: { contains: query.split(' ')[0], mode: 'insensitive' } },
+                  { firstName: { contains: query.split(' ')[1], mode: 'insensitive' } }
+                ]
+              }
+            ] : [])
+          ]
+        } : {}
+      ]
     },
     include: {
       fees: {

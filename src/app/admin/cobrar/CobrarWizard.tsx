@@ -65,7 +65,7 @@ export default function CobrarWizard() {
 
   // Search members logic for Event
   useEffect(() => {
-    if (eventMemberQuery.length > 2) {
+    if (eventMemberQuery.length > 1) {
       const delay = setTimeout(async () => {
         const results = await searchMembers(eventMemberQuery)
         setEventMemberResults(results)
@@ -102,7 +102,7 @@ export default function CobrarWizard() {
 
   // Search members logic
   useEffect(() => {
-    if (memberQuery.length > 2) {
+    if (memberQuery.length > 1) {
       const delay = setTimeout(async () => {
         const results = await searchMembers(memberQuery)
         setMemberResults(results)

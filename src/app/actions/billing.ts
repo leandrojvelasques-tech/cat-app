@@ -15,17 +15,45 @@ export async function getActiveEvents() {
 
 export async function searchMembers(query: string) {
   if (!query || query.length < 2) return []
+
+  const terms = query.trim().split(/\s+/)
+  
+  // If there's only one term, search commonly
+  if (terms.length === 1) {
+    return await db.member.findMany({
+      where: {
+        OR: [
+          { firstName: { contains: query, mode: 'insensitive' } },
+          { lastName: { contains: query, mode: 'insensitive' } },
+          { dni: { contains: query } },
+          { memberNumber: { contains: query } }
+        ]
+      },
+      take: 10
+    })
+  }
+
+  // If there are multiple terms, try searching for combinations
   return await db.member.findMany({
     where: {
-      AND: [
-        { status: { notIn: ["INACTIVE", "DECEASED", "RESIGNED"] } },
+      OR: [
+        // Case 1: First Term is part of First Name, Second term is part of Last Name
         {
-          OR: [
-            { firstName: { contains: query } },
-            { lastName: { contains: query } },
-            { dni: { contains: query } },
+          AND: [
+            { firstName: { contains: terms[0], mode: 'insensitive' } },
+            { lastName: { contains: terms[1], mode: 'insensitive' } }
           ]
-        }
+        },
+        // Case 2: First Term is part of Last Name, Second term is part of First Name
+        {
+          AND: [
+            { lastName: { contains: terms[0], mode: 'insensitive' } },
+            { firstName: { contains: terms[1], mode: 'insensitive' } }
+          ]
+        },
+        // Fallback: Full original query in either field
+        { firstName: { contains: query, mode: 'insensitive' } },
+        { lastName: { contains: query, mode: 'insensitive' } }
       ]
     },
     take: 10
