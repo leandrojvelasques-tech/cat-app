@@ -12,12 +12,12 @@ export async function GET(req: Request) {
   const members = await db.member.findMany({
     where: {
       OR: [
-        { firstName: { contains: query } },
-        { lastName: { contains: query } },
-        { dni: { contains: query } },
+        { firstName: { contains: query, mode: 'insensitive' } },
+        { lastName: { contains: query, mode: 'insensitive' } },
+        { dni: { contains: query, mode: 'insensitive' } },
       ],
       AND: [
-        { status: { in: ['ACTIVE', 'DEBTOR', 'SUSPENDED'] } }
+        { status: { notIn: ['INACTIVE', 'DECEASED', 'RESIGNED'] } }
       ]
     },
     take: 5,
