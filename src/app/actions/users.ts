@@ -52,3 +52,22 @@ export async function deleteUser(userId: string) {
 
   revalidatePath("/admin/usuarios")
 }
+
+// Reset a member's portal password by their memberId (not their admin user ID)
+export async function resetMemberPassword(memberId: string, newPassword: string) {
+  const session = await auth()
+  if (!session) throw new Error("No autorizado")
+
+  // Find the User record linked to this member
+  const user = await db.user.findFirst({ where: { member: { id: memberId } } })
+  if (!user) throw new Error("Este socio no tiene cuenta de acceso al portal")
+
+  const passwordHash = await bcrypt.hash(newPassword, 10)
+
+  await db.user.update({
+    where: { id: user.id },
+    data: { passwordHash }
+  })
+
+  revalidatePath(`/admin/socios/${memberId}`)
+}

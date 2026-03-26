@@ -204,6 +204,7 @@ model Championship {
   id          String   @id @default(uuid())
   year        Int
   name        String   @default("Vientos de Tango")
+  description String?  // Optional description of this championship edition
   results     ChampionshipResult[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

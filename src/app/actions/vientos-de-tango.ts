@@ -87,3 +87,11 @@ export async function linkChampionshipResult(resultId: string, memberId: string 
      revalidatePath("/socios")
   }
 }
+
+export async function updateChampionshipDescription(id: string, description: string) {
+  await (db.championship.update as any)({
+    where: { id },
+    data: { description: description || null }
+  })
+  revalidatePath("/admin/vientos-de-tango")
+}

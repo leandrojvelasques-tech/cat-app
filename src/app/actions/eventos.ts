@@ -2,7 +2,15 @@
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
-import { join } from "path"
+
+// Converts an uploaded File to a base64 data URL to store in the DB.
+// Using base64 because Vercel's serverless filesystem is read-only.
+async function fileToBase64DataUrl(file: File): Promise<string> {
+  const bytes = await file.arrayBuffer()
+  const buffer = Buffer.from(bytes)
+  const base64 = buffer.toString("base64")
+  return `data:${file.type};base64,${base64}`
+}
 
 export async function createEvent(formData: FormData) {
   const title = formData.get("title") as string
@@ -34,17 +42,11 @@ export async function createEvent(formData: FormData) {
   const priceNonSocioFull = parseFloat(formData.get("priceNonSocioFull") as string) || 0
 
   const eventBannerFile = formData.get("eventBanner") as File | null
-  let eventBanner = null
+  let eventBanner: string | null = null
 
+  // Store banner as base64 data URL — works on any environment including Vercel
   if (eventBannerFile && eventBannerFile.size > 0) {
-    const bytes = await eventBannerFile.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    const uniqueName = `${Date.now()}-${eventBannerFile.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`
-    const uploadDir = join(process.cwd(), "public", "uploads", "events")
-    const { existsSync, mkdirSync, writeFileSync } = await import("fs")
-    if (!existsSync(uploadDir)) mkdirSync(uploadDir, { recursive: true })
-    writeFileSync(join(uploadDir, uniqueName), buffer)
-    eventBanner = `/uploads/events/${uniqueName}`
+    eventBanner = await fileToBase64DataUrl(eventBannerFile)
   }
 
   const startWithTime = new Date(startDateStr + "T00:00:00")
@@ -110,17 +112,12 @@ export async function updateEvent(id: string, formData: FormData) {
   const priceNonSocioFull = parseFloat(formData.get("priceNonSocioFull") as string) || 0
 
   const eventBannerFile = formData.get("eventBanner") as File | null
-  let eventBanner = formData.get("existingBanner") as string | null
+  // Default: keep the existing banner stored in the hidden input
+  let eventBanner: string | null = (formData.get("existingBanner") as string) || null
 
+  // Override with newly uploaded banner if provided
   if (eventBannerFile && eventBannerFile.size > 0) {
-    const bytes = await eventBannerFile.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    const uniqueName = `${Date.now()}-${eventBannerFile.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`
-    const uploadDir = join(process.cwd(), "public", "uploads", "events")
-    const { existsSync, mkdirSync, writeFileSync } = await import("fs")
-    if (!existsSync(uploadDir)) mkdirSync(uploadDir, { recursive: true })
-    writeFileSync(join(uploadDir, uniqueName), buffer)
-    eventBanner = `/uploads/events/${uniqueName}`
+    eventBanner = await fileToBase64DataUrl(eventBannerFile)
   }
 
   const startWithTime = new Date(startDateStr + "T00:00:00")

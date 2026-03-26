@@ -1,8 +1,9 @@
 import { db } from "@/lib/db"
-import { Trophy, Calendar, Medal, Users, User, Trash2, Link as LinkIcon } from "lucide-react"
+import { Trophy, Calendar, Medal, Users, User, Trash2, Link as LinkIcon, FileText } from "lucide-react"
 import { AddResultForm } from "./AddResultForm"
-import { deleteChampionshipResult } from "@/app/actions/vientos-de-tango"
+import { deleteChampionshipResult, updateChampionshipDescription } from "@/app/actions/vientos-de-tango"
 import { EditResultModal } from "./EditResultModal"
+import { ChampionshipDescriptionEditor } from "./ChampionshipDescriptionEditor"
 
 export default async function VientosDeTangoPage() {
   const championships = await db.championship.findMany({
@@ -53,7 +54,7 @@ export default async function VientosDeTangoPage() {
           <div key={champ.id} className="bg-white/5 border border-white/10 rounded-[48px] p-8 backdrop-blur-md hover:border-amber-500/20 transition-all group shadow-xl relative overflow-hidden">
              <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
              
-             <div className="flex justify-between items-start mb-10 relative">
+             <div className="flex justify-between items-start mb-6 relative">
                 <div>
                    <h2 className="text-3xl font-black text-white tracking-tighter mb-1 uppercase italic">Edición {champ.year}</h2>
                    <div className="flex items-center gap-2 mt-2">
@@ -64,7 +65,13 @@ export default async function VientosDeTangoPage() {
                 <AddResultForm championshipId={champ.id} year={champ.year} members={members as any} />
              </div>
 
-             <div className="flex flex-col gap-4 relative">
+             {/* Championship description — editable inline */}
+             <ChampionshipDescriptionEditor
+               championshipId={champ.id}
+               initialDescription={champ.description || ""}
+             />
+
+             <div className="flex flex-col gap-4 relative mt-6">
                 {champ.results.length === 0 ? (
                   <div className="py-16 text-center bg-white/[0.02] rounded-[32px] border-2 border-dashed border-white/5">
                      <Trophy size={24} className="mx-auto text-zinc-800 mb-4" />

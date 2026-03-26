@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import { Shield, Mail, Calendar, Bell, Users, Save } from "lucide-react"
+import { Shield, Mail, Calendar, Bell, Users, Save, ShieldCheck, Crown, User, Key } from "lucide-react"
 import { revalidatePath } from "next/cache"
 import Link from "next/link"
 
@@ -24,6 +24,57 @@ async function updateSetting(formData: FormData) {
   revalidatePath("/admin/configuracion")
 }
 
+// Role permission definitions shown in the UI
+const ROLE_PERMISSIONS = [
+  {
+    role: "SUPERADMIN",
+    label: "Super Admin",
+    color: "text-red-400",
+    bgColor: "bg-red-500/10",
+    borderColor: "border-red-500/20",
+    dotColor: "bg-red-500",
+    description: "Acceso total al sistema. Puede crear, editar y eliminar usuarios y accesos de administrador. Sin restricciones.",
+    permissions: [
+      "Gestionar todos los usuarios del sistema",
+      "Dar de alta y baja socios con o sin aprobación",
+      "Configurar todos los parámetros del sistema",
+      "Acceso completo a cobranzas, eventos y reportes",
+    ],
+  },
+  {
+    role: "PRESIDENT",
+    label: "Presidente / Vicepresidente",
+    color: "text-amber-400",
+    bgColor: "bg-amber-500/10",
+    borderColor: "border-amber-500/20",
+    dotColor: "bg-amber-500",
+    description: "Máxima autoridad de la comisión. Pueden redesignar roles dentro de la junta y autorizar bajas de socios.",
+    permissions: [
+      "Autorizar bajas de socios (fallecimiento, renuncia, etc.)",
+      "Redesignar cargos de la comisión directiva",
+      "Cobrar cuotas y registrar pagos de eventos",
+      "Crear y gestionar eventos",
+      "Suspender socios temporalmente",
+    ],
+  },
+  {
+    role: "BOARD",
+    label: "Comisión Directiva",
+    color: "text-blue-400",
+    bgColor: "bg-blue-500/10",
+    borderColor: "border-blue-500/20",
+    dotColor: "bg-blue-500",
+    description: "Miembros activos de la comisión. Pueden operar el sistema pero no autorizar bajas ni redesignar roles.",
+    permissions: [
+      "Cobrar cuotas y registrar pagos",
+      "Crear y editar eventos",
+      "Registrar solicitudes de baja (quedan pendientes de aprobación)",
+      "Ver historial completo de cobranzas",
+      "Acceder a directorio de socios",
+    ],
+  },
+]
+
 export default async function SettingsPage() {
   // Fetch settings or use defaults
   const cuotaMensual = await getSetting("cuota_mensual", "6000")
@@ -42,8 +93,14 @@ export default async function SettingsPage() {
   const mesesDeudaMora = await getSetting("meses_deuda_mora", "1")
   const mesesSuspension = await getSetting("meses_suspension", "3")
 
+  // Board members with their linked members for avatar display
   const admins = await db.user.findMany({
-    where: { role: { in: ["ADMIN", "BOARD"] } }
+    where: { role: { in: ["ADMIN", "BOARD", "SUPERADMIN"] } },
+    include: {
+      member: {
+        select: { avatarUrl: true, firstName: true, lastName: true, memberNumber: true }
+      }
+    }
   })
 
   return (
@@ -214,41 +271,59 @@ export default async function SettingsPage() {
           </div>
         </section>
 
-        {/* Usuarios Comision Directiva */}
+        {/* Comision Directiva — with avatars */}
         <section className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md lg:col-span-2 space-y-6 text-zinc-400">
            <div className="flex items-center justify-between border-b border-white/5 pb-4">
              <div className="flex items-center gap-3">
                <Users className="text-amber-500" size={20} />
-               <h2 className="text-lg font-medium text-white">Comisión Directiva (Usuarios)</h2>
+               <h2 className="text-lg font-medium text-white">Comisión Directiva (Accesos Admin)</h2>
              </div>
-             <Link href="/admin/configuracion/usuarios/nuevo" className="text-xs bg-amber-600/10 text-amber-500 px-3 py-1 rounded-lg border border-amber-500/20 hover:bg-amber-600/20">
+             <Link href="/admin/configuracion/usuarios/nuevo" className="text-xs bg-amber-600/10 text-amber-500 px-3 py-1 rounded-lg border border-amber-500/20 hover:bg-amber-600/20 transition-colors">
                + Agregar Usuario
              </Link>
            </div>
 
            <div className="space-y-2">
-             {admins.map(admin => (
-               <div key={admin.id} className="flex items-center justify-between p-3 bg-black/20 rounded-xl border border-white/5">
-                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-500 text-xs font-bold uppercase">
-                      {admin.name ? admin.name[0] : admin.email[0]}
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm text-zinc-300 font-bold">{admin.name || admin.email.split('@')[0]}</span>
-                      <span className="text-xs text-zinc-500">{admin.email}</span>
-                    </div>
+             {admins.map(admin => {
+               // Show member avatar if linked member has one, otherwise show initials
+               const avatarUrl = admin.member?.avatarUrl
+               const initials = (admin.name || admin.email)[0].toUpperCase()
+               return (
+                 <div key={admin.id} className="flex items-center justify-between p-3 bg-black/20 rounded-xl border border-white/5">
+                   <div className="flex items-center gap-3">
+                     {/* Avatar: photo if available, else colored initials */}
+                     <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-white/10 bg-amber-500/20 flex items-center justify-center">
+                       {avatarUrl ? (
+                         <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                       ) : (
+                         <span className="text-amber-500 text-sm font-black">{initials}</span>
+                       )}
+                     </div>
+                     <div className="flex flex-col">
+                       <span className="text-sm text-zinc-300 font-bold">{admin.name || admin.email.split('@')[0]}</span>
+                       <span className="text-xs text-zinc-500">{admin.email}</span>
+                       {admin.member && (
+                         <span className="text-[9px] text-amber-500/60 font-black uppercase tracking-widest">
+                           Socio #{admin.member.memberNumber}
+                         </span>
+                       )}
+                     </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                     <div className="flex gap-1 items-center">
+                        <span className={`w-2 h-2 rounded-full ${admin.role === 'ADMIN' || admin.role === 'SUPERADMIN' ? 'bg-red-500' : 'bg-blue-500'}`}></span>
+                        <span className="text-[10px] text-zinc-500 uppercase">{admin.position || admin.role}</span>
+                     </div>
+                     <Link
+                       href={`/admin/usuarios`}
+                       className="text-zinc-600 hover:text-amber-400 text-[10px] font-black uppercase tracking-widest transition-colors"
+                     >
+                       Gestionar
+                     </Link>
+                  </div>
                  </div>
-                 <div className="flex items-center gap-4">
-                    <div className="flex gap-1 items-center">
-                       <span className={`w-2 h-2 rounded-full ${admin.role === 'ADMIN' ? 'bg-emerald-500' : 'bg-blue-500'}`}></span>
-                       <span className="text-[10px] text-zinc-500 uppercase">{admin.position || admin.role}</span>
-                    </div>
-                    <button type="button" className="text-zinc-600 hover:text-red-500 transition-colors">
-                      Eliminar
-                    </button>
-                 </div>
-               </div>
-             ))}
+               )
+             })}
            </div>
         </section>
 
@@ -263,6 +338,49 @@ export default async function SettingsPage() {
         </div>
 
       </form>
+
+      {/* ===== USUARIOS DEL SISTEMA (moved here from /admin/usuarios) ===== */}
+      <section className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md space-y-6">
+        <div className="flex items-center justify-between border-b border-white/5 pb-4">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="text-amber-500" size={20} />
+            <div>
+              <h2 className="text-lg font-medium text-white">Gestión de Usuarios del Sistema</h2>
+              <p className="text-xs text-zinc-500 mt-0.5">Usuarios con acceso al panel de administración</p>
+            </div>
+          </div>
+          <Link
+            href="/admin/usuarios"
+            className="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-amber-900/30"
+          >
+            <Key size={14} /> Administrar Accesos
+          </Link>
+        </div>
+
+        {/* Permission cards per role */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {ROLE_PERMISSIONS.map((rp) => (
+            <div
+              key={rp.role}
+              className={`rounded-2xl p-5 border ${rp.bgColor} ${rp.borderColor} space-y-3`}
+            >
+              <div className="flex items-center gap-2">
+                <span className={`w-2.5 h-2.5 rounded-full ${rp.dotColor}`}></span>
+                <h3 className={`text-xs font-black uppercase tracking-widest ${rp.color}`}>{rp.label}</h3>
+              </div>
+              <p className="text-[11px] text-zinc-400 leading-relaxed">{rp.description}</p>
+              <ul className="space-y-1.5">
+                {rp.permissions.map((perm, i) => (
+                  <li key={i} className="flex items-start gap-2 text-[10px] text-zinc-500">
+                    <span className={`mt-0.5 w-1 h-1 rounded-full ${rp.dotColor} shrink-0`}></span>
+                    {perm}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   )
 }

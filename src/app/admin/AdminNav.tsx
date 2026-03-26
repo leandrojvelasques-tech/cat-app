@@ -13,7 +13,7 @@ export function AdminNav() {
     { href: "/admin/cuotas", icon: CreditCard, label: "Cobranzas" },
     { href: "/admin/eventos", icon: Calendar, label: "Eventos" },
     { href: "/admin/vientos-de-tango", icon: Trophy, label: "Vientos de Tango" },
-    { href: "/admin/usuarios", icon: ShieldCheck, label: "Usuarios" },
+    // Usuarios now lives inside Ajustes (configuracion)
     { href: "/admin/configuracion", icon: Settings, label: "Ajustes" },
   ]
 

@@ -1,9 +1,10 @@
 import { db } from "@/lib/db"
 import { notFound } from "next/navigation"
 import { updateMember } from "@/app/actions/socios"
-import { ArrowLeft, Save } from "lucide-react"
+import { ArrowLeft, Save, Key } from "lucide-react"
 import Link from "next/link"
 import { AvatarFormInput } from "@/components/AvatarFormInput"
+import { ResetMemberPasswordForm } from "@/app/admin/socios/components/ResetMemberPasswordForm"
 
 export default async function EditarSocioPage(props: any) {
   const params = await props.params
@@ -12,7 +13,25 @@ export default async function EditarSocioPage(props: any) {
   if (!id) return notFound()
 
   const member = await db.member.findUnique({
-    where: { id }
+    where: { id },
+    select: {
+      id: true,
+      memberNumber: true,
+      firstName: true,
+      lastName: true,
+      dni: true,
+      email: true,
+      phone: true,
+      joinDate: true,
+      birthDate: true,
+      type: true,
+      status: true,
+      city: true,
+      notes: true,
+      wantsMailing: true,
+      avatarUrl: true,
+      userId: true, // Needed to check if portal account exists
+    }
   })
 
   if (!member) return notFound()
@@ -192,6 +211,16 @@ export default async function EditarSocioPage(props: any) {
             </button>
           </div>
         </form>
+
+        {/* Portal access — outside the main save form to avoid conflicts */}
+        <div className="mt-6 pt-6 border-t border-white/5 space-y-3">
+          <div className="flex items-center gap-2 mb-2">
+            <Key size={16} className="text-zinc-500" />
+            <h3 className="text-sm font-bold text-zinc-300">Acceso al Portal del Socio</h3>
+          </div>
+          <p className="text-xs text-zinc-600">Si este socio tiene cuenta de acceso al portal, podés cambiarle la contraseña desde acá.</p>
+          <ResetMemberPasswordForm memberId={id} hasPortalAccess={!!member.userId} />
+        </div>
       </div>
     </div>
   )

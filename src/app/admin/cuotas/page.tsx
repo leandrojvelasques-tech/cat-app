@@ -13,7 +13,8 @@ import {
   History,
   Eye,
   ChevronRight,
-  Info
+  Info,
+  Download
 } from "lucide-react"
 import Link from "next/link"
 import { format } from "date-fns"
@@ -125,14 +126,30 @@ export default async function CobranzasPage({
     select: { id: true, title: true, startDate: true }
   })
 
+  // Build CSV export URL preserving current filters
+  const csvParams = new URLSearchParams()
+  if (month) csvParams.set('month', month)
+  if (year) csvParams.set('year', year)
+  if (query) csvParams.set('query', query)
+  if (type !== 'all') csvParams.set('type', type)
+  if (eventId) csvParams.set('eventId', eventId)
+  if (eventType !== 'all') csvParams.set('eventType', eventType)
+
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto">
       
-      <div className="flex justify-between items-end">
+      <div className="flex justify-between items-end flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-black text-white italic uppercase tracking-tighter">Historial de Cobranzas</h1>
           <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-1">Registro unificado de todos los ingresos de la institución</p>
         </div>
+        <Link
+          href={`/api/export/cobranzas?${csvParams.toString()}`}
+          className="flex items-center gap-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 border border-emerald-500/20 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
+          prefetch={false}
+        >
+          <Download size={14} /> Exportar CSV
+        </Link>
       </div>
 
       <CobranzasFilters 
@@ -199,13 +216,13 @@ export default async function CobranzasPage({
             <tbody className="divide-y divide-white/5">
               {unifiedHistory.map((item: any) => (
                 <tr key={item.id} className="hover:bg-white/[0.03] transition-colors group">
-                  <td className="py-6 pl-10">
+                  <td className="py-5 pl-10">
                     <div className="flex flex-col">
                       <span className="text-white font-bold text-sm">{format(item.date, "dd/MM/yyyy", { locale: es })}</span>
                       <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{format(item.date, "HH:mm")} hs</span>
                     </div>
                   </td>
-                  <td className="py-6">
+                  <td className="py-5">
                     <div className="flex flex-col">
                       {item.isMember ? (
                         <Link href={`/admin/socios/${item.memberId}`} className="text-amber-500 hover:text-amber-400 font-black text-xs uppercase tracking-tight transition-colors flex items-center gap-1 group/link">
@@ -219,7 +236,7 @@ export default async function CobranzasPage({
                       </span>
                     </div>
                   </td>
-                  <td className="py-6">
+                  <td className="py-5">
                     <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
                       item.type === 'CUOTA' 
                         ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
@@ -228,13 +245,14 @@ export default async function CobranzasPage({
                       {item.type}
                     </span>
                   </td>
-                  <td className="py-6">
-                    <p className="text-zinc-400 text-xs font-medium max-w-[200px] truncate">{item.reason}</p>
+                  <td className="py-5 pr-4">
+                    {/* No truncation — text wraps so full event names are always readable */}
+                    <p className="text-zinc-300 text-[11px] font-medium leading-snug break-words max-w-[230px]">{item.reason}</p>
                   </td>
-                  <td className="py-6">
+                  <td className="py-5">
                     <span className="text-white font-black tracking-widest text-sm">${item.amount.toLocaleString()}</span>
                   </td>
-                  <td className="py-6 pr-10 text-right">
+                  <td className="py-5 pr-10 text-right">
                     <PaymentDetailModal payment={item} />
                   </td>
                 </tr>
