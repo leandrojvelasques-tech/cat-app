@@ -35,13 +35,13 @@ export function PaymentDetailModal({ payment }: PaymentDetailModalProps) {
                     ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
                     : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                 }`}>
-                  Comprobante de Ingreso #{payment.id.slice(0,8).toUpperCase()}
+                  Comprobante #{payment?.id?.slice(0,8).toUpperCase() || "N/A"}
                 </span>
                 <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter">Detalle de Pago</h3>
               </div>
               <button 
                 onClick={() => setIsOpen(false)}
-                className="p-3 hover:bg-white/5 rounded-full text-zinc-500 hover:text-white transition-all"
+                className="p-3 hover:bg-white/5 rounded-full text-zinc-500 hover:text-white transition-all shadow-inner"
               >
                 <X size={24} />
               </button>
@@ -53,15 +53,15 @@ export function PaymentDetailModal({ payment }: PaymentDetailModalProps) {
                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 flex items-center gap-2 italic">
                       <User size={12} /> Pagador
                    </p>
-                   <p className="text-white font-black text-lg uppercase tracking-tight italic leading-tight">{payment.payerName}</p>
-                   <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{payment.isMember ? 'Socio Activo' : 'No Socio / Visitante'}</p>
+                   <p className="text-white font-black text-lg uppercase tracking-tight italic leading-tight">{payment?.payerName || "Desconocido"}</p>
+                   <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{payment?.isMember ? 'Socio Activo' : 'No Socio / Visitante'}</p>
                 </div>
 
                 <div className="space-y-1">
                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 flex items-center gap-2 italic">
                       <Tag size={12} /> Motivo del Cobro
                    </p>
-                   <p className="text-zinc-300 font-medium text-sm leading-relaxed">{payment.reason}</p>
+                   <p className="text-zinc-300 font-medium text-sm leading-relaxed">{payment?.reason || "No especificado"}</p>
                 </div>
 
                 <div className="space-y-1">
@@ -69,7 +69,7 @@ export function PaymentDetailModal({ payment }: PaymentDetailModalProps) {
                       <Info size={12} /> Grabado por
                    </p>
                    <p className="text-white font-bold text-sm uppercase flex items-center gap-2">
-                     <ShieldCheck size={14} className="text-emerald-500" /> {payment.recordedBy}
+                     <ShieldCheck size={14} className="text-emerald-500" /> {payment?.recordedBy || "Sistema"}
                    </p>
                 </div>
               </div>
@@ -79,28 +79,34 @@ export function PaymentDetailModal({ payment }: PaymentDetailModalProps) {
                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 flex items-center gap-2 italic">
                       <Calendar size={12} /> Fecha y Hora
                    </p>
-                   <p className="text-white font-black text-sm uppercase">
-                     {format(new Date(payment.date), "eeee dd 'de' MMMM", { locale: es })}
-                   </p>
-                   <p className="text-xs text-zinc-500 font-bold">{format(new Date(payment.date), "HH:mm")} hs</p>
+                   {payment?.date ? (
+                     <>
+                        <p className="text-white font-black text-sm uppercase">
+                          {format(new Date(payment.date), "eeee dd 'de' MMMM", { locale: es })}
+                        </p>
+                        <p className="text-xs text-zinc-500 font-bold">{format(new Date(payment.date), "HH:mm")} hs</p>
+                     </>
+                   ) : (
+                     <p className="text-zinc-500 text-sm italic">Fecha no disponible</p>
+                   )}
                 </div>
 
                 <div className="space-y-1">
                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 flex items-center gap-2 italic">
                       <CreditCard size={12} /> Medio de Pago
                    </p>
-                   <p className="text-white font-black text-sm uppercase tracking-widest">{payment.method}</p>
+                   <p className="text-white font-black text-sm uppercase tracking-widest">{payment?.method || "EFECTIVO"}</p>
                 </div>
 
                 <div className="pt-4 border-t border-white/10">
                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 mb-1 italic">Total Ingresado</p>
-                   <p className="text-3xl font-black text-amber-500 tracking-tighter italic">${payment.amount.toLocaleString()}</p>
+                   <p className="text-3xl font-black text-amber-500 tracking-tighter italic">${payment?.amount?.toLocaleString() || "0"}</p>
                 </div>
               </div>
             </div>
 
             {/* Proof of Payment Section */}
-            {(payment.fullData?.paymentProof || payment.fullData?.notes?.includes('[COMPROBANTE:')) && (
+            {(payment?.fullData?.paymentProof || payment?.fullData?.notes?.includes('[COMPROBANTE:')) && (
               <div className="pt-8 border-t border-white/10 relative z-10 space-y-4">
                  <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 flex items-center gap-2 italic mb-4">
                     <Eye size={12} /> Comprobante de Pago
@@ -108,16 +114,18 @@ export function PaymentDetailModal({ payment }: PaymentDetailModalProps) {
                  <div className="bg-black/60 rounded-[40px] border border-white/10 overflow-hidden group/img relative min-h-[200px] flex items-center justify-center">
                     {(() => {
                       let proofUrl = ""
-                      if (payment.fullData?.paymentProof) {
+                      if (payment?.fullData?.paymentProof) {
                         proofUrl = payment.fullData.paymentProof
-                      } else {
+                      } else if (payment?.fullData?.notes) {
                         // Extract from notes for CUOTAS
                         const match = payment.fullData.notes.match(/\[COMPROBANTE: (.*?)\]/)
                         if (match) proofUrl = match[1]
                       }
 
+                      if (!proofUrl) return <p className="text-zinc-700 italic text-[10px] uppercase font-black">Link no válido</p>
+
                       if (proofUrl.startsWith('data:')) {
-                        return <img src={proofUrl} alt="Comprobante" className="max-w-full h-auto cursor-zoom-in hover:scale-105 transition-transform duration-500" />
+                        return <img src={proofUrl} alt="Comprobante" className="max-w-full h-auto cursor-zoom-in group-hover/img:scale-[1.02] transition-transform duration-700" />
                       }
                       
                       return (
