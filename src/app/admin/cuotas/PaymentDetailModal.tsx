@@ -24,8 +24,8 @@ export function PaymentDetailModal({ payment }: PaymentDetailModalProps) {
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl animate-in fade-in duration-200">
-          <div className="bg-zinc-900 border border-white/10 p-8 md:p-10 rounded-[48px] max-w-2xl w-full shadow-[0_0_100px_rgba(0,0,0,0.5)] space-y-8 animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] relative no-scrollbar">
+        <div className="fixed inset-0 z-[1000] flex items-start justify-center p-4 md:p-8 bg-black/95 backdrop-blur-xl animate-in fade-in duration-200 overflow-y-auto no-scrollbar">
+          <div className="bg-zinc-900 border border-white/10 p-8 md:p-10 rounded-[48px] max-w-2xl w-full shadow-[0_0_100px_rgba(0,0,0,0.5)] space-y-8 animate-in zoom-in-95 duration-200 relative my-auto md:my-20">
             <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
             
             <div className="flex justify-between items-start relative z-10">
