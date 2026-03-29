@@ -12,6 +12,15 @@ async function fileToBase64DataUrl(file: File): Promise<string> {
   return `data:${file.type};base64,${base64}`
 }
 
+// Helper to merge date from one field with time from another
+const mergeDateTime = (baseDate: Date | null, timeStr: string | null) => {
+  if (!timeStr) return null
+  if (timeStr.includes("T")) return new Date(timeStr)
+  if (!baseDate) return null
+  const datePart = baseDate.toISOString().split("T")[0]
+  return new Date(`${datePart}T${timeStr}:00`)
+}
+
 export async function createEvent(formData: FormData) {
   const title = formData.get("title") as string
   const description = formData.get("description") as string
@@ -23,16 +32,12 @@ export async function createEvent(formData: FormData) {
   const isPublic = formData.get("isPublic") === "on"
   
   // Specific Schedules
-  const milongaStart = formData.get("milongaStart") ? new Date(formData.get("milongaStart") as string) : null
-  const milongaEnd = formData.get("milongaEnd") ? new Date(formData.get("milongaEnd") as string) : null
   const milongaLocation = formData.get("milongaLocation") as string
   const tangoDJ = formData.get("tangoDJ") as string
   
-  const workshopStart = formData.get("workshopStart") ? new Date(formData.get("workshopStart") as string) : null
-  const workshopEnd = formData.get("workshopEnd") ? new Date(formData.get("workshopEnd") as string) : null
   const workshopLocation = formData.get("workshopLocation") as string
-  const workshopClasses = formData.get("workshopClasses") as string // Stringified JSON
-
+  const workshopClassesRaw = formData.get("workshopClasses") as string // Stringified JSON
+  
   // Pricing
   const priceSocioMilonga = parseFloat(formData.get("priceSocioMilonga") as string) || 0
   const priceNonSocioMilonga = parseFloat(formData.get("priceNonSocioMilonga") as string) || 0
@@ -40,6 +45,25 @@ export async function createEvent(formData: FormData) {
   const priceNonSocioWorkshop = parseFloat(formData.get("priceNonSocioWorkshop") as string) || 0
   const priceSocioFull = parseFloat(formData.get("priceSocioFull") as string) || 0
   const priceNonSocioFull = parseFloat(formData.get("priceNonSocioFull") as string) || 0
+  const priceSocioSingleClass = parseFloat(formData.get("priceSocioSingleClass") as string) || 0
+  const priceNonSocioSingleClass = parseFloat(formData.get("priceNonSocioSingleClass") as string) || 0
+
+  const milongaStart = formData.get("milongaStart") ? new Date(formData.get("milongaStart") as string) : null
+  const milongaEnd = mergeDateTime(milongaStart, formData.get("milongaEnd") as string)
+  
+  const workshopStart = formData.get("workshopStart") ? new Date(formData.get("workshopStart") as string) : null
+  const workshopEnd = formData.get("workshopEnd") ? new Date(formData.get("workshopEnd") as string) : null
+
+  // Normalize workshop classes times
+  let workshopClasses = "{}"
+  if (workshopClassesRaw) {
+    const parsed = JSON.parse(workshopClassesRaw)
+    const normalized = parsed.map((cls: any) => ({
+      ...cls,
+      end: mergeDateTime(cls.start ? new Date(cls.start) : null, cls.end)
+    }))
+    workshopClasses = JSON.stringify(normalized)
+  }
 
   const eventBannerFile = formData.get("eventBanner") as File | null
   let eventBanner: string | null = null
@@ -77,6 +101,8 @@ export async function createEvent(formData: FormData) {
       priceNonSocioWorkshop,
       priceSocioFull,
       priceNonSocioFull,
+      priceSocioSingleClass,
+      priceNonSocioSingleClass,
       status: "OPEN"
     }
   })
@@ -96,13 +122,24 @@ export async function updateEvent(id: string, formData: FormData) {
   const isPublic = formData.get("isPublic") === "on"
   
   const milongaStart = formData.get("milongaStart") ? new Date(formData.get("milongaStart") as string) : null
-  const milongaEnd = formData.get("milongaEnd") ? new Date(formData.get("milongaEnd") as string) : null
+  const milongaEnd = mergeDateTime(milongaStart, formData.get("milongaEnd") as string)
   const milongaLocation = formData.get("milongaLocation") as string
   const tangoDJ = formData.get("tangoDJ") as string
   
   const workshopStart = formData.get("workshopStart") ? new Date(formData.get("workshopStart") as string) : null
   const workshopEnd = formData.get("workshopEnd") ? new Date(formData.get("workshopEnd") as string) : null
-  const workshopClasses = formData.get("workshopClasses") as string
+  const workshopClassesRaw = formData.get("workshopClasses") as string
+
+  // Normalize workshop classes times
+  let workshopClasses = "{}"
+  if (workshopClassesRaw) {
+    const parsed = JSON.parse(workshopClassesRaw)
+    const normalized = parsed.map((cls: any) => ({
+      ...cls,
+      end: mergeDateTime(cls.start ? new Date(cls.start) : null, cls.end)
+    }))
+    workshopClasses = JSON.stringify(normalized)
+  }
 
   const priceSocioMilonga = parseFloat(formData.get("priceSocioMilonga") as string) || 0
   const priceNonSocioMilonga = parseFloat(formData.get("priceNonSocioMilonga") as string) || 0
@@ -110,6 +147,8 @@ export async function updateEvent(id: string, formData: FormData) {
   const priceNonSocioWorkshop = parseFloat(formData.get("priceNonSocioWorkshop") as string) || 0
   const priceSocioFull = parseFloat(formData.get("priceSocioFull") as string) || 0
   const priceNonSocioFull = parseFloat(formData.get("priceNonSocioFull") as string) || 0
+  const priceSocioSingleClass = parseFloat(formData.get("priceSocioSingleClass") as string) || 0
+  const priceNonSocioSingleClass = parseFloat(formData.get("priceNonSocioSingleClass") as string) || 0
 
   const eventBannerFile = formData.get("eventBanner") as File | null
   // Default: keep the existing banner stored in the hidden input
@@ -148,6 +187,8 @@ export async function updateEvent(id: string, formData: FormData) {
       priceNonSocioWorkshop,
       priceSocioFull,
       priceNonSocioFull,
+      priceSocioSingleClass,
+      priceNonSocioSingleClass,
     }
   })
 

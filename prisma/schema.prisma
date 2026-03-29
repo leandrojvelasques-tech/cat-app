@@ -158,6 +158,8 @@ model Event {
   priceNonSocioWorkshop Float?
   priceSocioFull       Float?
   priceNonSocioFull    Float?
+  priceSocioSingleClass Float?
+  priceNonSocioSingleClass Float?
   
   status          String   @default("OPEN") // OPEN, CLOSED, ARCHIVED
   isPublic        Boolean  @default(true)   // For website visibility

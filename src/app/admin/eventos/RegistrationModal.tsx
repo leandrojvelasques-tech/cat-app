@@ -93,7 +93,13 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
         </div>
 
         <form action={async (fd) => {
-           await registerAttendee(fd);
+           setLoading(true);
+           const result = await registerAttendee(fd);
+           setLoading(false);
+           if (result?.error) {
+             alert(result.error);
+             return;
+           }
            onClose();
         }} className="p-8 space-y-6 max-h-[80vh] overflow-y-auto">
           

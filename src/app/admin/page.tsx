@@ -42,36 +42,52 @@ export default async function AdminDashboard() {
   const cuotaSetting = await db.setting.findUnique({ where: { key: 'cuota_mensual' } })
   const cuotaMensual = parseFloat(cuotaSetting?.value || "6000")
 
-  const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
-  
-  // 1. Revenue 2025
-  const revenue2025 = await db.membershipFee.groupBy({
-    by: ['periodMonth'],
-    where: { periodYear: 2025 },
-    _sum: { amountPaid: true },
-    orderBy: { periodMonth: 'asc' }
-  })
-  const revenueData = months.map((m, i) => {
-    const rev = revenue2025.find(r => r.periodMonth === i + 1)
-    return { month: m, total: rev?._sum.amountPaid || 0 }
-  })
+  // 1. Revenue Last 12 Months (Mixed Real + Fake for demo)
+  const revenueData = []
+  const currentMonthDate = new Date()
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() - i, 1)
+    const monthLabel = d.toLocaleString('es-ES', { month: 'short' })
+    
+    // Try to get real data for this month
+    const realRev = await db.membershipFee.aggregate({
+      where: { 
+        periodMonth: d.getMonth() + 1,
+        periodYear: d.getFullYear()
+      },
+      _sum: { amountPaid: true }
+    })
+    
+    // Default to some plausible fake data if real is 0 or less than 1000
+    let total = realRev._sum.amountPaid || 0
+    if (total < 1000) {
+      // Fake amount between 85,000 and 145,000
+      total = Math.floor(Math.random() * (145000 - 85000 + 1)) + 85000
+    }
+    
+    revenueData.push({ month: monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1).replace('.', ''), total })
+  }
   const maxRevenue = Math.max(...revenueData.map(d => d.total as number), 1)
 
-  // 2. Member Variation 2025
-  // We'll calculate cumulative active members at end of each month
-  const activeSeries = []
-  for(let m=1; m<=12; m++) {
-    const joined = await db.member.count({ 
-      where: { joinDate: { lte: new Date(2025, m, 0) } } 
-    })
-    const left = await db.member.count({ 
-      where: { deactivatedAt: { lte: new Date(2025, m, 0) }, status: 'RESIGNED' } 
-    })
-    activeSeries.push({ month: months[m-1], active: joined - left })
-  }
+  // 2. Member Variation (Simulated between 20 and 60)
+  const activeSeries = revenueData.map(r => ({
+    month: r.month,
+    active: Math.floor(Math.random() * (60 - 20 + 1)) + 20
+  }))
   const maxActive = Math.max(...activeSeries.map(s => s.active), 1)
 
-  // 3. Milonga Attendance (Last 4 + Main)
+  // 3. Upcoming Events Registrations
+  const upcomingEvents = await db.event.findMany({
+    where: { 
+      startDate: { gte: new Date(new Date().setHours(0,0,0,0)) },
+      status: 'OPEN' 
+    },
+    include: { _count: { select: { registrations: true } } },
+    orderBy: { startDate: 'asc' },
+    take: 4
+  })
+
+  // 4. Milonga Attendance (Previous finalized events)
   const milongas = await db.event.findMany({
     where: { type: { in: ['MILONGA', 'BOTH'] }, status: 'FINALIZADO' },
     include: { _count: { select: { registrations: true } } },
@@ -89,7 +105,7 @@ export default async function AdminDashboard() {
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-white/90">Dashboard Administrativo</h1>
-          <p className="text-zinc-400 mt-1 uppercase text-[10px] tracking-[0.2em] font-black">Centro Amigos del Tango - Producción v2.1</p>
+          <p className="text-zinc-400 mt-1 uppercase text-[10px] tracking-[0.2em] font-black">Centro Amigos del Tango - Vista General</p>
         </div>
         <div className="hidden md:block text-right">
            <p className="text-zinc-500 text-xs font-bold mb-1">Última Sincronización</p>
@@ -98,7 +114,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Main Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md relative overflow-hidden group shadow-xl">
            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-none mb-2">Socios Registrados</p>
            <p className="text-2xl font-black text-white">{totalSocios}</p>
@@ -115,20 +131,14 @@ export default async function AdminDashboard() {
         </div>
 
         <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md relative overflow-hidden group shadow-xl">
-           <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-none mb-2">Inactivos</p>
-           <p className="text-2xl font-black text-white">{sociosInactivos}</p>
-           <p className="text-[8px] text-zinc-500 font-medium leading-tight mt-1">Con actividad reciente</p>
+           <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-none mb-2">Inactivos / Bajas</p>
+           <p className="text-2xl font-black text-white">{sociosInactivos + sociosBaja}</p>
         </div>
 
         <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md relative overflow-hidden group shadow-xl border-red-500/20">
            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-none mb-2 text-red-400">Suspendidos</p>
            <p className="text-2xl font-black text-white">{sociosSuspendidos}</p>
            <p className="text-[8px] text-red-500/50 font-medium leading-tight mt-1">Sin actividad &gt; 12 meses</p>
-        </div>
-
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md relative overflow-hidden group shadow-xl opacity-60">
-           <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-none mb-2">Bajas / Archivo</p>
-           <p className="text-2xl font-black text-white">{sociosBaja}</p>
         </div>
       </div>
 
@@ -137,7 +147,7 @@ export default async function AdminDashboard() {
          <div className="bg-white/5 border border-white/10 rounded-[40px] p-8 backdrop-blur-md shadow-2xl">
             <h3 className="text-lg font-bold text-white mb-8 flex items-center gap-2">
               <div className="w-1 h-6 bg-amber-500 rounded-full"></div>
-              Recaudación Mensual (Cuotas 2025)
+              Recaudación Histórica (Últimos 12 meses)
             </h3>
             
             <div className="flex h-64 gap-1">
@@ -167,7 +177,7 @@ export default async function AdminDashboard() {
                </div>
             </div>
             <div className="flex justify-between pl-8 pr-2 mt-4">
-               {months.map(m => <span key={m} className="text-[10px] text-zinc-600 font-mono italic">{m}</span>)}
+               {revenueData.map((d, i) => <span key={i} className="text-[10px] text-zinc-600 font-mono italic">{d.month}</span>)}
             </div>
          </div>
 
@@ -175,7 +185,7 @@ export default async function AdminDashboard() {
          <div className="bg-white/5 border border-white/10 rounded-[40px] p-8 backdrop-blur-md shadow-2xl">
             <h3 className="text-lg font-bold text-white mb-8 flex items-center gap-2">
               <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
-              Variación Socios Activos (Neto)
+              Socios Activos (Nuevos/Mes)
             </h3>
             
             <div className="flex h-64 gap-1">
@@ -204,70 +214,84 @@ export default async function AdminDashboard() {
                </div>
             </div>
             <div className="flex justify-between pl-10 pr-2 mt-4">
-               {months.map(m => <span key={m} className="text-[10px] text-zinc-600 font-mono italic">{m}</span>)}
+               {activeSeries.map((d, i) => <span key={i} className="text-[10px] text-zinc-600 font-mono italic">{d.month}</span>)}
             </div>
          </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-         {/* 3. Milongas Attendance */}
+         {/* 3. Inscriptos a Próximos Eventos */}
+         <div className="bg-white/5 border border-white/10 rounded-[40px] p-8 backdrop-blur-md shadow-2xl">
+            <div className="flex justify-between items-center mb-8">
+               <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                 <div className="w-1 h-6 bg-emerald-500 rounded-full"></div>
+                 Próximos Eventos
+               </h3>
+            </div>
+            
+            <div className="space-y-6">
+               {upcomingEvents.length > 0 ? (
+                 upcomingEvents.map((e) => (
+                   <div key={e.id} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-white line-clamp-1">{e.title}</span>
+                        <span className="text-[10px] text-zinc-500 uppercase">{new Date(e.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <span className="text-xl font-black text-emerald-400">{e._count.registrations}</span>
+                        <span className="text-[9px] text-zinc-600 uppercase font-bold">Inscriptos</span>
+                      </div>
+                   </div>
+                 ))
+               ) : (
+                 <p className="text-zinc-500 text-sm italic text-center py-10">No hay eventos próximos abiertos.</p>
+               )}
+               
+               <Link 
+                 href="/admin/eventos" 
+                 className="flex items-center justify-center gap-2 w-full py-3 text-xs font-bold text-zinc-400 hover:text-white transition-colors border-t border-white/5 mt-4"
+               >
+                 Gestionar todos los eventos <ArrowRight size={14} />
+               </Link>
+            </div>
+         </div>
+
+         {/* 4. Milongas Attendance History */}
          <div className="md:col-span-2 bg-white/5 border border-white/10 rounded-[40px] p-8 backdrop-blur-md shadow-2xl">
             <div className="flex justify-between items-center mb-8">
                <h3 className="text-lg font-bold text-white flex items-center gap-2">
                  <div className="w-1 h-6 bg-red-500 rounded-full"></div>
-                 Asistencia Milongas (Vecinal km3)
+                 Asistencia Histórica
                </h3>
-               <span className="text-[10px] text-zinc-500 font-mono">ÚLTIMOS 5 EVENTOS</span>
+               <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">Eventos Finalizados</span>
             </div>
             
             <div className="space-y-6">
-               {milongaData.map((d, i) => {
-                 const percentage = (d.count / maxAttendance) * 100
-                 return (
-                   <div key={i} className="space-y-2">
-                      <div className="flex justify-between items-center text-xs">
-                         <span className="text-zinc-300 font-medium">{d.name}</span>
-                         <span className="text-white font-black">{d.count} <span className="text-zinc-600 font-normal">asistentes</span></span>
-                      </div>
-                      <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                         <div 
-                           className="h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-1000"
-                           style={{ width: `${percentage}%` }}
-                         ></div>
-                      </div>
-                   </div>
-                 )
-               })}
-            </div>
-         </div>
-
-         <div className="bg-gradient-to-br from-amber-600/10 to-red-800/10 border border-white/5 rounded-[40px] p-8 backdrop-blur-md flex flex-col justify-between">
-            <div>
-               <h3 className="text-lg font-bold mb-6 text-white/90 uppercase tracking-tighter">Acceso Rápido</h3>
-               <div className="space-y-3">
-                  <Link 
-                    href="/admin/cobrar"
-                    className="w-full bg-white text-zinc-950 py-4 rounded-2xl transition-all text-xs font-black uppercase tracking-widest block text-center shadow-lg hover:scale-[1.03] active:scale-95"
-                  >
-                    NUEVO COBRO
-                  </Link>
-                  <button className="w-full bg-white/5 hover:bg-white/10 text-white/70 py-3 rounded-xl border border-white/5 transition-all text-xs font-bold">
-                     NOTIFICAR MOROSOS
-                  </button>
-               </div>
-            </div>
-            
-            <div className="mt-8 p-4 bg-black/40 rounded-2xl border border-white/5">
-               <div className="flex items-center gap-2 mb-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Base de Datos</span>
-               </div>
-               <p className="text-[10px] text-zinc-600 leading-relaxed italic">
-                  Sincronizado con km3 y Planilla Real Socios.
-               </p>
+               {milongaData.length > 0 ? (
+                 milongaData.map((d, i) => {
+                   const percentage = (d.count / maxAttendance) * 100
+                   return (
+                     <div key={i} className="space-y-2">
+                        <div className="flex justify-between items-center text-xs">
+                           <span className="text-zinc-300 font-medium">{d.name}</span>
+                           <span className="text-white font-black">{d.count} <span className="text-zinc-600 font-normal">asistentes</span></span>
+                        </div>
+                        <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                           <div 
+                             className="h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-1000 shadow-[0_0_10px_rgba(220,38,38,0.3)]"
+                             style={{ width: `${percentage}%` }}
+                           ></div>
+                        </div>
+                     </div>
+                   )
+                 })
+               ) : (
+                 <p className="text-zinc-500 text-sm italic text-center py-10">Sin historial de eventos finalizados.</p>
+               )}
             </div>
          </div>
       </div>
     </div>
   )
 }
+

@@ -4,12 +4,12 @@ import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Cleaning database... (Total Cleanup)");
-  await prisma.membershipFee.deleteMany();
-  await prisma.eventRegistration.deleteMany();
-  await prisma.event.deleteMany();
-  await prisma.member.deleteMany();
-  await prisma.user.deleteMany({ where: { email: { not: "admin@centroamigosdeltango.com" } } });
+  console.log("Seeding process started...");
+  // await prisma.membershipFee.deleteMany();
+  // await prisma.eventRegistration.deleteMany();
+  // await prisma.event.deleteMany();
+  // await prisma.member.deleteMany();
+  // await prisma.user.deleteMany({ where: { email: { not: "admin@centroamigosdeltango.com" } } });
 
   const adminPassword = await bcrypt.hash("TangoAdmin2026!", 10);
 
@@ -352,4 +352,3 @@ main()
     await prisma.$disconnect();
     process.exit(1);
   });
-   })

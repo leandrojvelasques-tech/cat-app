@@ -52,6 +52,12 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
     return d.toISOString().slice(0, 16)
   }
 
+  const formatTimeOnly = (date: any) => {
+    if (!date) return ""
+    const d = new Date(date)
+    return d.toTimeString().slice(0, 5)
+  }
+
   const formAction = isEditing 
     ? updateEvent.bind(null, initialData.id) 
     : createEvent
@@ -129,7 +135,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
               <div className="flex items-center justify-between border-b border-red-500/10 pb-4">
                 <div className="flex items-center gap-3">
                   <Music className="text-red-400" size={20} />
-                  <h2 className="text-lg font-medium">Logística de la Milonga</h2>
+                  <h2 className="text-lg font-medium">Organización de la Milonga</h2>
                 </div>
                 <div className="flex items-center gap-2 text-red-400">
                    <Headphones size={18} />
@@ -142,12 +148,12 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
                     <div className="flex items-center gap-2">
                       <input name="milongaStart" type="datetime-local" defaultValue={formatDateTimeForInput(initialData?.milongaStart)} className="bg-black/40 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none w-full" />
                       <span className="text-zinc-600">→</span>
-                      <input name="milongaEnd" type="datetime-local" defaultValue={formatDateTimeForInput(initialData?.milongaEnd)} className="bg-black/40 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none w-full" />
+                      <input name="milongaEnd" type="time" defaultValue={formatTimeOnly(initialData?.milongaEnd)} className="bg-black/40 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none w-full" />
                     </div>
                  </div>
                  <div className="space-y-2">
                     <label className="text-[10px] font-bold text-zinc-500 uppercase">Lugar Provisorio</label>
-                    <input name="milongaLocation" defaultValue={initialData?.milongaLocation} placeholder="Especifique si cambia de sede" className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2 text-sm text-white outline-none" />
+                    <input name="milongaLocation" defaultValue={initialData?.milongaLocation} className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2 text-sm text-white outline-none" />
                  </div>
               </div>
             </section>
@@ -174,7 +180,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4">
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold text-zinc-500 uppercase">Lugar del Workshop</label>
-                    <input name="workshopLocation" defaultValue={initialData?.workshopLocation} placeholder="Especifique si cambia de sede" className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2 text-sm text-white outline-none" />
+                    <input name="workshopLocation" defaultValue={initialData?.workshopLocation} className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2 text-sm text-white outline-none" />
                   </div>
                </div>
 
@@ -198,7 +204,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
                           <div className="flex items-center gap-2">
                              <input type="datetime-local" className="bg-zinc-900/50 border border-white/5 rounded-xl px-2 py-2 text-[10px] text-white outline-none w-full" value={cls.start} onChange={(e) => updateClass(cls.id, "start", e.target.value)} />
                              <span className="text-zinc-600 text-xs">→</span>
-                             <input type="datetime-local" className="bg-zinc-900/50 border border-white/5 rounded-xl px-2 py-2 text-[10px] text-white outline-none w-full" value={cls.end} onChange={(e) => updateClass(cls.id, "end", e.target.value)} />
+                             <input type="time" className="bg-zinc-900/50 border border-white/5 rounded-xl px-2 py-2 text-[10px] text-white outline-none w-full" value={cls.end.includes('T') ? cls.end.split('T')[1].slice(0,5) : cls.end} onChange={(e) => updateClass(cls.id, "end", e.target.value)} />
                           </div>
                        </div>
                        <input 
@@ -290,8 +296,13 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
               {(type === 'WORKSHOP' || type === 'BOTH') && (
                 <div className="space-y-2">
                    <p className="text-[10px] font-bold text-blue-500/60 uppercase tracking-widest px-1">Tarifa Workshop</p>
-                   <input name="priceSocioWorkshop" type="number" defaultValue={initialData?.priceSocioWorkshop} placeholder="Pr. Socio" className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2 text-xs text-white outline-none" />
-                   <input name="priceNonSocioWorkshop" type="number" defaultValue={initialData?.priceNonSocioWorkshop} placeholder="Pr. No Socio" className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2 text-xs text-white outline-none" />
+                   <input name="priceSocioWorkshop" type="number" defaultValue={initialData?.priceSocioWorkshop} placeholder="Pr. Socio Wk" className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2 text-xs text-white outline-none" />
+                   <input name="priceNonSocioWorkshop" type="number" defaultValue={initialData?.priceNonSocioWorkshop} placeholder="Pr. No Socio Wk" className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2 text-xs text-white outline-none" />
+                   <div className="bg-blue-500/10 p-2 rounded-xl mt-1 space-y-1">
+                      <p className="text-[9px] font-bold text-blue-400 uppercase text-center mb-1">Clase Suelta (Solo Workshop)</p>
+                      <input name="priceSocioSingleClass" type="number" defaultValue={initialData?.priceSocioSingleClass} placeholder="Socio: Clase Suelta" className="w-full bg-black/40 border border-blue-500/20 rounded-lg px-3 py-1.5 text-xs text-white outline-none" />
+                      <input name="priceNonSocioSingleClass" type="number" defaultValue={initialData?.priceNonSocioSingleClass} placeholder="No Socio: Clase Suelta" className="w-full bg-black/40 border border-blue-500/20 rounded-lg px-3 py-1.5 text-xs text-white outline-none" />
+                   </div>
                 </div>
               )}
               {type === 'BOTH' && (

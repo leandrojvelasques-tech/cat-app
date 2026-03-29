@@ -51,7 +51,7 @@ async function main() {
   for (const p of payments) {
     let member
     if (p.num) {
-      member = await db.member.findFirst({ where: { memberNumber: p.num } })
+      member = await db.member.findFirst({ where: { memberNumber: p.num.toString() } })
     } else if (p.name) {
       const names = p.name.split(' ')
       member = await db.member.findFirst({ 
