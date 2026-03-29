@@ -46,22 +46,27 @@ export function EditProfileModal({ member }: EditProfileModalProps) {
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl animate-in fade-in duration-200">
-          <div className="bg-zinc-900 border border-white/10 p-8 md:p-10 rounded-[48px] max-w-md w-full shadow-[0_0_100px_rgba(0,0,0,0.5)] space-y-8 animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center">
+        <div 
+          className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsOpen(false)
+          }}
+        >
+          <div className="bg-zinc-900 border border-white/10 p-8 md:p-10 rounded-[48px] max-w-md w-full max-h-[90vh] overflow-y-auto shadow-[0_0_100px_rgba(0,0,0,0.5)] space-y-8 animate-in zoom-in-95 duration-200 relative custom-scrollbar">
+            <div className="flex justify-between items-center sticky top-0 bg-zinc-900 z-10 pb-4">
               <div>
                 <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter">Editar Perfil</h3>
                 <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mt-1">Actualice sus datos de contacto</p>
               </div>
               <button 
                 onClick={() => setIsOpen(false)}
-                className="p-3 hover:bg-white/5 rounded-full text-zinc-500 hover:text-white transition-all"
+                className="p-3 hover:bg-white/5 rounded-full text-zinc-500 hover:text-white transition-all shadow-inner border border-white/5"
               >
-                <X size={24} />
+                <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-8 pt-2">
               {/* Avatar section */}
               <div className="flex justify-center flex-col items-center">
                  <AvatarFormInput defaultValue={member.avatarUrl} />
@@ -97,7 +102,7 @@ export function EditProfileModal({ member }: EditProfileModalProps) {
                 </div>
               </div>
 
-              <div className="pt-4">
+              <div className="pt-4 pb-2">
                 <button 
                   type="submit"
                   disabled={isSaving}
@@ -112,8 +117,8 @@ export function EditProfileModal({ member }: EditProfileModalProps) {
                     </>
                   )}
                 </button>
-                <p className="text-[9px] text-zinc-600 text-center mt-6 uppercase font-bold tracking-tight px-4 flex items-center gap-2 justify-center">
-                  <Save size={10} /> Solo puede editar sus datos de contacto y foto.
+                <p className="text-[10px] text-zinc-600 text-center mt-6 uppercase font-black tracking-tighter px-4 flex items-center gap-2 justify-center italic">
+                   Solo puede editar sus datos de contacto y foto.
                 </p>
               </div>
             </form>

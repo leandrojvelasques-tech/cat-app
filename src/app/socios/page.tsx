@@ -159,7 +159,7 @@ export default async function PortalSocioPage() {
            )}
 
            {/* Personal Info Box */}
-           <div className="bg-white/5 border border-white/10 p-8 rounded-[40px] backdrop-blur-md">
+           <div id="perfil" className="bg-white/5 border border-white/10 p-8 rounded-[40px] backdrop-blur-md scroll-mt-24">
               <h2 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-500 flex items-center gap-2 mb-6 italic">
                  <User size={14} /> Mis Datos
               </h2>
@@ -233,7 +233,7 @@ export default async function PortalSocioPage() {
            </div>
 
            {/* Cuotas / Payments History */}
-           <div className="bg-zinc-900/40 border border-white/10 p-10 rounded-[48px]">
+           <div id="pagos" className="bg-zinc-900/40 border border-white/10 p-10 rounded-[48px] scroll-mt-24">
               <div className="flex justify-between items-center mb-8">
                  <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter flex items-center gap-3">
                     <History size={24} className="text-zinc-600" /> Historial de Cuotas
