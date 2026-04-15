@@ -297,3 +297,36 @@ model BuffetSaleItem {
 
   @@unique([saleId, productId])
 }
+
+model EscuelitaStudent {
+  id          String                @id @default(uuid())
+  dni         String                @unique
+  firstName   String
+  lastName    String
+  email       String?
+  phone       String?
+  attendances EscuelitaAttendance[]
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+}
+
+model EscuelitaClass {
+  id          String                @id @default(uuid())
+  date        DateTime              @default(now())
+  teachers    String // Nombres de los profesores
+  photoUrl    String?
+  attendances EscuelitaAttendance[]
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+}
+
+model EscuelitaAttendance {
+  id        String           @id @default(uuid())
+  studentId String
+  classId   String
+  student   EscuelitaStudent @relation(fields: [studentId], references: [id])
+  escuelita EscuelitaClass   @relation(fields: [classId], references: [id])
+  createdAt DateTime         @default(now())
+
+  @@unique([studentId, classId])
+}

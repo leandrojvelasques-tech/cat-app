@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import { Shield, Mail, Calendar, Bell, Users, Save, ShieldCheck, Crown, User, Key } from "lucide-react"
+import { Shield, Mail, Calendar, Bell, Users, Save, ShieldCheck, Crown, User, Key, ShoppingBag } from "lucide-react"
 import { revalidatePath } from "next/cache"
 import Link from "next/link"
 
@@ -338,6 +338,32 @@ export default async function SettingsPage() {
         </div>
 
       </form>
+
+      {/* ===== MODULOS ADICIONALES ===== */}
+      <section className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md space-y-6">
+        <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+          <ShoppingBag className="text-amber-500" size={20} />
+          <div>
+            <h2 className="text-lg font-medium text-white">Módulos del Sistema</h2>
+            <p className="text-xs text-zinc-500 mt-0.5">Gestión de datos para funciones satélites</p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Link
+            href="/admin/buffet"
+            className="flex items-center justify-between p-4 bg-black/20 hover:bg-white/5 border border-white/5 hover:border-amber-500/30 rounded-2xl transition-all group"
+          >
+            <div>
+              <p className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">Catálogo Buffet</p>
+              <p className="text-xs text-zinc-500 mt-1">Administra los productos, precios y categorías disponibles en los eventos.</p>
+            </div>
+            <div className="p-2 bg-amber-500/10 text-amber-500 rounded-xl group-hover:scale-110 transition-transform">
+              <ShoppingBag size={18} />
+            </div>
+          </Link>
+        </div>
+      </section>
 
       {/* ===== USUARIOS DEL SISTEMA (moved here from /admin/usuarios) ===== */}
       <section className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md space-y-6">

@@ -1,7 +1,7 @@
 import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import Link from "next/link"
-import { Users, TrendingUp, CreditCard, AlertTriangle, Activity, UserPlus, FileText, ArrowRight, UserCheck, AlertCircle } from "lucide-react"
+import { Users, TrendingUp, CreditCard, AlertTriangle, Activity, UserPlus, FileText, ArrowRight, UserCheck, AlertCircle, GraduationCap } from "lucide-react"
 import { calculateMemberStatus, CalculatedStatus } from "@/lib/member-utils"
 
 export default async function AdminDashboard() {
@@ -99,6 +99,22 @@ export default async function AdminDashboard() {
     count: m._count.registrations
   })).reverse()
   const maxAttendance = Math.max(...milongaData.map(d => d.count), 1)
+
+  // 5. Escuelita Stats
+  const lastEscuelitaClass = await db.escuelitaClass.findFirst({
+    orderBy: { date: 'desc' },
+    include: { _count: { select: { attendances: true } } }
+  })
+  
+  const escuelita3MonthsAgo = new Date()
+  escuelita3MonthsAgo.setMonth(now.getMonth() - 2)
+  escuelita3MonthsAgo.setDate(1) // from 1st day of month 3 months ago
+  const recentEscuelitaClasses = await db.escuelitaClass.findMany({
+    where: { date: { gte: escuelita3MonthsAgo } },
+    include: { _count: { select: { attendances: true } } },
+    orderBy: { date: 'asc' }
+  })
+  const maxEscuelita = Math.max(...recentEscuelitaClasses.map(c => c._count.attendances), 1, 10)
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
@@ -288,6 +304,74 @@ export default async function AdminDashboard() {
                ) : (
                  <p className="text-zinc-500 text-sm italic text-center py-10">Sin historial de eventos finalizados.</p>
                )}
+            </div>
+         </div>
+      </div>
+
+      {/* Escuelita ROW */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+         <div className="md:col-span-1 bg-gradient-to-br from-blue-900/20 to-black border border-white/10 rounded-[40px] p-8 backdrop-blur-md relative overflow-hidden shadow-2xl">
+            <div className="absolute -right-4 -bottom-4 text-white/5 pointer-events-none"><GraduationCap size={150} /></div>
+            <div className="relative z-10">
+               <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                 <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
+                 Escuelita CAT
+               </h3>
+               <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest mb-6">Última Clase Registrada</p>
+               
+               <p className="text-6xl font-black text-white">{lastEscuelitaClass?._count.attendances || 0}</p>
+               <p className="text-sm font-medium text-blue-400 mt-2">
+                 {lastEscuelitaClass ? new Date(lastEscuelitaClass.date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long'}) : "No hay datos"}
+               </p>
+               <div className="mt-8">
+                 <Link 
+                   href="/admin/escuelita" 
+                   className="inline-flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 px-4 py-2 rounded-xl text-xs font-bold transition-all border border-blue-500/30"
+                 >
+                   Módulo Escuelita <ArrowRight size={14} />
+                 </Link>
+               </div>
+            </div>
+         </div>
+         
+         <div className="md:col-span-2 bg-white/5 border border-white/10 rounded-[40px] p-8 backdrop-blur-md shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+               <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                 <div className="w-1 h-6 bg-cyan-500 rounded-full"></div>
+                 Frecuencia Escuelita
+               </h3>
+               <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">Últimos 3 meses</span>
+            </div>
+            
+            <div className="flex h-40 gap-1 mt-6">
+               <div className="flex flex-col justify-between text-[10px] text-zinc-600 font-mono pr-2 h-36 pb-4 text-right min-w-[30px]">
+                  <span>{maxEscuelita}</span>
+                  <span>{Math.floor(maxEscuelita/2)}</span>
+                  <span>0</span>
+               </div>
+               
+               <div className="flex-1 flex items-end gap-1 h-36 border-l border-b border-white/5 pb-0 pl-2">
+                  {recentEscuelitaClasses.length === 0 ? (
+                    <div className="w-full h-full flex items-center justify-center text-xs text-zinc-600 italic">No hay clases aún</div>
+                  ) : (
+                    recentEscuelitaClasses.map((c, i) => {
+                      const height = (c._count.attendances / maxEscuelita) * 90
+                      return (
+                        <div key={i} className="flex-1 flex flex-col items-center gap-2 group/bar h-full justify-end relative">
+                           <div 
+                              className="bg-cyan-500/20 group-hover/bar:bg-cyan-500 transition-all duration-300 rounded-t-lg w-full min-h-[4px]"
+                              style={{ height: `${height || 2}%` }}
+                           ></div>
+                           <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-cyan-500 text-black text-[10px] font-black px-2 py-1 rounded-md opacity-0 group-hover/bar:opacity-100 transition-opacity z-20 pointer-events-none shadow-xl whitespace-nowrap">
+                              {c._count.attendances} asists.
+                              <br/>
+                              <span className="font-normal">{new Date(c.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
+                           </div>
+                        </div>
+                      )
+                    })
+                  )}
+               </div>
             </div>
          </div>
       </div>
