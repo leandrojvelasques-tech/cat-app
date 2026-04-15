@@ -1,6 +1,6 @@
 import { db } from "@/lib/db"
 import { notFound } from "next/navigation"
-import { Calendar, MapPin, Music, Users, Headphones, User, ArrowLeft, Plus, DollarSign, Clock, LayoutDashboard, Copy, Trash2, CheckCircle2, XCircle, Edit } from "lucide-react"
+import { Calendar, MapPin, Music, Users, Headphones, User, ArrowLeft, Plus, DollarSign, Clock, LayoutDashboard, Copy, Trash2, CheckCircle2, XCircle, Edit, ShoppingBag, Wallet } from "lucide-react"
 import Link from "next/link"
 import { RegistrationModal } from "../RegistrationModal"
 import { EventDetailsClient } from "./EventDetailsClient"
@@ -58,6 +58,18 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white px-4 py-2.5 rounded-xl font-medium transition-all text-sm border border-white/10">
                   <Copy size={16} /> Duplicar
                </button>
+               <Link
+                  href={`/admin/eventos/${event.id}/buffet`}
+                  className="flex items-center gap-2 bg-purple-500/20 hover:bg-purple-500/30 backdrop-blur-md text-purple-300 px-4 py-2.5 rounded-xl font-medium transition-all text-sm border border-purple-500/20"
+               >
+                  <ShoppingBag size={16} /> Buffet
+               </Link>
+               <Link
+                  href={`/admin/eventos/${event.id}/caja`}
+                  className="flex items-center gap-2 bg-emerald-500/20 hover:bg-emerald-500/30 backdrop-blur-md text-emerald-300 px-4 py-2.5 rounded-xl font-medium transition-all text-sm border border-emerald-500/20"
+               >
+                  <Wallet size={16} /> Rendición de Caja
+               </Link>
                <EventDetailsClient event={event} />
             </div>
           </div>
@@ -96,6 +108,18 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
              <button className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-zinc-300 px-4 py-2.5 rounded-xl font-medium transition-all text-sm border border-white/5">
                 <Copy size={16} /> Duplicar para Próxima Fecha
              </button>
+             <Link
+                href={`/admin/eventos/${event.id}/buffet`}
+                className="flex items-center gap-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 px-4 py-2.5 rounded-xl font-medium transition-all text-sm border border-purple-500/20"
+             >
+                <ShoppingBag size={16} /> Buffet
+             </Link>
+             <Link
+                href={`/admin/eventos/${event.id}/caja`}
+                className="flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-4 py-2.5 rounded-xl font-medium transition-all text-sm border border-emerald-500/20"
+             >
+                <Wallet size={16} /> Rendición de Caja
+             </Link>
              <EventDetailsClient event={event} />
           </div>
         </div>

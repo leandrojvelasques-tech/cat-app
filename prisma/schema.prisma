@@ -8,78 +8,80 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
+  id            String  @id @default(uuid())
+  email         String  @unique
   name          String?
   passwordHash  String
-  role          String   @default("MEMBER") // ADMIN, BOARD, MEMBER
-  position      String?  // Presidente, Tesorero, etc.
-  isBoardMember Boolean  @default(false)
+  role          String  @default("MEMBER") // ADMIN, BOARD, MEMBER
+  position      String? // Presidente, Tesorero, etc.
+  isBoardMember Boolean @default(false)
   member        Member?
-  
+
   // Track registrations recorded by this user
   recordedRegistrations EventRegistration[] @relation("RecordedBy")
   recordedFees          MembershipFee[]     @relation("FeeRecordedBy")
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  buffetSalesRecorded   BuffetSale[]        @relation("BuffetRecordedBy")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Member {
-  id               String   @id @default(uuid())
-  memberNumber     String      
-  firstName        String
-  lastName         String
-  dni              String   @unique
-  address          String?
-  city             String?
-  email            String?
-  phone            String?
-  joinDate         DateTime @default(now())
-  birthDate        DateTime?
-  type             String   @default("ACTIVO") // ACTIVO, HONORARIO
-  status           String   @default("ACTIVE") // ACTIVE, INACTIVE, DEBTOR, SUSPENDED, DECEASED, RESIGNED
-  
+  id           String    @id @default(uuid())
+  memberNumber String
+  firstName    String
+  lastName     String
+  dni          String    @unique
+  address      String?
+  city         String?
+  email        String?
+  phone        String?
+  joinDate     DateTime  @default(now())
+  birthDate    DateTime?
+  type         String    @default("ACTIVO") // ACTIVO, HONORARIO
+  status       String    @default("ACTIVE") // ACTIVE, INACTIVE, DEBTOR, SUSPENDED, DECEASED, RESIGNED
+
   // Board status
-  isBoardMember    Boolean  @default(false)
-  position         String?  // e.g. "Vocal", "Presidente"
+  isBoardMember Boolean @default(false)
+  position      String? // e.g. "Vocal", "Presidente"
 
   // New: Family Discount (50%)
   isFamilyDiscount Boolean  @default(false)
   partnerId        String?
-  partner          Member?   @relation("MemberPartner", fields: [partnerId], references: [id])
-  partnerOf        Member[]  @relation("MemberPartner")
+  partner          Member?  @relation("MemberPartner", fields: [partnerId], references: [id])
+  partnerOf        Member[] @relation("MemberPartner")
 
-  wantsMailing     Boolean  @default(true)
-  notes            String?  
-  userId           String?  @unique
-  user             User?    @relation(fields: [userId], references: [id])
-  
-  fees             MembershipFee[]
-  communications   Communication[]
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  avatarUrl        String?  // For digital ID
-  deactivatedAt    DateTime?
-  eventRegistrations EventRegistration[]
+  wantsMailing Boolean @default(true)
+  notes        String?
+  userId       String? @unique
+  user         User?   @relation(fields: [userId], references: [id])
+
+  fees                MembershipFee[]
+  communications      Communication[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  avatarUrl           String? // For digital ID
+  deactivatedAt       DateTime?
+  eventRegistrations  EventRegistration[]
   championshipResults ChampionshipResult[] @relation("MemberAwards")
   boardHistory        BoardHistory[]
+  buffetPurchases     BuffetSale[]         @relation("BuffetBuyer")
 }
 
 model Communication {
-  id          String   @id @default(uuid())
-  memberId    String
-  member      Member   @relation(fields: [memberId], references: [id])
-  type        String   // WELCOME, DEBT_REMINDER, EVENT_INFO, GENERAL
-  subject     String
-  content     String
-  sentBy      String?
-  sentAt      DateTime @default(now())
-  status      String   @default("SENT") // SENT, FAILED, PENDING
-  channel     String   @default("EMAIL") // EMAIL, WHATSAPP, MANUAL
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id       String   @id @default(uuid())
+  memberId String
+  member   Member   @relation(fields: [memberId], references: [id])
+  type     String // WELCOME, DEBT_REMINDER, EVENT_INFO, GENERAL
+  subject  String
+  content  String
+  sentBy   String?
+  sentAt   DateTime @default(now())
+  status   String   @default("SENT") // SENT, FAILED, PENDING
+  channel  String   @default("EMAIL") // EMAIL, WHATSAPP, MANUAL
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model MembershipFee {
@@ -92,27 +94,27 @@ model MembershipFee {
   amountPaid    Float
   paymentDate   DateTime
   paymentMethod String?
-  paymentStatus String   // PAID, PARTIAL
+  paymentStatus String // PAID, PARTIAL
   notes         String?
-  
+
   // Track recording user for fees too
-  recordedById  String?
-  recordedBy    User?    @relation("FeeRecordedBy", fields: [recordedById], references: [id])
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  recordedById String?
+  recordedBy   User?   @relation("FeeRecordedBy", fields: [recordedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([memberId, periodYear, periodMonth])
 }
 
 model Announcement {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   title       String
   content     String
-  status      String   @default("DRAFT")
+  status      String    @default("DRAFT")
   publishedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Setting {
@@ -123,126 +125,175 @@ model Setting {
 }
 
 model Teacher {
-  id        String   @id @default(uuid())
-  name      String
-  bio       String?
-  events    Event[]  @relation("EventTeachers")
+  id     String  @id @default(uuid())
+  name   String
+  bio    String?
+  events Event[] @relation("EventTeachers")
 }
 
 model Event {
-  id              String   @id @default(uuid())
-  title           String
-  description     String?
-  startDate       DateTime
-  endDate         DateTime?
-  location        String?  @default("Sede Central CAT")
-  type            String   // MILONGA, WORKSHOP, BOTH
-  
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  location    String?   @default("Sede Central CAT")
+  type        String // MILONGA, WORKSHOP, BOTH
+
   // Specific Schedules and Locations
   milongaStart    DateTime?
   milongaEnd      DateTime?
   milongaLocation String?
   tangoDJ         String?
-  
-  workshopStart   DateTime?
-  workshopEnd     DateTime?
+
+  workshopStart    DateTime?
+  workshopEnd      DateTime?
   workshopLocation String?
-  workshopClasses String? // JSON String with [{name, start, end, description}]
-  
-  organizer       String   @default("Centro Amigos del Tango")
-  
+  workshopClasses  String? // JSON String with [{name, start, end, description}]
+
+  organizer String @default("Centro Amigos del Tango")
+
   // Pricing
-  priceSocioMilonga    Float?
-  priceNonSocioMilonga Float?
-  priceSocioWorkshop   Float?
-  priceNonSocioWorkshop Float?
-  priceSocioFull       Float?
-  priceNonSocioFull    Float?
-  priceSocioSingleClass Float?
+  priceSocioMilonga        Float?
+  priceNonSocioMilonga     Float?
+  priceSocioWorkshop       Float?
+  priceNonSocioWorkshop    Float?
+  priceSocioFull           Float?
+  priceNonSocioFull        Float?
+  priceSocioSingleClass    Float?
   priceNonSocioSingleClass Float?
-  
-  status          String   @default("OPEN") // OPEN, CLOSED, ARCHIVED
-  isPublic        Boolean  @default(true)   // For website visibility
-  eventBanner     String?  // URL/Path to designed banner image
-  
-  teachers        Teacher[] @relation("EventTeachers")
-  registrations   EventRegistration[]
-  
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+
+  status      String  @default("OPEN") // OPEN, CLOSED, ARCHIVED
+  isPublic    Boolean @default(true) // For website visibility
+  eventBanner String? // URL/Path to designed banner image
+
+  teachers      Teacher[]           @relation("EventTeachers")
+  registrations EventRegistration[]
+  buffetSales   BuffetSale[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model EventRegistration {
-  id              String   @id @default(uuid())
-  eventId         String
-  event           Event    @relation(fields: [eventId], references: [id])
-  
+  id      String @id @default(uuid())
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id])
+
   // Link to member if exists, otherwise manual data
-  memberId        String?
-  member          Member?  @relation(fields: [memberId], references: [id])
-  
-  firstName       String
-  lastName        String
-  dni             String?
-  email           String?
-  phone           String?
-  
-  registrationType String  // MILONGA, WORKSHOP, FULL
-  amountPaid      Float    @default(0)
-  paymentStatus   String   @default("PENDING") // PENDING, PAID
-  paymentMethod   String?  // CASH, TRANSFER, etc
-  paymentProof    String?  // URL/Path to image
-  
+  memberId String?
+  member   Member? @relation(fields: [memberId], references: [id])
+
+  firstName String
+  lastName  String
+  dni       String?
+  email     String?
+  phone     String?
+
+  registrationType String // MILONGA, WORKSHOP, FULL
+  amountPaid       Float   @default(0)
+  paymentStatus    String  @default("PENDING") // PENDING, PAID
+  paymentMethod    String? // CASH, TRANSFER, etc
+  paymentProof     String? // URL/Path to image
+
   // Source tracking
-  source          String   @default("MANAGEMENT") // WEB, MANAGEMENT
-  recordedById    String?
-  recordedBy      User?    @relation("RecordedBy", fields: [recordedById], references: [id])
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  source       String  @default("MANAGEMENT") // WEB, MANAGEMENT
+  recordedById String?
+  recordedBy   User?   @relation("RecordedBy", fields: [recordedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Championship {
-  id          String   @id @default(uuid())
+  id          String               @id @default(uuid())
   year        Int
-  name        String   @default("Vientos de Tango")
-  description String?  // Optional description of this championship edition
+  name        String               @default("Vientos de Tango")
+  description String? // Optional description of this championship edition
   results     ChampionshipResult[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
 
   @@unique([year, name])
 }
 
 model ChampionshipResult {
-  id              String   @id @default(uuid())
-  championshipId  String
-  championship    Championship @relation(fields: [championshipId], references: [id])
-  
-  category        String   // TANGO PISTA, MILONGA, VALS, TANGO ESCENARIO
-  place           Int      // 1, 2, 3
-  
+  id             String       @id @default(uuid())
+  championshipId String
+  championship   Championship @relation(fields: [championshipId], references: [id])
+
+  category String // TANGO PISTA, MILONGA, VALS, TANGO ESCENARIO
+  place    Int // 1, 2, 3
+
   // Link to member if they are a current member
-  memberId        String?
-  member          Member?  @relation("MemberAwards", fields: [memberId], references: [id])
-  
+  memberId String?
+  member   Member? @relation("MemberAwards", fields: [memberId], references: [id])
+
   // Names of the couple (since one or both might not be members)
-  firstName       String
-  lastName        String
-  partnerName     String?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  firstName   String
+  lastName    String
+  partnerName String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model BoardHistory {
   id          String   @id @default(uuid())
   memberId    String
   member      Member   @relation(fields: [memberId], references: [id])
-  position    String   // e.g. "Presidente", "Vocal"
-  periodStart String?  // e.g. "2012"
-  periodEnd   String?  // e.g. "2023"
+  position    String // e.g. "Presidente", "Vocal"
+  periodStart String? // e.g. "2012"
+  periodEnd   String? // e.g. "2023"
   notes       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model BuffetProduct {
+  id        String   @id @default(uuid())
+  name      String
+  brand     String?
+  size      String?
+  price     Float
+  type      String // BEBIDAS_SIN_ALCOHOL, BEBIDAS_CON_ALCOHOL, COMIDA
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  saleItems BuffetSaleItem[]
+}
+
+model BuffetSale {
+  id      String @id @default(uuid())
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id])
+
+  amountTotal   Float
+  amountPaid    Float
+  paymentMethod String // CASH, TRANSFER, MERCADOPAGO, A_COBRAR
+
+  buyerName String?
+  buyerId   String?
+  buyer     Member? @relation("BuffetBuyer", fields: [buyerId], references: [id])
+
+  recordedById String?
+  recordedBy   User?   @relation("BuffetRecordedBy", fields: [recordedById], references: [id])
+
+  items BuffetSaleItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BuffetSaleItem {
+  id          String        @id @default(uuid())
+  saleId      String
+  sale        BuffetSale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId   String
+  product     BuffetProduct @relation(fields: [productId], references: [id])
+  quantity    Int
+  priceAtSale Float
+
+  @@unique([saleId, productId])
 }
