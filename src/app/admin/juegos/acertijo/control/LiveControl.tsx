@@ -18,6 +18,7 @@ export function LiveControl() {
   const [allQuestions, setAllQuestions] = useState<Question[]>([])
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [timerVal, setTimerVal] = useState(10)
+  const [timeLeft, setTimeLeft] = useState<number | null>(null)
   
   // Polling for admin metrics
   useEffect(() => {
@@ -27,9 +28,27 @@ export function LiveControl() {
       setLoading(false)
     }
     refresh()
-    const interval = setInterval(refresh, 3000)
+    const interval = setInterval(refresh, 2000)
     return () => clearInterval(interval)
   }, [])
+
+  // Timer logic for admin
+  useEffect(() => {
+    if (!status?.timerEndAt) {
+      setTimeLeft(null)
+      return
+    }
+
+    const timer = setInterval(() => {
+      const end = new Date(status.timerEndAt).getTime()
+      const now = new Date().getTime()
+      const diff = Math.max(0, Math.floor((end - now) / 1000))
+      setTimeLeft(diff)
+      if (diff === 0) clearInterval(timer)
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [status?.timerEndAt])
 
   useEffect(() => {
     async function loadQs() {
@@ -273,17 +292,42 @@ export function LiveControl() {
 
                {status.currentQuestion ? (
                  <div className={`space-y-6 transition-opacity duration-500 ${status.status === 'QUESTION_HIDDEN' ? 'opacity-30 blur-sm' : 'opacity-100'}`}>
-                   <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight">
-                     {status.currentQuestion.statement}
-                   </h2>
-                   
-                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                     {['A', 'B', 'C', 'D'].map(letter => (
-                       <div key={letter} className="p-4 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-3">
-                         <span className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-xs font-black text-zinc-400">{letter}</span>
-                         <span className="text-sm text-zinc-300 font-medium">{status.currentQuestion[`option${letter}`]}</span>
-                       </div>
-                     ))}
+                   <div className="flex justify-between items-start gap-4">
+                      <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight flex-1">
+                        {status.currentQuestion.statement}
+                      </h2>
+                      {timeLeft !== null && (
+                         <div className={`w-16 h-16 rounded-2xl flex flex-col items-center justify-center border-2 ${timeLeft < 4 ? 'border-red-500 text-red-500 animate-pulse' : 'border-emerald-500 text-emerald-500'}`}>
+                            <span className="text-2xl font-black">{timeLeft}</span>
+                            <span className="text-[8px] font-bold uppercase">seg</span>
+                         </div>
+                      )}
+                   </div>
+
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                     {status.currentQuestion.options.map((opt: string, i: number) => {
+                       const letter = ['A', 'B', 'C', 'D'][i]
+                       const count = status.answerStats?.[letter] || 0
+                       const total = Object.values(status.answerStats || {}).reduce((a: any, b: any) => a + b, 0) as number
+                       const percent = total > 0 ? (count / total) * 100 : 0
+                       
+                       return (
+                        <div key={i} className="relative p-4 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                           {/* Progress Bar Background */}
+                           <div 
+                              className="absolute inset-y-0 left-0 bg-emerald-500/10 transition-all duration-1000" 
+                              style={{ width: `${percent}%` }}
+                           />
+                           <div className="relative flex justify-between items-center gap-3">
+                              <div className="flex items-center gap-3">
+                                <span className="w-6 h-6 rounded bg-white/10 flex items-center justify-center text-[10px] font-black">{letter}</span>
+                                <span className="text-sm font-medium text-zinc-300">{opt}</span>
+                              </div>
+                              <span className="text-xs font-black text-emerald-500">{count}</span>
+                           </div>
+                        </div>
+                       )
+                     })}
                    </div>
                  </div>
                ) : (
@@ -332,25 +376,33 @@ export function LiveControl() {
 
         {/* Sidebar: Participants & Ranking */}
         <div className="space-y-6">
-          <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6">
-             <div className="flex items-center justify-between mb-6">
-               <h3 className="text-sm font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-                 <Trophy size={16} className="text-amber-500" />
-                 Ranking Vivo
-               </h3>
-               <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                 <span className="text-[10px] font-black text-emerald-400">EN VIVO</span>
-               </div>
+          <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
+             <h3 className="text-sm font-black text-white/50 mb-6 flex items-center gap-2 uppercase tracking-widest">
+               <Users size={14} className="text-emerald-500" />
+               Conectados ({status.connectedCount})
+             </h3>
+             <div className="flex flex-wrap gap-2 mb-8">
+                {status.connectedNames?.map((name: string, i: number) => (
+                  <span key={i} className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold text-zinc-400">
+                    {name}
+                  </span>
+                ))}
+                {status.connectedCount === 0 && <p className="text-xs text-zinc-600 italic">No hay nadie conectado...</p>}
              </div>
 
+             <h3 className="text-sm font-black text-white/50 mb-6 flex items-center gap-2 uppercase tracking-widest">
+               <Trophy size={14} className="text-amber-500" />
+               Top 10 en Vivo
+             </h3>
              <div className="space-y-3">
                {status.ranking && status.ranking.length > 0 ? (
-                 status.ranking.map((entry: any, i: number) => (
-                   <div key={i} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
-                      <span className="text-xs font-black text-zinc-600 w-4 text-center">{i + 1}</span>
-                      <span className="text-sm font-bold text-white flex-1 truncate">{entry.name}</span>
-                      <span className="text-sm font-black text-amber-500">{entry.score}</span>
+                 status.ranking.map((player: any, i: number) => (
+                   <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+                     <div className="flex items-center gap-3">
+                       <span className="text-[10px] font-black text-zinc-600">#{i + 1}</span>
+                       <span className="text-sm font-bold text-white">{player.name}</span>
+                     </div>
+                     <span className="text-sm font-black text-amber-500">{player.score}</span>
                    </div>
                  ))
                ) : (

@@ -243,14 +243,49 @@ export async function getLiveStatus(sessionId?: string) {
   
   if (!game) return null
 
-  // Contar jugadores activos en los últimos 10 segundos
+  // 1. Contar y obtener nombres de jugadores activos (en los últimos 10 segundos)
   const activeThreshold = new Date(Date.now() - 10000)
-  const connectedPlayersCount = await db.triviaSession.count({
+  const activeSessions = await db.triviaSession.findMany({
     where: {
       gameId: game.id,
       updatedAt: { gte: activeThreshold },
-      completedAt: null // Solo contamos los que están jugando todavía
-    }
+    },
+    include: { player: true },
+  })
+
+  const connectedNames = activeSessions.map(s => 
+    s.player.nickname || `${s.player.firstName} ${s.player.lastName.charAt(0)}.`
+  )
+
+  // 2. Obtener estadísticas de respuestas para la pregunta actual
+  const answerStats: Record<string, number> = { A: 0, B: 0, C: 0, D: 0 }
+  if (game.currentQuestionId) {
+    const answers = await db.triviaAnswer.groupBy({
+      by: ["selectedOption"],
+      where: {
+        questionId: game.currentQuestionId,
+        // Solo contamos las respuestas de la partida actual
+        createdAt: { gte: game.updatedAt } 
+      },
+      _count: { id: true }
+    })
+    
+    answers.forEach(a => {
+      if (a.selectedOption && answerStats[a.selectedOption] !== undefined) {
+        answerStats[a.selectedOption] = a._count.id
+      }
+    })
+  }
+
+  // 3. Ranking dinámico (incluye sesiones en curso)
+  const rankingSessions = await db.triviaSession.findMany({
+    where: { gameId: game.id },
+    include: { player: true },
+    orderBy: [
+      { score: "desc" },
+      { updatedAt: "desc" }
+    ],
+    take: 10
   })
 
   let currentQuestion = null
@@ -272,17 +307,20 @@ export async function getLiveStatus(sessionId?: string) {
   return {
     status: game.status,
     currentQuestion,
-    currentIndex: game.currentQuestionIndex,
+    currentQuestionIndex: game.currentQuestionIndex,
     totalQuestions: game.activeQuestionIds.length,
     timerEndAt: game.timerEndAt,
     timerDuration: game.timerDuration,
-    connectedCount: connectedPlayersCount, // <-- Agregado
-    ranking: game.sessions.map(s => ({
+    connectedCount: activeSessions.length,
+    connectedNames,
+    answerStats,
+    ranking: rankingSessions.map(s => ({
       name: s.player.nickname || `${s.player.firstName} ${s.player.lastName.charAt(0)}.`,
       score: s.score
     }))
   }
 }
+
 
 
 
