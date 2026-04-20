@@ -44,19 +44,56 @@ export default async function AdminJuegosPage() {
                 <p className="text-sm text-zinc-500">Trivia de tango para milongas y eventos</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Link
-                href="/admin/juegos/acertijo/control"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 rounded-xl font-black text-xs transition-all shadow-lg shadow-amber-500/20 active:scale-95"
-              >
-                <Play size={14} fill="currentColor" />
-                CONTROL EN VIVO
-              </Link>
-              <ToggleGameButton isActive={gameConfig.isActive} />
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between gap-4">
+                  <Link
+                    href="/admin/juegos/acertijo/control"
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-amber-500 hover:bg-amber-400 text-zinc-950 rounded-xl font-black text-xs transition-all shadow-lg shadow-amber-500/20"
+                  >
+                    <Play size={14} fill="currentColor" />
+                    PANEL DE CONTROL EN VIVO
+                  </Link>
+                  <ToggleGameButton isActive={gameConfig.isActive} />
+                </div>
+                <p className="text-[10px] text-zinc-500 font-medium text-right">
+                  {gameConfig.isActive 
+                    ? "✓ El juego es visible para el público" 
+                    : "🔒 El juego está oculto para el público"}
+                </p>
+              </div>
             </div>
-
           </div>
-        </div>
+
+          {/* Quick Guide */}
+          <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-500 mb-3">
+                <span className="font-black text-xs">1</span>
+              </div>
+              <h4 className="text-xs font-bold text-white mb-1 uppercase">Preparar</h4>
+              <p className="text-[10px] text-zinc-500 leading-relaxed">
+                Entrá a <b>Preguntas</b> para cargar el banco de preguntas o usar el Importador Masivo (CSV).
+              </p>
+            </div>
+            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-500 mb-3">
+                <span className="font-black text-xs">2</span>
+              </div>
+              <h4 className="text-xs font-bold text-white mb-1 uppercase">Lanzar</h4>
+              <p className="text-[10px] text-zinc-500 leading-relaxed">
+                Desde <b>Control en Vivo</b> elegí las preguntas para esta noche y compartí el link por WhatsApp.
+              </p>
+            </div>
+            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
+              <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-500 mb-3">
+                <span className="font-black text-xs">3</span>
+              </div>
+              <h4 className="text-xs font-bold text-white mb-1 uppercase">Moderar</h4>
+              <p className="text-[10px] text-zinc-500 leading-relaxed">
+                Revelá cada pregunta, activá el cronómetro y disfrutá viendo el ranking subir en tiempo real.
+              </p>
+            </div>
+          </div>
 
         {/* Metrics Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/5">
