@@ -305,10 +305,11 @@ export function LiveControl() {
                    </div>
 
                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                     {status.currentQuestion.options.map((opt: string, i: number) => {
+                     {(status?.currentQuestion?.options || []).map((opt: string, i: number) => {
                        const letter = ['A', 'B', 'C', 'D'][i]
-                       const count = status.answerStats?.[letter] || 0
-                       const total = Object.values(status.answerStats || {}).reduce((a: any, b: any) => a + b, 0) as number
+                       const stats = status?.answerStats || {}
+                       const count = stats[letter] || 0
+                       const total = Object.values(stats as Record<string, number>).reduce((a, b) => a + b, 0)
                        const percent = total > 0 ? (count / total) * 100 : 0
                        
                        return (
@@ -379,15 +380,15 @@ export function LiveControl() {
           <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
              <h3 className="text-sm font-black text-white/50 mb-6 flex items-center gap-2 uppercase tracking-widest">
                <Users size={14} className="text-emerald-500" />
-               Conectados ({status.connectedCount})
+               Conectados ({status?.connectedCount || 0})
              </h3>
              <div className="flex flex-wrap gap-2 mb-8">
-                {status.connectedNames?.map((name: string, i: number) => (
+                {(status?.connectedNames || []).map((name: string, i: number) => (
                   <span key={i} className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold text-zinc-400">
                     {name}
                   </span>
                 ))}
-                {status.connectedCount === 0 && <p className="text-xs text-zinc-600 italic">No hay nadie conectado...</p>}
+                {(status?.connectedCount || 0) === 0 && <p className="text-xs text-zinc-600 italic">No hay nadie conectado...</p>}
              </div>
 
              <h3 className="text-sm font-black text-white/50 mb-6 flex items-center gap-2 uppercase tracking-widest">
