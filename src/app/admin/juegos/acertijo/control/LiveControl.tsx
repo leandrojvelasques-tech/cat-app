@@ -1,0 +1,285 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { Brain, Play, FastForward, Clock, RotateCcw, Users, Trophy, ChevronRight, CheckCircle2, AlertCircle, Settings2 } from "lucide-react"
+import { startLiveSession, nextLiveQuestion, startLiveTimer, resetLiveGame, getLiveStatus, getQuestions } from "@/app/actions/juegos"
+import { toast } from "sonner"
+
+interface Question {
+  id: string
+  statement: string
+  category: string
+  difficulty: string
+}
+
+export function LiveControl() {
+  const [status, setStatus] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [allQuestions, setAllQuestions] = useState<Question[]>([])
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [timerVal, setTimerVal] = useState(10)
+  
+  // Polling for admin metrics
+  useEffect(() => {
+    async function refresh() {
+      const s = await getLiveStatus()
+      setStatus(s)
+      setLoading(false)
+    }
+    refresh()
+    const interval = setInterval(refresh, 3000)
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    async function loadQs() {
+      const qs = await getQuestions({ isActive: true })
+      setAllQuestions(qs)
+    }
+    loadQs()
+  }, [])
+
+  const handleStartSession = async () => {
+    if (selectedIds.length === 0) {
+      toast.error("Seleccioná al menos una pregunta")
+      return
+    }
+    try {
+      await startLiveSession(selectedIds, timerVal)
+      toast.success("Sesión iniciada")
+    } catch {
+      toast.error("Error al iniciar sesión")
+    }
+  }
+
+  const handleNext = async () => {
+    try {
+      await nextLiveQuestion()
+      toast.success("Siguiente pregunta enviada")
+    } catch {
+      toast.error("Error al pasar la pregunta")
+    }
+  }
+
+  const handleStartTimer = async () => {
+    try {
+      await startLiveTimer()
+      toast.success("¡Tiempo iniciado!")
+    } catch {
+      toast.error("Error al iniciar el tiempo")
+    }
+  }
+
+  const handleReset = async () => {
+    if (!confirm("¿Estás seguro de reiniciar el juego? Se perderá el progreso actual.")) return
+    try {
+      await resetLiveGame()
+      toast.success("Juego reiniciado")
+    } catch {
+      toast.error("Error al reiniciar")
+    }
+  }
+
+  if (loading) return <div className="p-8 text-center text-zinc-500">Cargando control...</div>
+
+  // SETUP PHASE
+  if (!status || status.status === "IDLE") {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <Settings2 className="text-amber-500" />
+            Configurar Partida en Vivo
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <label className="block text-sm font-bold text-zinc-400 uppercase tracking-wider">
+                Tiempo de respuesta (segundos)
+              </label>
+              <input 
+                type="number" 
+                value={timerVal}
+                onChange={(e) => setTimerVal(parseInt(e.target.value))}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-amber-500/50 outline-none"
+              />
+              
+              <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-xl">
+                <p className="text-xs text-amber-200/60 leading-relaxed italic">
+                  * En esta modalidad, todos los participantes ven la misma pregunta al mismo tiempo. El tiempo empieza cuando vos lo activás.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-bold text-zinc-400 uppercase tracking-wider">
+                  Seleccionar Preguntas ({selectedIds.length})
+                </label>
+                <button 
+                  onClick={() => {
+                    const random = [...allQuestions].sort(() => 0.5 - Math.random()).slice(0, 10).map(q => q.id)
+                    setSelectedIds(random)
+                  }}
+                  className="text-xs text-amber-500 font-bold hover:underline"
+                >
+                  Seleccionar 10 al azar
+                </button>
+              </div>
+              
+              <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2">
+                {allQuestions.map(q => (
+                  <button
+                    key={q.id}
+                    onClick={() => {
+                      if (selectedIds.includes(q.id)) {
+                        setSelectedIds(prev => prev.filter(id => id !== q.id))
+                      } else {
+                        setSelectedIds(prev => [...prev, q.id])
+                      }
+                    }}
+                    className={`w-full text-left p-3 rounded-xl border text-xs transition-all ${
+                      selectedIds.includes(q.id) 
+                        ? "bg-amber-500/20 border-amber-500/50 text-white" 
+                        : "bg-white/5 border-white/10 text-zinc-400 hover:border-white/20"
+                    }`}
+                  >
+                    {q.statement}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={handleStartSession}
+            className="w-full mt-8 py-4 bg-gradient-to-r from-amber-600 to-red-800 hover:from-amber-500 rounded-2xl font-black text-white shadow-xl shadow-red-900/20 flex items-center justify-center gap-3 active:scale-95 transition-all"
+          >
+            <Play fill="currentColor" />
+            COMENZAR SESIÓN EN VIVO
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ACTIVE GAME PHASE
+  return (
+    <div className="space-y-6">
+      {/* Control Panel */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-zinc-900 border border-white/10 rounded-3xl p-8 relative overflow-hidden">
+             {/* Background glow based on status */}
+             <div className={`absolute top-0 right-0 w-64 h-64 blur-[100px] pointer-events-none opacity-20 ${
+               status.status === 'TIMER_ACTIVE' ? 'bg-red-500' : 'bg-emerald-500'
+             }`} />
+
+             <div className="relative z-10">
+               <div className="flex items-center justify-between mb-8">
+                 <div className="flex items-center gap-3">
+                   <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                     Pregunta {status.currentIndex + 1} de {status.totalQuestions}
+                   </span>
+                   <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                     status.status === 'TIMER_ACTIVE' ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'
+                   }`}>
+                     {status.status === 'TIMER_ACTIVE' ? 'CRONÓMETRO ACTIVO' : 'ESPERANDO ACCIÓN'}
+                   </span>
+                 </div>
+                 <button onClick={handleReset} className="p-2 text-zinc-600 hover:text-red-400 transition-colors">
+                    <RotateCcw size={18} />
+                 </button>
+               </div>
+
+               {status.currentQuestion ? (
+                 <div className="space-y-6">
+                   <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight">
+                     {status.currentQuestion.statement}
+                   </h2>
+                   
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                     {['A', 'B', 'C', 'D'].map(letter => (
+                       <div key={letter} className="p-4 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-3">
+                         <span className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 text-xs font-black text-zinc-400">{letter}</span>
+                         <span className="text-sm text-zinc-300 font-medium">{status.currentQuestion[`option${letter}`]}</span>
+                       </div>
+                     ))}
+                   </div>
+                 </div>
+               ) : (
+                 <div className="text-center py-12">
+                    <Trophy size={48} className="text-amber-500 mx-auto mb-4" />
+                    <h3 className="text-2xl font-black text-white">¡Partida Finalizada!</h3>
+                    <p className="text-zinc-500 mt-2">Ya podés anunciar los resultados finales.</p>
+                 </div>
+               )}
+
+               <div className="flex flex-col sm:flex-row gap-4 mt-12">
+                 {status.status === 'WAITING_QUESTION' && (
+                    <button
+                      onClick={handleStartTimer}
+                      className="flex-1 py-4 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-amber-500/20 transition-all active:scale-95"
+                    >
+                      <Clock size={20} />
+                      INICIAR {status.timerDuration} SEG.
+                    </button>
+                 )}
+                 
+                 {(status.status === 'TIMER_ACTIVE' || !status.currentQuestion) ? null : (
+                    <button
+                      disabled={status.status === 'TIMER_ACTIVE'}
+                      onClick={handleNext}
+                      className="flex-1 py-4 bg-white/10 hover:bg-white/20 text-white font-black rounded-2xl flex items-center justify-center gap-3 border border-white/10 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                      <span>Siguiente Pregunta</span>
+                      <FastForward size={20} />
+                    </button>
+                 )}
+               </div>
+             </div>
+          </div>
+        </div>
+
+        {/* Sidebar: Participants & Ranking */}
+        <div className="space-y-6">
+          <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6">
+             <div className="flex items-center justify-between mb-6">
+               <h3 className="text-sm font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                 <Trophy size={16} className="text-amber-500" />
+                 Ranking Vivo
+               </h3>
+               <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                 <span className="text-[10px] font-black text-emerald-400">EN VIVO</span>
+               </div>
+             </div>
+
+             <div className="space-y-3">
+               {status.ranking && status.ranking.length > 0 ? (
+                 status.ranking.map((entry: any, i: number) => (
+                   <div key={i} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
+                      <span className="text-xs font-black text-zinc-600 w-4 text-center">{i + 1}</span>
+                      <span className="text-sm font-bold text-white flex-1 truncate">{entry.name}</span>
+                      <span className="text-sm font-black text-amber-500">{entry.score}</span>
+                   </div>
+                 ))
+               ) : (
+                 <p className="text-xs text-zinc-600 text-center py-4">Esperando resultados...</p>
+               )}
+             </div>
+          </div>
+
+          <div className="bg-amber-600/10 border border-amber-600/20 rounded-3xl p-6">
+            <h4 className="text-xs font-black text-amber-500 uppercase tracking-widest mb-2">Instrucciones Admin</h4>
+            <ul className="text-[11px] text-zinc-400 space-y-2 leading-relaxed">
+              <li className="flex gap-2"><div className="w-1 h-1 rounded-full bg-amber-500 mt-1.5 shrink-0" /> Leé la pregunta en voz alta antes de iniciar el tiempo para que todos esten listos.</li>
+              <li className="flex gap-2"><div className="w-1 h-1 rounded-full bg-amber-500 mt-1.5 shrink-0" /> Una vez iniciado el tiempo, los participantes tienen {status.timerDuration}s para marcar su opción.</li>
+              <li className="flex gap-2"><div className="w-1 h-1 rounded-full bg-amber-500 mt-1.5 shrink-0" /> Los participantes no ven si acertaron hasta el final.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

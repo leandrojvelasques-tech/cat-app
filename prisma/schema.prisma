@@ -330,3 +330,87 @@ model EscuelitaAttendance {
 
   @@unique([studentId, classId])
 }
+
+// ============================================
+// JUEGOS — Acertijo 2.0
+// ============================================
+
+model TriviaQuestion {
+  id            String   @id @default(uuid())
+  statement     String   // Enunciado de la pregunta
+  optionA       String
+  optionB       String
+  optionC       String
+  optionD       String
+  correctOption String   // "A", "B", "C", "D"
+  category      String   // historia, orquestas, cantantes, etc.
+  difficulty    String   @default("MEDIUM") // EASY, MEDIUM, HARD
+  isActive      Boolean  @default(true)
+  answers       TriviaAnswer[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model TriviaGame {
+  id               String         @id @default(uuid())
+  name             String         @default("Acertijo 2.0")
+  isActive         Boolean        @default(false)
+  
+  // -- Campos para Juego en Vivo --
+  status           String         @default("IDLE") // IDLE, WAITING_QUESTION, TIMER_ACTIVE, SHOWING_RESULTS
+  currentQuestionId String?       
+  currentQuestionIndex Int          @default(0)
+  timerDuration    Int            @default(10)     // Segundos ajustables
+  timerEndAt       DateTime?                        // Para sincronizar el reloj
+  activeQuestionIds String[]      @default([])     // Las 10 preguntas elegidas para la sesión
+  // -------------------------------
+
+  questionsPerGame Int            @default(10)
+  timePerQuestion  Int            @default(30) // Segundos (Default para modo offline)
+  totalTimeLimit   Int?           // Segundos, null = sin límite
+  pointsCorrect    Int            @default(10)
+  pointsIncorrect  Int            @default(0) // Penalización
+  sessions         TriviaSession[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model TriviaPlayer {
+  id        String          @id @default(uuid())
+  firstName String
+  lastName  String
+  nickname  String?
+  email     String?
+  phone     String?
+  sessions  TriviaSession[]
+  createdAt DateTime        @default(now())
+}
+
+model TriviaSession {
+  id             String        @id @default(uuid())
+  playerId       String
+  player         TriviaPlayer  @relation(fields: [playerId], references: [id])
+  gameId         String
+  game           TriviaGame    @relation(fields: [gameId], references: [id])
+  totalCorrect   Int           @default(0)
+  totalIncorrect Int           @default(0)
+  totalTime      Int           @default(0) // Milisegundos
+  score          Int           @default(0)
+  completedAt    DateTime?
+  answers        TriviaAnswer[]
+  createdAt      DateTime      @default(now())
+}
+
+model TriviaAnswer {
+  id             String         @id @default(uuid())
+  sessionId      String
+  session        TriviaSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  questionId     String
+  question       TriviaQuestion @relation(fields: [questionId], references: [id])
+  selectedOption String         // "A", "B", "C", "D"
+  isCorrect      Boolean
+  timeTaken      Int            // Milisegundos
+  createdAt      DateTime       @default(now())
+
+  @@unique([sessionId, questionId])
+}

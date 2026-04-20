@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Users, CreditCard, LayoutDashboard, Settings, Archive, Calendar, Trophy, ShieldCheck, GraduationCap } from "lucide-react"
+import { Users, CreditCard, LayoutDashboard, Settings, Archive, Calendar, Trophy, ShieldCheck, GraduationCap, Gamepad2 } from "lucide-react"
 
 export function AdminNav() {
   const pathname = usePathname()
@@ -14,6 +14,7 @@ export function AdminNav() {
     { href: "/admin/eventos", icon: Calendar, label: "Eventos" },
     { href: "/admin/escuelita", icon: GraduationCap, label: "Escuelita CAT" },
     { href: "/admin/vientos-de-tango", icon: Trophy, label: "Vientos de Tango" },
+    { href: "/admin/juegos", icon: Gamepad2, label: "Juegos" },
     // Usuarios now lives inside Ajustes (configuracion)
     { href: "/admin/configuracion", icon: Settings, label: "Ajustes" },
   ]
