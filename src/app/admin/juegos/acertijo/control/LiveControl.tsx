@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Brain, Play, FastForward, Clock, RotateCcw, Users, Trophy, ChevronRight, CheckCircle2, AlertCircle, Settings2, Share2 } from "lucide-react"
-import { startLiveSession, nextLiveQuestion, startLiveTimer, resetLiveGame, getLiveStatus, getQuestions } from "@/app/actions/juegos"
+import { Brain, Play, FastForward, Clock, RotateCcw, Users, Trophy, ChevronRight, CheckCircle2, AlertCircle, Settings2, Share2, Eye } from "lucide-react"
+import { startLiveSession, nextLiveQuestion, startLiveTimer, resetLiveGame, getLiveStatus, getQuestions, revealLiveQuestion } from "@/app/actions/juegos"
 import { toast } from "sonner"
 
 interface Question {
@@ -58,6 +58,15 @@ export function LiveControl() {
       toast.success("Siguiente pregunta enviada")
     } catch {
       toast.error("Error al pasar la pregunta")
+    }
+  }
+
+  const handleReveal = async () => {
+    try {
+      await revealLiveQuestion()
+      toast.success("Pregunta revelada a los jugadores")
+    } catch {
+      toast.error("Error al revelar")
     }
   }
 
@@ -248,16 +257,22 @@ export function LiveControl() {
                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
                      status.status === 'TIMER_ACTIVE' ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'
                    }`}>
-                     {status.status === 'TIMER_ACTIVE' ? 'CRONÓMETRO ACTIVO' : 'ESPERANDO ACCIÓN'}
+                     {status.status === 'QUESTION_HIDDEN' ? 'PREGUNTA OCULTA' : status.status === 'TIMER_ACTIVE' ? 'CRONÓMETRO ACTIVO' : 'ESPERANDO ACCIÓN'}
                    </span>
                  </div>
-                 <button onClick={handleReset} className="p-2 text-zinc-600 hover:text-red-400 transition-colors">
-                    <RotateCcw size={18} />
-                 </button>
+                 <div className="flex items-center gap-6">
+                    <div className="flex flex-col items-end">
+                       <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">{status.connectedCount} en línea</span>
+                       <span className="text-[8px] text-zinc-600 font-bold uppercase tracking-widest">JUGADORES CONECTADOS</span>
+                    </div>
+                    <button onClick={handleReset} className="p-2 text-zinc-600 hover:text-red-400 transition-colors">
+                        <RotateCcw size={18} />
+                    </button>
+                 </div>
                </div>
 
                {status.currentQuestion ? (
-                 <div className="space-y-6">
+                 <div className={`space-y-6 transition-opacity duration-500 ${status.status === 'QUESTION_HIDDEN' ? 'opacity-30 blur-sm' : 'opacity-100'}`}>
                    <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight">
                      {status.currentQuestion.statement}
                    </h2>
@@ -280,6 +295,16 @@ export function LiveControl() {
                )}
 
                <div className="flex flex-col sm:flex-row gap-4 mt-12">
+                 {status.status === 'QUESTION_HIDDEN' && (
+                    <button
+                      onClick={handleReveal}
+                      className="flex-1 py-4 bg-white text-zinc-950 font-black rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-white/10 transition-all active:scale-95"
+                    >
+                      <Eye size={20} />
+                      REVELAR PREGUNTA
+                    </button>
+                 )}
+
                  {status.status === 'WAITING_QUESTION' && (
                     <button
                       onClick={handleStartTimer}

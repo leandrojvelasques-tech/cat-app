@@ -145,7 +145,7 @@ export async function startLiveSession(questionIds: string[], timerDuration = 10
   return db.triviaGame.update({
     where: { id: game.id },
     data: {
-      status: "WAITING_QUESTION",
+      status: "QUESTION_HIDDEN",
       activeQuestionIds: questionIds,
       currentQuestionIndex: 0,
       currentQuestionId: questionIds[0],
@@ -172,11 +172,20 @@ export async function nextLiveQuestion() {
     data: {
       currentQuestionIndex: nextIndex,
       currentQuestionId: game.activeQuestionIds[nextIndex],
-      status: "WAITING_QUESTION",
+      status: "QUESTION_HIDDEN", // <-- Cambiado a oculto por defecto
       timerEndAt: null,
     },
   })
 }
+
+export async function revealLiveQuestion() {
+  const game = await getGameConfig()
+  return db.triviaGame.update({
+    where: { id: game.id },
+    data: { status: "WAITING_QUESTION" }
+  })
+}
+
 
 export async function startLiveTimer(duration?: number) {
   const game = await getGameConfig()
@@ -207,7 +216,19 @@ export async function resetLiveGame() {
   })
 }
 
-export async function getLiveStatus() {
+export async function getLiveStatus(sessionId?: string) {
+  // Heartbeat: Si viene un sessionId, actualizamos su updatedAt
+  if (sessionId) {
+    try {
+      await db.triviaSession.update({
+        where: { id: sessionId },
+        data: { updatedAt: new Date() }
+      })
+    } catch (e) {
+      // Ignorar errores si la sesión no existe
+    }
+  }
+
   const game = await db.triviaGame.findFirst({
     where: { name: "Acertijo 2.0" },
     include: {
@@ -222,8 +243,18 @@ export async function getLiveStatus() {
   
   if (!game) return null
 
+  // Contar jugadores activos en los últimos 10 segundos
+  const activeThreshold = new Date(Date.now() - 10000)
+  const connectedPlayersCount = await db.triviaSession.count({
+    where: {
+      gameId: game.id,
+      updatedAt: { gte: activeThreshold },
+      completedAt: null // Solo contamos los que están jugando todavía
+    }
+  })
+
   let currentQuestion = null
-  if (game.currentQuestionId) {
+  if (game.currentQuestionId && game.status !== "QUESTION_HIDDEN") {
     currentQuestion = await db.triviaQuestion.findUnique({
       where: { id: game.currentQuestionId },
       select: {
@@ -245,12 +276,14 @@ export async function getLiveStatus() {
     totalQuestions: game.activeQuestionIds.length,
     timerEndAt: game.timerEndAt,
     timerDuration: game.timerDuration,
+    connectedCount: connectedPlayersCount, // <-- Agregado
     ranking: game.sessions.map(s => ({
       name: s.player.nickname || `${s.player.firstName} ${s.player.lastName.charAt(0)}.`,
       score: s.score
     }))
   }
 }
+
 
 
 // ============================================
