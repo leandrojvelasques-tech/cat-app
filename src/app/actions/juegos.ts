@@ -264,8 +264,8 @@ export async function getLiveStatus(sessionId?: string) {
       by: ["selectedOption"],
       where: {
         questionId: game.currentQuestionId,
-        // Solo contamos las respuestas de la partida actual
-        createdAt: { gte: game.updatedAt } 
+        // Solo contamos las respuestas recientes (últimos 10 minutos)
+        createdAt: { gte: new Date(Date.now() - 10 * 60 * 1000) } 
       },
       _count: { id: true }
     })
