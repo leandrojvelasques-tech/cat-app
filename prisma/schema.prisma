@@ -399,7 +399,7 @@ model TriviaSession {
   completedAt    DateTime?
   answers        TriviaAnswer[]
   createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  updatedAt      DateTime      @default(now()) @updatedAt
 }
 
 model TriviaAnswer {
