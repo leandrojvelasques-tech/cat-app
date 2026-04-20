@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Brain, Play, FastForward, Clock, RotateCcw, Users, Trophy, ChevronRight, CheckCircle2, AlertCircle, Settings2 } from "lucide-react"
+import { Brain, Play, FastForward, Clock, RotateCcw, Users, Trophy, ChevronRight, CheckCircle2, AlertCircle, Settings2, Share2 } from "lucide-react"
 import { startLiveSession, nextLiveQuestion, startLiveTimer, resetLiveGame, getLiveStatus, getQuestions } from "@/app/actions/juegos"
 import { toast } from "sonner"
 
@@ -80,6 +80,26 @@ export function LiveControl() {
     }
   }
 
+  const getGameUrl = () => {
+    if (typeof window !== "undefined") {
+      return `${window.location.origin}/juegos/acertijo`
+    }
+    return ""
+  }
+
+  const handleCopyLink = () => {
+    const url = getGameUrl()
+    navigator.clipboard.writeText(url)
+    toast.success("¡Link copiado al portapapeles!")
+  }
+
+  const handleShareWhatsapp = () => {
+    const url = getGameUrl()
+    const text = `¡Empezó el Acertijo 2.0 del Centro Amigos del Tango! 💃🎶\n\nEntrá acá para jugar con nosotros:\n${url}`
+    const wbUrl = `https://wa.me/?text=${encodeURIComponent(text)}`
+    window.open(wbUrl, '_blank')
+  }
+
   if (loading) return <div className="p-8 text-center text-zinc-500">Cargando control...</div>
 
   // SETUP PHASE
@@ -88,9 +108,31 @@ export function LiveControl() {
       <div className="space-y-6">
         <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6">
           <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <Settings2 className="text-amber-500" />
-            Configurar Partida en Vivo
+            <Users className="text-amber-500" />
+            Acceso para Participantes
           </h2>
+
+          <div className="p-4 bg-white/5 border border-white/10 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+            <div className="flex-1">
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Link de la partida</p>
+              <p className="text-sm font-mono text-amber-500/80 truncate">{getGameUrl()}</p>
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button 
+                onClick={handleCopyLink}
+                className="flex-1 sm:flex-none px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-all border border-white/10"
+              >
+                Copiar
+              </button>
+              <button 
+                onClick={handleShareWhatsapp}
+                className="flex-1 sm:flex-none px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2"
+              >
+                <Share2 size={14} />
+                WhatsApp
+              </button>
+            </div>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
@@ -166,6 +208,28 @@ export function LiveControl() {
   // ACTIVE GAME PHASE
   return (
     <div className="space-y-6">
+      {/* Quick Share Bar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+            <Users size={20} className="text-emerald-500" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-white leading-none mb-1">Enlace de Invitación</p>
+            <p className="text-[10px] text-emerald-500/60 font-medium uppercase tracking-wider">Compartí este link para que se unan</p>
+          </div>
+        </div>
+        <div className="flex gap-2 w-full sm:w-auto">
+           <button onClick={handleCopyLink} className="flex-1 sm:flex-none px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-xl text-xs font-bold transition-all">
+             Copiar Link
+           </button>
+           <button onClick={handleShareWhatsapp} className="flex-1 sm:flex-none px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20">
+             <Share2 size={14} />
+             Enviar WhatsApp
+           </button>
+        </div>
+      </div>
+
       {/* Control Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
