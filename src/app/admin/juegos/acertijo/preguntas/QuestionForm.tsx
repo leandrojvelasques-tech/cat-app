@@ -7,6 +7,9 @@ import { ArrowLeft, Save, CheckCircle } from "lucide-react"
 import Link from "next/link"
 
 const CATEGORIES = [
+  { value: "milonga", label: "Milonga" },
+  { value: "vientos", label: "Vientos de Tango" },
+  { value: "tangos", label: "Tangos" },
   { value: "historia", label: "Historia del tango" },
   { value: "orquestas", label: "Orquestas típicas" },
   { value: "cantantes", label: "Cantantes" },
@@ -16,8 +19,8 @@ const CATEGORIES = [
   { value: "codigos", label: "Códigos de milonga" },
   { value: "danza", label: "Tango danza" },
   { value: "cultura", label: "Cultura tanguera" },
-  { value: "ciudades", label: "Ciudades y festivales" },
   { value: "curiosidades", label: "Curiosidades" },
+  { value: "ciudades", label: "Ciudades y festivales" },
 ]
 
 interface QuestionData {
@@ -177,7 +180,7 @@ export function QuestionForm({ question, isEditing }: Props) {
               onChange={(e) => setDifficulty(e.target.value)}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/50 appearance-none cursor-pointer"
             >
-              <option value="EASY">Fácil</option>
+              <option value="EASY">Baja</option>
               <option value="MEDIUM">Media</option>
               <option value="HARD">Difícil</option>
             </select>
