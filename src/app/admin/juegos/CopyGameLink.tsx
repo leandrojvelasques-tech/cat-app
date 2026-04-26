@@ -3,9 +3,11 @@
 import { useState } from "react"
 import { Copy, CheckCircle2 } from "lucide-react"
 
-export function CopyLiveLink() {
+export function CopyGameLink({ mode }: { mode: "solo" | "live" }) {
   const [copied, setCopied] = useState(false)
-  const link = "https://socios.centroamigosdeltango.com/juegos/acertijo/vivo"
+  const link = mode === "solo" 
+    ? "https://socios.centroamigosdeltango.com/juegos/acertijo"
+    : "https://socios.centroamigosdeltango.com/juegos/acertijo/vivo"
 
   const handleCopy = async () => {
     try {

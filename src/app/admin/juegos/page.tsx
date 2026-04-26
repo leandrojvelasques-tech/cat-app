@@ -3,7 +3,7 @@ import Link from "next/link"
 import { Brain, Users, Target, Clock, Trophy, ListChecks, Settings, Gamepad2, ArrowRight, BarChart3, ChevronRight, Play } from "lucide-react"
 import { ToggleGameButton } from "./ToggleGameButton"
 import { GameSettingsForm } from "./GameSettingsForm"
-import { CopyLiveLink } from "./CopyLiveLink"
+import { CopyGameLink } from "./CopyGameLink"
 
 export default async function AdminJuegosPage() {
   const [metrics, gameConfig] = await Promise.all([
@@ -46,55 +46,77 @@ export default async function AdminJuegosPage() {
                 <p className="text-sm text-zinc-500">Trivia de tango para milongas y eventos</p>
               </div>
             </div>
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between gap-4">
-                  <Link
-                    href="/admin/juegos/acertijo/control"
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-amber-500 hover:bg-amber-400 text-zinc-950 rounded-xl font-black text-xs transition-all shadow-lg shadow-amber-500/20"
-                  >
-                    <Play size={14} fill="currentColor" />
-                    PANEL DE CONTROL EN VIVO
-                  </Link>
-                  <ToggleGameButton isActive={gameConfig.isActive} />
-                </div>
-                <p className="text-[10px] text-zinc-500 font-medium text-right">
+              <div className="flex flex-col gap-2 justify-center items-end">
+                <ToggleGameButton isActive={gameConfig.isActive} />
+                <p className="text-[10px] text-zinc-500 font-medium text-right mt-1">
                   {gameConfig.isActive 
-                    ? "✓ El juego es visible para el público" 
-                    : "🔒 El juego está oculto para el público"}
+                    ? "✓ El juego está habilitado para jugar" 
+                    : "🔒 El juego está deshabilitado"}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Quick Guide */}
-          <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-500 mb-3">
-                <span className="font-black text-xs">1</span>
+          {/* Modos de Juego */}
+          <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 bg-zinc-950/50">
+            {/* Modo Individual */}
+            <div className="p-6 bg-white/[0.03] border border-white/10 rounded-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-3xl rounded-full group-hover:bg-blue-500/20 transition-colors" />
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400">
+                    <Brain size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white tracking-tight">Juego Individual</h3>
+                    <p className="text-xs text-blue-400 font-medium">Auto-guiado</p>
+                  </div>
+                </div>
+                <p className="text-sm text-zinc-400 leading-relaxed mb-6">
+                  Los jugadores pueden entrar en cualquier momento, jugar a su propio ritmo y ver su puntaje al final. <strong className="text-white">No requiere que el administrador inicie ni modere la partida.</strong>
+                </p>
+                <div className="space-y-2">
+                  <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider">Link para compartir:</p>
+                  <CopyGameLink mode="solo" />
+                </div>
               </div>
-              <h4 className="text-xs font-bold text-white mb-1 uppercase">Preparar</h4>
-              <p className="text-[10px] text-zinc-500 leading-relaxed">
-                Entrá a <b>Preguntas</b> para cargar el banco de preguntas o usar el Importador Masivo (CSV).
-              </p>
             </div>
-            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-500 mb-3">
-                <span className="font-black text-xs">2</span>
+
+            {/* Modo Grupal (En Vivo) */}
+            <div className="p-6 bg-white/[0.03] border border-white/10 rounded-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 blur-3xl rounded-full group-hover:bg-amber-500/20 transition-colors" />
+              <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-500">
+                      <Users size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white tracking-tight">Juego Grupal</h3>
+                      <p className="text-xs text-amber-500 font-medium">En Vivo (Moderado)</p>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-sm text-zinc-400 leading-relaxed mb-6">
+                  Todos los jugadores responden al mismo tiempo. <strong className="text-white">Requiere que el administrador inicie y avance las preguntas</strong> desde el panel de control.
+                </p>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-2">1. Compartir este link con los jugadores:</p>
+                    <CopyGameLink mode="live" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-2">2. Moderar la partida:</p>
+                    <Link
+                      href="/admin/juegos/acertijo/control"
+                      className="flex items-center justify-center gap-2 w-full p-2.5 bg-amber-500 hover:bg-amber-400 text-zinc-950 rounded-lg font-bold text-sm transition-colors shadow-lg shadow-amber-500/20"
+                    >
+                      <Play size={16} fill="currentColor" />
+                      IR AL PANEL DE CONTROL
+                    </Link>
+                  </div>
+                </div>
               </div>
-              <h4 className="text-xs font-bold text-white mb-1 uppercase">Lanzar</h4>
-              <p className="text-[10px] text-zinc-500 leading-relaxed mb-3">
-                Para el <b>Juego en Vivo</b> compartí el siguiente link con los jugadores:
-              </p>
-              <CopyLiveLink />
-            </div>
-            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
-              <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-500 mb-3">
-                <span className="font-black text-xs">3</span>
-              </div>
-              <h4 className="text-xs font-bold text-white mb-1 uppercase">Moderar</h4>
-              <p className="text-[10px] text-zinc-500 leading-relaxed">
-                Revelá cada pregunta, activá el cronómetro y disfrutá viendo el ranking subir en tiempo real.
-              </p>
             </div>
           </div>
 
