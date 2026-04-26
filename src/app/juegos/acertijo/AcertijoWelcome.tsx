@@ -59,7 +59,11 @@ export function AcertijoWelcome({ gameConfig }: Props) {
         phone: phone.trim() || undefined,
       })
 
-      const qs = await getRandomQuestions(gameConfig.questionsPerGame)
+      const qs = await getRandomQuestions({
+        easy: gameConfig.questionsEasy,
+        medium: gameConfig.questionsMedium,
+        hard: gameConfig.questionsHard
+      })
       const session = await createSession(player.id, gameConfig.id)
 
       setQuestions(qs)
@@ -94,7 +98,7 @@ export function AcertijoWelcome({ gameConfig }: Props) {
       <GameScreen
         questions={questions}
         sessionId={sessionId}
-        timePerQuestion={gameConfig.timePerQuestion}
+        gameConfig={gameConfig}
         onFinish={() => setPhase("result")}
       />
     )

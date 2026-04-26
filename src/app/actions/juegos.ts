@@ -113,8 +113,12 @@ export async function getGameConfig() {
 
 export async function updateGameConfig(data: {
   isActive: boolean
-  questionsPerGame: number
-  timePerQuestion: number
+  questionsEasy: number
+  questionsMedium: number
+  questionsHard: number
+  timeEasy: number
+  timeMedium: number
+  timeHard: number
   totalTimeLimit: number | null
   pointsCorrect: number
   pointsIncorrect: number
@@ -338,8 +342,8 @@ export async function registerPlayer(data: {
   return db.triviaPlayer.create({ data })
 }
 
-export async function getRandomQuestions(count: number) {
-  // Get all active questions, then pick random N
+export async function getRandomQuestions(counts: { easy: number; medium: number; hard: number }) {
+  // Get all active questions
   const allQuestions = await db.triviaQuestion.findMany({
     where: { isActive: true },
     select: {
@@ -354,14 +358,24 @@ export async function getRandomQuestions(count: number) {
     },
   })
 
-  // Fisher-Yates shuffle
-  const shuffled = [...allQuestions]
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  const easy = allQuestions.filter(q => q.difficulty === 'EASY')
+  const medium = allQuestions.filter(q => q.difficulty === 'MEDIUM')
+  const hard = allQuestions.filter(q => q.difficulty === 'HARD')
+
+  const shuffle = (arr: any[]) => {
+    const shuffled = [...arr]
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
+    return shuffled
   }
 
-  return shuffled.slice(0, Math.min(count, shuffled.length))
+  return [
+    ...shuffle(easy).slice(0, counts.easy),
+    ...shuffle(medium).slice(0, counts.medium),
+    ...shuffle(hard).slice(0, counts.hard),
+  ]
 }
 
 export async function createSession(playerId: string, gameId: string) {

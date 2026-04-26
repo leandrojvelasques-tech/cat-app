@@ -22,7 +22,7 @@ export function InstructionsScreen({ gameConfig, totalQuestions, onStart }: Prop
     {
       icon: Clock,
       title: "Tiempo por pregunta",
-      description: `Tenés ${gameConfig.timePerQuestion} segundos para responder cada pregunta. ¡No te duermas!`,
+      description: `Tenés entre ${gameConfig.timeEasy} y ${gameConfig.timeHard} segundos para responder cada pregunta según su dificultad. ¡No te duermas!`,
       color: "blue",
     },
     {

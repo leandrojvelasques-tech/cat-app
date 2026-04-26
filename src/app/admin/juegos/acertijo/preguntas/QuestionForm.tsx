@@ -169,7 +169,7 @@ export function QuestionForm({ question, isEditing }: Props) {
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/50 appearance-none cursor-pointer"
             >
               {CATEGORIES.map((cat) => (
-                <option key={cat.value} value={cat.value}>{cat.label}</option>
+                <option key={cat.value} value={cat.value} className="bg-zinc-900 text-white">{cat.label}</option>
               ))}
             </select>
           </div>
@@ -180,9 +180,9 @@ export function QuestionForm({ question, isEditing }: Props) {
               onChange={(e) => setDifficulty(e.target.value)}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/50 appearance-none cursor-pointer"
             >
-              <option value="EASY">Baja</option>
-              <option value="MEDIUM">Media</option>
-              <option value="HARD">Difícil</option>
+              <option value="EASY" className="bg-zinc-900 text-white">Baja</option>
+              <option value="MEDIUM" className="bg-zinc-900 text-white">Media</option>
+              <option value="HARD" className="bg-zinc-900 text-white">Difícil</option>
             </select>
           </div>
         </div>

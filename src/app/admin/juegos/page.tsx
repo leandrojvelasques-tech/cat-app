@@ -2,6 +2,7 @@ import { getGameMetrics, getGameConfig } from "@/app/actions/juegos"
 import Link from "next/link"
 import { Brain, Users, Target, Clock, Trophy, ListChecks, Settings, Gamepad2, ArrowRight, BarChart3, ChevronRight, Play } from "lucide-react"
 import { ToggleGameButton } from "./ToggleGameButton"
+import { GameSettingsForm } from "./GameSettingsForm"
 
 export default async function AdminJuegosPage() {
   const [metrics, gameConfig] = await Promise.all([
@@ -163,29 +164,7 @@ export default async function AdminJuegosPage() {
           </div>
         </div>
 
-        {/* Config overview */}
-        <div className="p-6 border-t border-white/5">
-          <div className="flex items-center gap-2 mb-3">
-            <Settings size={14} className="text-zinc-500" />
-            <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Configuración actual</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <span className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-zinc-400">
-              {gameConfig.questionsPerGame} preguntas/partida
-            </span>
-            <span className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-zinc-400">
-              {gameConfig.timePerQuestion}s por pregunta
-            </span>
-            <span className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-zinc-400">
-              +{gameConfig.pointsCorrect} pts correcta
-            </span>
-            {gameConfig.pointsIncorrect > 0 && (
-              <span className="px-3 py-1.5 bg-red-500/5 border border-red-500/10 rounded-lg text-xs text-red-400">
-                -{gameConfig.pointsIncorrect} pts incorrecta
-              </span>
-            )}
-          </div>
-        </div>
+        <GameSettingsForm config={gameConfig} />
 
         {/* Quick Links */}
         <div className="border-t border-white/5 grid grid-cols-1 sm:grid-cols-3 gap-px bg-white/5">

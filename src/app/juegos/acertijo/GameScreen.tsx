@@ -18,7 +18,7 @@ interface Question {
 interface Props {
   questions: Question[]
   sessionId: string
-  timePerQuestion: number
+  gameConfig: any
   onFinish: () => void
 }
 
@@ -40,19 +40,25 @@ const LETTER_COLORS = {
   correctReveal: "bg-emerald-500 text-white",
 }
 
-export function GameScreen({ questions, sessionId, timePerQuestion, onFinish }: Props) {
+export function GameScreen({ questions, sessionId, gameConfig, onFinish }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null)
+  const question = questions[currentIndex]
+  const totalQuestions = questions.length
+  const progress = ((currentIndex) / totalQuestions) * 100
+
+  // Calculate time limit for current question
+  const timePerQuestion: number = question?.difficulty === "EASY" ? gameConfig.timeEasy 
+    : question?.difficulty === "HARD" ? gameConfig.timeHard 
+    : gameConfig.timeMedium
+
   const [timeLeft, setTimeLeft] = useState(timePerQuestion)
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [correctAnswer, setCorrectAnswer] = useState<string | null>(null)
   const questionStartTime = useRef(Date.now())
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  const question = questions[currentIndex]
-  const totalQuestions = questions.length
-  const progress = ((currentIndex) / totalQuestions) * 100
 
   const handleTimeUp = useCallback(async () => {
     if (isSubmitting || feedback) return
@@ -76,8 +82,7 @@ export function GameScreen({ questions, sessionId, timePerQuestion, onFinish }: 
           setSelectedOption(null)
           setFeedback(null)
           setCorrectAnswer(null)
-          setTimeLeft(timePerQuestion)
-          questionStartTime.current = Date.now()
+          // setTimeLeft will be handled by the effect
           setIsSubmitting(false)
         } else {
           await finishSession(sessionId)

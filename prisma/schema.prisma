@@ -365,9 +365,13 @@ model TriviaGame {
   activeQuestionIds String[]      @default([])     // Las 10 preguntas elegidas para la sesión
   // -------------------------------
 
-  questionsPerGame Int            @default(10)
-  timePerQuestion  Int            @default(30) // Segundos (Default para modo offline)
-  totalTimeLimit   Int?           // Segundos, null = sin límite
+  questionsEasy    Int            @default(5)
+  questionsMedium  Int            @default(5)
+  questionsHard    Int            @default(5)
+  timeEasy         Int            @default(10) // Segundos
+  timeMedium       Int            @default(12)
+  timeHard         Int            @default(15)
+  totalTimeLimit   Int?           // Segundos globales, null = sin límite
   pointsCorrect    Int            @default(10)
   pointsIncorrect  Int            @default(0) // Penalización
   sessions         TriviaSession[]
