@@ -280,11 +280,10 @@ export function LiveControl() {
             </button>
             <button
               onClick={handleBeginGame}
-              disabled={status.connectedCount === 0}
-              className="flex-[2] py-4 bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-400 hover:to-red-500 text-zinc-950 font-black rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-red-900/20 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale"
+              className="flex-[2] py-4 bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-400 hover:to-red-500 text-zinc-950 font-black rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-red-900/20 active:scale-95 transition-all"
             >
               <Play fill="currentColor" />
-              EMPEZAR JUEGO AHORA
+              INICIAR JUEGO
             </button>
           </div>
         </div>
@@ -425,14 +424,25 @@ export function LiveControl() {
                      </button>
                   )}
 
-                  {status.status === 'GAME_OVER' && (
-                     <button
-                       onClick={handleRevealResults}
-                       className="flex-1 py-4 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-emerald-500/20 transition-all active:scale-95"
-                     >
-                       <Trophy size={20} />
-                       MOSTRAR RESULTADOS / GANADOR
-                     </button>
+                  {(status.status === 'GAME_OVER' || status.status === 'SHOWING_RESULTS') && (
+                     <div className="flex flex-col w-full gap-3">
+                        {status.status === 'GAME_OVER' && (
+                          <button
+                            onClick={handleRevealResults}
+                            className="flex-1 py-4 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-emerald-500/20 transition-all active:scale-95"
+                          >
+                            <Trophy size={20} />
+                            MOSTRAR RESULTADOS / GANADOR
+                          </button>
+                        )}
+                        <button
+                          onClick={handleReset}
+                          className="flex-1 py-4 bg-white/5 hover:bg-red-500/10 text-zinc-400 hover:text-red-400 font-bold rounded-2xl border border-white/10 hover:border-red-500/30 transition-all active:scale-95 flex items-center justify-center gap-2"
+                        >
+                          <RotateCcw size={18} />
+                          REINICIAR PARA NUEVA PARTIDA
+                        </button>
+                     </div>
                   )}
                   
                   {(status.status === 'TIMER_ACTIVE' || status.status === 'GAME_OVER' || !status.currentQuestion) ? null : (

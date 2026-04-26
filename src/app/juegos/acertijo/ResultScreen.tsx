@@ -7,9 +7,10 @@ import Link from "next/link"
 
 interface Props {
   sessionId: string
+  mode?: "individual" | "live"
 }
 
-export function ResultScreen({ sessionId }: Props) {
+export function ResultScreen({ sessionId, mode = "individual" }: Props) {
   const [result, setResult] = useState<Awaited<ReturnType<typeof getSessionResult>> | null>(null)
   const [rank, setRank] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
@@ -175,11 +176,11 @@ export function ResultScreen({ sessionId }: Props) {
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link
-              href="/juegos/acertijo"
+              href={mode === "live" ? "/juegos/acertijo/vivo" : "/juegos/acertijo"}
               className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl font-bold text-white text-sm transition-all active:scale-[0.98]"
             >
               <RotateCcw size={16} />
-              <span>Jugar de nuevo</span>
+              <span>{mode === "live" ? "Esperar próxima partida" : "Jugar de nuevo"}</span>
             </Link>
           </div>
         </div>

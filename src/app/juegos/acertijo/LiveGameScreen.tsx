@@ -79,7 +79,7 @@ export function LiveGameScreen({ sessionId }: Props) {
   }
 
   if (isFinished) {
-    return <ResultScreen sessionId={sessionId} />
+    return <ResultScreen sessionId={sessionId} mode="live" />
   }
 
   if (!liveStatus) return <div className="p-8 text-center text-zinc-500">Conectando...</div>
