@@ -20,6 +20,7 @@ export function LiveControl() {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [timerVal, setTimerVal] = useState(10)
   const [timeLeft, setTimeLeft] = useState<number | null>(null)
+  const [serverOffset, setServerOffset] = useState(0)
 
   const handlePause = async () => {
     try {
@@ -38,11 +39,14 @@ export function LiveControl() {
       toast.error("Error al reanudar")
     }
   }
-  
+
   // Polling for admin metrics
   useEffect(() => {
     async function refresh() {
       const s = await getLiveStatus(undefined, true)
+      if (s?.serverTime) {
+        setServerOffset(new Date(s.serverTime).getTime() - Date.now())
+      }
       setStatus(s)
       setLoading(false)
     }
@@ -65,14 +69,14 @@ export function LiveControl() {
 
     const timer = setInterval(() => {
       const end = new Date(status.timerEndAt).getTime()
-      const now = new Date().getTime()
-      const diff = Math.max(0, Math.floor((end - now) / 1000))
+      const nowWithOffset = Date.now() + serverOffset
+      const diff = Math.max(0, Math.floor((end - nowWithOffset) / 1000))
       setTimeLeft(diff)
       if (diff === 0) clearInterval(timer)
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [status?.timerEndAt, status?.status, status?.pausedTimeRemaining])
+  }, [status?.timerEndAt, status?.status, status?.pausedTimeRemaining, serverOffset])
 
   useEffect(() => {
     async function loadQs() {

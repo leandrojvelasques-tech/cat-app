@@ -356,7 +356,18 @@ export async function getLiveStatus(sessionId?: string, isAdmin = false) {
         include: { sessions: { include: { player: true }, take: 10 } } // re-fetch for consistency
       })
     } else {
-      const d = game.timerDuration
+      // Buscar la siguiente pregunta para saber su dificultad
+      const nextQuestion = await db.triviaQuestion.findUnique({
+        where: { id: game.activeQuestionIds[nextIndex] }
+      })
+
+      let d = game.timerDuration
+      if (nextQuestion) {
+        if (nextQuestion.difficulty === "EASY") d = game.timeEasy
+        if (nextQuestion.difficulty === "MEDIUM") d = game.timeMedium
+        if (nextQuestion.difficulty === "HARD") d = game.timeHard
+      }
+
       const nextEndAt = new Date(Date.now() + d * 1000)
       game = await db.triviaGame.update({
         where: { id: game.id },
@@ -429,18 +440,30 @@ export async function getLiveStatus(sessionId?: string, isAdmin = false) {
     })
   }
 
+  // Determinar la duración que se aplicó a esta pregunta
+  let currentQuestionDuration = game.timerDuration
+  if (currentQuestion) {
+    // Re-calculamos según la dificultad para que el cliente lo sepa
+    const qRaw = await db.triviaQuestion.findUnique({ where: { id: game.currentQuestionId || "" } })
+    if (qRaw) {
+      if (qRaw.difficulty === "EASY") currentQuestionDuration = game.timeEasy
+      if (qRaw.difficulty === "MEDIUM") currentQuestionDuration = game.timeMedium
+      if (qRaw.difficulty === "HARD") currentQuestionDuration = game.timeHard
+    }
+  }
+
   return {
-    status: game.status,
-    currentQuestion,
-    currentIndex: game.currentQuestionIndex, // Consistent name for client
-    totalQuestions: game.activeQuestionIds.length,
-    timerEndAt: game.timerEndAt,
-    timerDuration: game.timerDuration,
-    connectedCount: activeSessions.length,
-    connectedNames,
+    ...game,
+    serverTime: new Date(),
     answerStats,
+    connectedCount: connectedNames.length,
+    connectedNames,
+    currentIndex: game.currentQuestionIndex,
+    totalQuestions: game.activeQuestionIds.length,
+    currentQuestion,
+    currentQuestionDuration,
     ranking: rankingSessions.map(s => ({
-      name: s.player.nickname || `${s.player.firstName} ${s.player.lastName.charAt(0)}.` ,
+      name: s.player.nickname || `${s.player.firstName} ${s.player.lastName.charAt(0)}.`,
       score: s.score
     }))
   }

@@ -16,11 +16,15 @@ export function LiveGameScreen({ sessionId }: Props) {
   const [isFinished, setIsFinished] = useState(false)
   const [hasAnsweredCurrent, setHasAnsweredCurrent] = useState(false)
   const lastQuestionId = useRef<string | null>(null)
+  const [serverOffset, setServerOffset] = useState(0)
 
   // Polling for game status
   useEffect(() => {
     async function poll() {
       const status = await getLiveStatus(sessionId) // <-- Pasamos el sessionId para el heartbeat
+      if (status?.serverTime) {
+        setServerOffset(new Date(status.serverTime).getTime() - Date.now())
+      }
       setLiveStatus(status)
       
       if (status?.status === "SHOWING_RESULTS") {
@@ -51,7 +55,8 @@ export function LiveGameScreen({ sessionId }: Props) {
       const endAt = new Date(liveStatus.timerEndAt).getTime()
       
       const timer = setInterval(() => {
-        const remaining = Math.max(0, Math.floor((endAt - Date.now()) / 1000))
+        const nowWithOffset = Date.now() + serverOffset
+        const remaining = Math.max(0, Math.floor((endAt - nowWithOffset) / 1000))
         setTimeLeft(remaining)
         if (remaining === 0) clearInterval(timer)
       }, 500)
@@ -60,7 +65,7 @@ export function LiveGameScreen({ sessionId }: Props) {
     } else {
       setTimeLeft(0)
     }
-  }, [liveStatus?.status, liveStatus?.timerEndAt, liveStatus?.pausedTimeRemaining])
+  }, [liveStatus?.status, liveStatus?.timerEndAt, liveStatus?.pausedTimeRemaining, serverOffset])
 
   const handleOptionSelect = async (option: string) => {
     if (hasAnsweredCurrent || liveStatus?.status !== "TIMER_ACTIVE") return
@@ -69,14 +74,15 @@ export function LiveGameScreen({ sessionId }: Props) {
     setHasAnsweredCurrent(true)
 
     try {
-      // timeTaken is just to track speed, although admin doesn't see it yet
-      const timeTaken = liveStatus.timerEndAt ? (new Date(liveStatus.timerEndAt).getTime() - 10000) - Date.now() : 0 
+      // Calculamos el tiempo tomado basándonos en la duración real de la pregunta
+      const duration = liveStatus.currentQuestionDuration || 15
+      const timeTaken = (duration - timeLeft) * 1000
       
       await submitAnswer({
         sessionId,
         questionId: liveStatus.currentQuestion.id,
         selectedOption: option,
-        timeTaken: Math.abs(timeTaken),
+        timeTaken: Math.max(0, timeTaken),
       })
     } catch (err) {
       console.error("Error submitting answer", err)
