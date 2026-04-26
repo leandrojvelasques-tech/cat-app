@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Brain, Play, FastForward, Clock, RotateCcw, Users, Trophy, ChevronRight, CheckCircle2, AlertCircle, Settings2, Share2, Eye } from "lucide-react"
 import Link from "next/link"
-import { startLiveSession, nextLiveQuestion, startLiveTimer, resetLiveGame, getLiveStatus, getQuestions, revealLiveQuestion, beginLiveGame, revealLiveResults, pauseLiveGame, resumeLiveGame } from "@/app/actions/juegos"
+import { startLiveSession, nextLiveQuestion, resetLiveGame, getLiveStatus, getQuestions, revealLiveQuestion, beginLiveGame, revealLiveResults, pauseLiveGame, resumeLiveGame } from "@/app/actions/juegos"
 import { toast } from "sonner"
 
 interface Question {
@@ -124,15 +124,6 @@ export function LiveControl() {
       toast.success("Pregunta revelada a los jugadores")
     } catch {
       toast.error("Error al revelar")
-    }
-  }
-
-  const handleStartTimer = async () => {
-    try {
-      await startLiveTimer()
-      toast.success("¡Tiempo iniciado!")
-    } catch {
-      toast.error("Error al iniciar el tiempo")
     }
   }
 
