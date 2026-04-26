@@ -60,13 +60,31 @@ export function GameScreen({ questions, sessionId, gameConfig, onFinish }: Props
   const questionStartTime = useRef(Date.now())
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  const advanceQuestion = async () => {
+    try {
+      if (currentIndex < totalQuestions - 1) {
+        setCurrentIndex((prev) => prev + 1)
+        setSelectedOption(null)
+        setFeedback(null)
+        setCorrectAnswer(null)
+        setIsSubmitting(false)
+      } else {
+        await finishSession(sessionId)
+        onFinish()
+      }
+    } catch (error) {
+      console.error("Failed to finish session", error)
+      onFinish() // Force finish on error
+    }
+  }
+
   const handleTimeUp = useCallback(async () => {
     if (isSubmitting || feedback) return
     setIsSubmitting(true)
 
     try {
       const timeTaken = timePerQuestion * 1000
-      const result = await submitAnswer({
+      await submitAnswer({
         sessionId,
         questionId: question.id,
         selectedOption: "X", // No answer
@@ -76,27 +94,16 @@ export function GameScreen({ questions, sessionId, gameConfig, onFinish }: Props
       setFeedback("incorrect")
 
       // Auto advance
-      setTimeout(async () => {
-        if (currentIndex < totalQuestions - 1) {
-          setCurrentIndex((prev) => prev + 1)
-          setSelectedOption(null)
-          setFeedback(null)
-          setCorrectAnswer(null)
-          // setTimeLeft will be handled by the effect
-          setIsSubmitting(false)
-        } else {
-          await finishSession(sessionId)
-          onFinish()
-        }
-      }, 1200)
+      setTimeout(advanceQuestion, 1200)
     } catch {
-      setIsSubmitting(false)
+      setFeedback("incorrect")
+      setTimeout(advanceQuestion, 1200)
     }
   }, [isSubmitting, feedback, sessionId, question?.id, currentIndex, totalQuestions, timePerQuestion, onFinish])
 
   // Timer
   useEffect(() => {
-    if (feedback) return // Stop timer when showing feedback
+    if (feedback || isSubmitting) return // Stop timer when showing feedback or submitting
 
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
@@ -112,7 +119,7 @@ export function GameScreen({ questions, sessionId, gameConfig, onFinish }: Props
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
-  }, [currentIndex, feedback, handleTimeUp])
+  }, [currentIndex, feedback, isSubmitting, handleTimeUp])
 
   // Reset timer on question change
   useEffect(() => {
@@ -138,27 +145,14 @@ export function GameScreen({ questions, sessionId, gameConfig, onFinish }: Props
         timeTaken,
       })
 
+      setCorrectAnswer(question.correctOption || null)
       setFeedback(result.isCorrect ? "correct" : "incorrect")
-      if (!result.isCorrect) {
-        // We need to find the correct answer — since it is hidden, we just show the feedback
-        // The server returns isCorrect but not the correct option. We'll rely on visual feedback.
-      }
 
       // Auto advance after feedback
-      setTimeout(async () => {
-        if (currentIndex < totalQuestions - 1) {
-          setCurrentIndex((prev) => prev + 1)
-          setSelectedOption(null)
-          setFeedback(null)
-          setCorrectAnswer(null)
-          setIsSubmitting(false)
-        } else {
-          await finishSession(sessionId)
-          onFinish()
-        }
-      }, 1500)
+      setTimeout(advanceQuestion, 1500)
     } catch {
-      setIsSubmitting(false)
+      setFeedback("incorrect") // Show incorrect on error
+      setTimeout(advanceQuestion, 1500)
     }
   }
 
