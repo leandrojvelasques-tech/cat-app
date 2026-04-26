@@ -17,11 +17,7 @@ export default async function RankingPage() {
     return min > 0 ? `${min}:${sec.toString().padStart(2, "0")}` : `${sec}s`
   }
 
-  const podiumColors = [
-    { bg: "from-yellow-500 to-amber-600", text: "text-yellow-300", border: "border-yellow-500/30", medal: "🥇", shadow: "shadow-yellow-900/30" },
-    { bg: "from-zinc-300 to-zinc-400", text: "text-zinc-300", border: "border-zinc-400/30", medal: "🥈", shadow: "shadow-zinc-500/20" },
-    { bg: "from-amber-700 to-orange-800", text: "text-amber-600", border: "border-amber-700/30", medal: "🥉", shadow: "shadow-amber-900/20" },
-  ]
+  const medals = ["🥇", "🥈", "🥉"]
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white relative overflow-hidden">
@@ -64,67 +60,48 @@ export default async function RankingPage() {
             </Link>
           </div>
         ) : (
-          <div className="space-y-4">
-            {/* Podium - Top 3 */}
-            {ranking.length >= 1 && (
-              <div className="grid grid-cols-3 gap-3 mb-8 items-end">
-                {[1, 0, 2].map((podiumIndex) => {
-                  const entry = ranking[podiumIndex]
-                  if (!entry) return <div key={podiumIndex} />
-                  const colors = podiumColors[podiumIndex]
-                  const isFirst = podiumIndex === 0
-
-                  return (
-                    <div key={entry.id} className={`text-center ${isFirst ? "order-2" : podiumIndex === 1 ? "order-1" : "order-3"}`}>
-                      <div className={`bg-white/[0.03] border ${colors.border} rounded-2xl p-4 ${isFirst ? "pb-6" : "pb-4"} ${colors.shadow} shadow-lg`}>
-                        <span className="text-3xl mb-2 block">{colors.medal}</span>
-                        <p className="font-bold text-sm text-white truncate">
-                          {entry.player.nickname || `${entry.player.firstName} ${entry.player.lastName.charAt(0)}.`}
-                        </p>
-                        <p className={`text-2xl font-black mt-1 bg-gradient-to-r ${colors.bg} bg-clip-text text-transparent`}>
-                          {entry.score}
-                        </p>
-                        <div className="flex items-center justify-center gap-1 mt-1">
-                          <Clock size={10} className="text-zinc-500" />
-                          <span className="text-[10px] text-zinc-500 font-mono">{formatTime(entry.totalTime)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
-            {/* Rest of ranking */}
-            <div className="space-y-2">
-              {ranking.slice(3).map((entry, i) => (
-                <div
-                  key={entry.id}
-                  className="flex items-center gap-4 p-4 bg-white/[0.02] border border-white/5 rounded-2xl hover:bg-white/[0.04] transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
-                    <span className="text-xs font-black text-zinc-500">{i + 4}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm text-white truncate">
-                      {entry.player.nickname || `${entry.player.firstName} ${entry.player.lastName}`}
-                    </p>
-                    <div className="flex items-center gap-3 mt-0.5">
-                      <span className="text-[10px] text-zinc-500 flex items-center gap-1">
-                        <Star size={9} /> {entry.totalCorrect} correctas
+          <div className="space-y-3">
+            {ranking.slice(0, 10).map((entry, i) => (
+              <div
+                key={entry.id}
+                className={`flex items-center gap-4 p-4 border rounded-2xl transition-colors ${
+                  i === 0 ? "bg-amber-500/10 border-amber-500/30 shadow-lg shadow-amber-900/20" :
+                  i === 1 ? "bg-zinc-300/10 border-zinc-400/30" :
+                  i === 2 ? "bg-orange-800/20 border-orange-700/30" :
+                  "bg-white/[0.02] border-white/5 hover:bg-white/[0.04]"
+                }`}
+              >
+                <div className="w-10 h-10 rounded-xl bg-black/20 flex items-center justify-center shrink-0">
+                  {i < 3 ? (
+                    <span className="text-xl">{medals[i]}</span>
+                  ) : (
+                    <span className="text-sm font-black text-zinc-500">{i + 1}</span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-base text-white truncate">
+                    {entry.player.nickname || `${entry.player.firstName} ${entry.player.lastName}`}
+                  </p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="text-[11px] text-zinc-500 flex items-center gap-1">
+                      <Star size={10} /> {entry.totalCorrect}
+                    </span>
+                    <span className="text-[11px] text-zinc-500 flex items-center gap-1">
+                      <Clock size={10} /> {formatTime(entry.totalTime)}
+                    </span>
+                    {entry.completedAt && (
+                      <span className="text-[11px] text-zinc-600">
+                        • {new Date(entry.completedAt).toLocaleDateString("es-AR", { day: '2-digit', month: 'short', year: '2-digit' })}
                       </span>
-                      <span className="text-[10px] text-zinc-500 flex items-center gap-1">
-                        <Clock size={9} /> {formatTime(entry.totalTime)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-black text-amber-400">{entry.score}</p>
-                    <p className="text-[10px] text-zinc-600 font-bold">pts</p>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
+                <div className="text-right shrink-0">
+                  <p className={`text-xl font-black ${i === 0 ? "text-amber-400" : "text-white"}`}>{entry.score}</p>
+                  <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">pts</p>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
