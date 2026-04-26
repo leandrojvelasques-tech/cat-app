@@ -125,7 +125,7 @@ export function LiveControl() {
 
   const getGameUrl = () => {
     if (typeof window !== "undefined") {
-      return `${window.location.origin}/juegos/acertijo`
+      return `${window.location.origin}/juegos/acertijo/vivo`
     }
     return ""
   }

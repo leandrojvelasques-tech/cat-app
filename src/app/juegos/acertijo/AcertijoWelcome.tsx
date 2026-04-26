@@ -60,24 +60,24 @@ export function AcertijoWelcome({ gameConfig, mode = "solo" }: Props) {
         phone: phone.trim() || undefined,
       })
 
-      const qs = await getRandomQuestions({
-        easy: gameConfig.questionsEasy,
-        medium: gameConfig.questionsMedium,
-        hard: gameConfig.questionsHard
-      })
       const session = await createSession(player.id, gameConfig.id)
-
-      setQuestions(qs)
       setSessionId(session.id)
       
       if (mode === "live") {
         setPhase("playing_live")
       } else {
+        const qs = await getRandomQuestions({
+          easy: gameConfig.questionsEasy,
+          medium: gameConfig.questionsMedium,
+          hard: gameConfig.questionsHard
+        })
+        setQuestions(qs)
         setPhase("instructions")
       }
 
-    } catch {
-      setError("Hubo un error. Intentá de nuevo.")
+    } catch (err) {
+      console.error(err)
+      setError("Hubo un error al registrarte. Intentá de nuevo.")
     } finally {
       setLoading(false)
     }
