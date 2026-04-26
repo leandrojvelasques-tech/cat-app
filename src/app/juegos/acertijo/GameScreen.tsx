@@ -56,7 +56,6 @@ export function GameScreen({ questions, sessionId, gameConfig, onFinish }: Props
   const [timeLeft, setTimeLeft] = useState(timePerQuestion)
 
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [correctAnswer, setCorrectAnswer] = useState<string | null>(null)
   const questionStartTime = useRef(Date.now())
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -66,7 +65,6 @@ export function GameScreen({ questions, sessionId, gameConfig, onFinish }: Props
         setCurrentIndex((prev) => prev + 1)
         setSelectedOption(null)
         setFeedback(null)
-        setCorrectAnswer(null)
         setIsSubmitting(false)
       } else {
         await finishSession(sessionId)
@@ -90,7 +88,6 @@ export function GameScreen({ questions, sessionId, gameConfig, onFinish }: Props
         selectedOption: "X", // No answer
         timeTaken,
       })
-      setCorrectAnswer(null)
       setFeedback("incorrect")
 
       // Auto advance
@@ -145,7 +142,6 @@ export function GameScreen({ questions, sessionId, gameConfig, onFinish }: Props
         timeTaken,
       })
 
-      setCorrectAnswer(question.correctOption || null)
       setFeedback(result.isCorrect ? "correct" : "incorrect")
 
       // Auto advance after feedback
