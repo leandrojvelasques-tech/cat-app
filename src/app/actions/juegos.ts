@@ -124,10 +124,15 @@ export async function updateGameConfig(data: {
   pointsIncorrect: number
 }) {
   const game = await getGameConfig()
-  return db.triviaGame.update({
+  const updated = await db.triviaGame.update({
     where: { id: game.id },
     data,
   })
+  revalidatePath("/admin/juegos")
+  revalidatePath("/juegos")
+  revalidatePath("/juegos/acertijo")
+  revalidatePath("/juegos/acertijo/vivo")
+  return updated
 }
 
 export async function toggleGameActive(isActive: boolean) {
