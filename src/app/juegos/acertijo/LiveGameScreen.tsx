@@ -116,19 +116,29 @@ export function LiveGameScreen({ sessionId }: Props) {
       </header>
 
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-8 max-w-lg mx-auto w-full">
-        {(!question || liveStatus.status === "QUESTION_HIDDEN") ? (
+        {(liveStatus.status === "WAITING_FOR_START" || !question || liveStatus.status === "QUESTION_HIDDEN" || liveStatus.status === "GAME_OVER") ? (
           <div className="text-center space-y-6 animate-in fade-in zoom-in duration-500">
              <div className="w-20 h-20 mx-auto rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-                <Users size={32} className="text-zinc-600 animate-pulse" />
+                <Users size={32} className={`${liveStatus.status === "GAME_OVER" ? "text-amber-500" : "text-zinc-600 animate-pulse"}`} />
              </div>
              <div className="space-y-4">
                <h2 className="text-2xl font-bold text-white">
-                 {liveStatus.status === "QUESTION_HIDDEN" ? "¡Atención al moderador!" : "Esperando que empiece el juego"}
+                 {liveStatus.status === "WAITING_FOR_START" 
+                    ? "Esperando que el administrador inicie el juego" 
+                    : liveStatus.status === "QUESTION_HIDDEN" 
+                    ? "¡Atención al moderador!" 
+                    : liveStatus.status === "GAME_OVER"
+                    ? "¡Juego Terminado!"
+                    : "Esperando..."}
                </h2>
                <p className="text-zinc-500 text-sm max-w-[280px] mx-auto">
-                 {liveStatus.status === "QUESTION_HIDDEN" 
-                   ? "La pregunta está por aparecer. Escuchá atentamente la consigna." 
-                   : "El administrador iniciará la partida pronto."}
+                 {liveStatus.status === "WAITING_FOR_START"
+                    ? "En breve comenzaremos la trivia. ¡Preparate!"
+                    : liveStatus.status === "QUESTION_HIDDEN" 
+                    ? "La pregunta está por aparecer en pantalla." 
+                    : liveStatus.status === "GAME_OVER"
+                    ? "El administrador revelará el podio en instantes."
+                    : "El administrador iniciará la partida pronto."}
                </p>
              </div>
           </div>

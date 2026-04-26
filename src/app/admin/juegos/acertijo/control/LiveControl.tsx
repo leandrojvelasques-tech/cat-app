@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { Brain, Play, FastForward, Clock, RotateCcw, Users, Trophy, ChevronRight, CheckCircle2, AlertCircle, Settings2, Share2, Eye } from "lucide-react"
-import { startLiveSession, nextLiveQuestion, startLiveTimer, resetLiveGame, getLiveStatus, getQuestions, revealLiveQuestion } from "@/app/actions/juegos"
+import Link from "next/link"
+import { startLiveSession, nextLiveQuestion, startLiveTimer, resetLiveGame, getLiveStatus, getQuestions, revealLiveQuestion, beginLiveGame, revealLiveResults } from "@/app/actions/juegos"
 import { toast } from "sonner"
 
 interface Question {
@@ -59,15 +60,29 @@ export function LiveControl() {
   }, [])
 
   const handleStartSession = async () => {
-    if (selectedIds.length === 0) {
-      toast.error("Seleccioná al menos una pregunta")
-      return
-    }
     try {
-      await startLiveSession(selectedIds, timerVal)
-      toast.success("Sesión iniciada")
+      await startLiveSession(selectedIds.length > 0 ? selectedIds : undefined, timerVal)
+      toast.success("Sesión configurada. Esperando jugadores.")
     } catch {
-      toast.error("Error al iniciar sesión")
+      toast.error("Error al configurar la sesión")
+    }
+  }
+
+  const handleBeginGame = async () => {
+    try {
+      await beginLiveGame()
+      toast.success("¡Juego iniciado!")
+    } catch {
+      toast.error("Error al iniciar el juego")
+    }
+  }
+
+  const handleRevealResults = async () => {
+    try {
+      await revealLiveResults()
+      toast.success("Resultados revelados!")
+    } catch {
+      toast.error("Error al revelar resultados")
     }
   }
 
@@ -225,9 +240,53 @@ export function LiveControl() {
             onClick={handleStartSession}
             className="w-full mt-8 py-4 bg-gradient-to-r from-amber-600 to-red-800 hover:from-amber-500 rounded-2xl font-black text-white shadow-xl shadow-red-900/20 flex items-center justify-center gap-3 active:scale-95 transition-all"
           >
-            <Play fill="currentColor" />
-            COMENZAR SESIÓN EN VIVO
+            <Settings2 size={20} />
+            CONFIGURAR PARTIDA EN VIVO
           </button>
+        </div>
+      </div>
+    )
+  }
+
+  // WAITING FOR START PHASE (Admin sees players connecting)
+  if (status.status === "WAITING_FOR_START") {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-8 text-center max-w-2xl mx-auto">
+          <div className="w-20 h-20 bg-amber-500/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+            <Users size={40} className="text-amber-500 animate-pulse" />
+          </div>
+          <h2 className="text-3xl font-black text-white mb-2 tracking-tight">Sala de Espera</h2>
+          <p className="text-zinc-500 mb-8 font-medium">Los jugadores se están uniendo a la partida...</p>
+
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
+            <h3 className="text-xs font-black text-amber-500 uppercase tracking-[0.2em] mb-4">Jugadores Conectados ({status.connectedCount})</h3>
+            <div className="flex flex-wrap justify-center gap-2">
+              {status.connectedNames.map((name: string, i: number) => (
+                <span key={i} className="px-4 py-2 bg-white/5 border border-white/10 rounded-full text-xs font-bold text-white animate-in zoom-in">
+                  {name}
+                </span>
+              ))}
+              {status.connectedCount === 0 && <p className="text-zinc-600 italic text-sm">Esperando al primer valiente...</p>}
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={handleReset}
+              className="flex-1 py-4 bg-white/5 hover:bg-white/10 text-zinc-400 font-bold rounded-2xl border border-white/10 transition-all"
+            >
+              Cancelar / Volver
+            </button>
+            <button
+              onClick={handleBeginGame}
+              disabled={status.connectedCount === 0}
+              className="flex-[2] py-4 bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-400 hover:to-red-500 text-zinc-950 font-black rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-red-900/20 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale"
+            >
+              <Play fill="currentColor" />
+              EMPEZAR JUEGO AHORA
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -255,6 +314,14 @@ export function LiveControl() {
              <Share2 size={14} />
              Enviar WhatsApp
            </button>
+           <Link 
+             href="/juegos/acertijo/tv" 
+             target="_blank"
+             className="flex-1 sm:flex-none px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/20 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2"
+           >
+             <Eye size={14} />
+             Abrir Pantalla TV
+           </Link>
         </div>
       </div>
 
@@ -339,38 +406,48 @@ export function LiveControl() {
                  </div>
                )}
 
-               <div className="flex flex-col sm:flex-row gap-4 mt-12">
-                 {status.status === 'QUESTION_HIDDEN' && (
-                    <button
-                      onClick={handleReveal}
-                      className="flex-1 py-4 bg-white text-zinc-950 font-black rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-white/10 transition-all active:scale-95"
-                    >
-                      <Eye size={20} />
-                      REVELAR PREGUNTA
-                    </button>
-                 )}
+                <div className="flex flex-col sm:flex-row gap-4 mt-12">
+                  {status.status === 'QUESTION_HIDDEN' && (
+                     <button
+                       onClick={handleReveal}
+                       className="flex-1 py-4 bg-white text-zinc-950 font-black rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-white/10 transition-all active:scale-95"
+                     >
+                       <Eye size={20} />
+                       REVELAR PREGUNTA
+                     </button>
+                  )}
 
-                 {status.status === 'WAITING_QUESTION' && (
-                    <button
-                      onClick={handleStartTimer}
-                      className="flex-1 py-4 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-amber-500/20 transition-all active:scale-95"
-                    >
-                      <Clock size={20} />
-                      INICIAR {status.timerDuration} SEG.
-                    </button>
-                 )}
-                 
-                 {(status.status === 'TIMER_ACTIVE' || !status.currentQuestion) ? null : (
-                    <button
-                      disabled={status.status === 'TIMER_ACTIVE'}
-                      onClick={handleNext}
-                      className="flex-1 py-4 bg-white/10 hover:bg-white/20 text-white font-black rounded-2xl flex items-center justify-center gap-3 border border-white/10 transition-all active:scale-95 disabled:opacity-50"
-                    >
-                      <span>Siguiente Pregunta</span>
-                      <FastForward size={20} />
-                    </button>
-                 )}
-               </div>
+                  {status.status === 'WAITING_QUESTION' && (
+                     <button
+                       onClick={handleStartTimer}
+                       className="flex-1 py-4 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-amber-500/20 transition-all active:scale-95"
+                     >
+                       <Clock size={20} />
+                       INICIAR {status.timerDuration} SEG.
+                     </button>
+                  )}
+
+                  {status.status === 'GAME_OVER' && (
+                     <button
+                       onClick={handleRevealResults}
+                       className="flex-1 py-4 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-emerald-500/20 transition-all active:scale-95"
+                     >
+                       <Trophy size={20} />
+                       MOSTRAR RESULTADOS / GANADOR
+                     </button>
+                  )}
+                  
+                  {(status.status === 'TIMER_ACTIVE' || status.status === 'GAME_OVER' || !status.currentQuestion) ? null : (
+                     <button
+                       disabled={status.status === 'TIMER_ACTIVE'}
+                       onClick={handleNext}
+                       className="flex-1 py-4 bg-white/10 hover:bg-white/20 text-white font-black rounded-2xl flex items-center justify-center gap-3 border border-white/10 transition-all active:scale-95 disabled:opacity-50"
+                     >
+                       <span>Siguiente Pregunta</span>
+                       <FastForward size={20} />
+                     </button>
+                  )}
+                </div>
              </div>
           </div>
         </div>

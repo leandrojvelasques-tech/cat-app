@@ -149,19 +149,42 @@ export async function toggleGameActive(isActive: boolean) {
 // LIVE GAME MODALITY CONTROLS
 // ============================================
 
-export async function startLiveSession(questionIds: string[], timerDuration = 10) {
+export async function startLiveSession(questionIds?: string[], timerDuration = 15) {
   const game = await getGameConfig()
+  
+  let finalIds = questionIds || []
+  
+  // Si no hay IDs, o si el usuario quiere que sea siempre al azar
+  if (finalIds.length === 0) {
+    const randomQs = await db.triviaQuestion.findMany({
+      where: { isActive: true },
+      select: { id: true }
+    })
+    finalIds = randomQs
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 15) // Default 15 questions
+      .map(q => q.id)
+  }
+
   return db.triviaGame.update({
     where: { id: game.id },
     data: {
-      status: "QUESTION_HIDDEN",
-      activeQuestionIds: questionIds,
+      status: "WAITING_FOR_START", // Nuevo estado: Admin debe dar click a "Empezar Juego"
+      activeQuestionIds: finalIds,
       currentQuestionIndex: 0,
-      currentQuestionId: questionIds[0],
+      currentQuestionId: finalIds[0],
       timerDuration,
       timerEndAt: null,
       isActive: true
     },
+  })
+}
+
+export async function beginLiveGame() {
+  const game = await getGameConfig()
+  return db.triviaGame.update({
+    where: { id: game.id },
+    data: { status: "QUESTION_HIDDEN" }
   })
 }
 
@@ -172,7 +195,7 @@ export async function nextLiveQuestion() {
   if (nextIndex >= game.activeQuestionIds.length) {
     return db.triviaGame.update({
       where: { id: game.id },
-      data: { status: "SHOWING_RESULTS" }
+      data: { status: "GAME_OVER" } // Cambiado de SHOWING_RESULTS a GAME_OVER
     })
   }
 
@@ -207,6 +230,14 @@ export async function startLiveTimer(duration?: number) {
       status: "TIMER_ACTIVE",
       timerEndAt: endAt,
     },
+  })
+}
+
+export async function revealLiveResults() {
+  const game = await getGameConfig()
+  return db.triviaGame.update({
+    where: { id: game.id },
+    data: { status: "SHOWING_RESULTS" }
   })
 }
 
