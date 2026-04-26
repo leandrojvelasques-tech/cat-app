@@ -182,7 +182,18 @@ export async function startLiveSession(questionIds?: string[], timerDuration = 1
 
 export async function beginLiveGame() {
   const game = await getGameConfig()
-  const d = game.timerDuration
+  
+  const question = await db.triviaQuestion.findUnique({
+    where: { id: game.currentQuestionId || "" }
+  })
+
+  let d = game.timerDuration
+  if (question) {
+    if (question.difficulty === "EASY") d = game.timeEasy
+    if (question.difficulty === "MEDIUM") d = game.timeMedium
+    if (question.difficulty === "HARD") d = game.timeHard
+  }
+
   const endAt = new Date(Date.now() + d * 1000)
 
   return db.triviaGame.update({
@@ -216,9 +227,52 @@ export async function nextLiveQuestion() {
   })
 }
 
+export async function pauseLiveGame() {
+  const game = await getGameConfig()
+  if (game.status !== "TIMER_ACTIVE" || !game.timerEndAt) return game
+
+  const remaining = Math.max(0, Math.floor((new Date(game.timerEndAt).getTime() - Date.now()) / 1000))
+  
+  return db.triviaGame.update({
+    where: { id: game.id },
+    data: {
+      status: "PAUSED",
+      pausedTimeRemaining: remaining,
+      timerEndAt: null
+    }
+  })
+}
+
+export async function resumeLiveGame() {
+  const game = await getGameConfig()
+  if (game.status !== "PAUSED" || game.pausedTimeRemaining === null) return game
+
+  const endAt = new Date(Date.now() + game.pausedTimeRemaining * 1000)
+  
+  return db.triviaGame.update({
+    where: { id: game.id },
+    data: {
+      status: "TIMER_ACTIVE",
+      timerEndAt: endAt,
+      pausedTimeRemaining: null
+    }
+  })
+}
+
 export async function revealLiveQuestion() {
   const game = await getGameConfig()
-  const d = game.timerDuration
+  
+  const question = await db.triviaQuestion.findUnique({
+    where: { id: game.currentQuestionId || "" }
+  })
+
+  let d = game.timerDuration
+  if (question) {
+    if (question.difficulty === "EASY") d = game.timeEasy
+    if (question.difficulty === "MEDIUM") d = game.timeMedium
+    if (question.difficulty === "HARD") d = game.timeHard
+  }
+  
   const endAt = new Date(Date.now() + d * 1000)
 
   return db.triviaGame.update({
@@ -230,23 +284,19 @@ export async function revealLiveQuestion() {
   })
 }
 
-
-export async function startLiveTimer(duration?: number) {
-  const game = await getGameConfig()
-  const d = duration || game.timerDuration
-  const endAt = new Date(Date.now() + d * 1000)
-
-  return db.triviaGame.update({
-    where: { id: game.id },
-    data: {
-      status: "TIMER_ACTIVE",
-      timerEndAt: endAt,
-    },
-  })
-}
-
 export async function revealLiveResults() {
   const game = await getGameConfig()
+  
+  // Al revelar resultados, marcamos todas las sesiones del juego como completadas
+  // Esto disparará el cálculo final de puntos incluyendo las no respondidas
+  const activeSessions = await db.triviaSession.findMany({
+    where: { gameId: game.id, completedAt: null }
+  })
+
+  for (const session of activeSessions) {
+    await finishSession(session.id)
+  }
+
   return db.triviaGame.update({
     where: { id: game.id },
     data: { status: "SHOWING_RESULTS" }
@@ -507,9 +557,17 @@ export async function finishSession(sessionId: string) {
   })
   if (!session) throw new Error("Sesión no encontrada")
 
+  // Total de preguntas de esta partida
+  const totalQuestions = session.game.activeQuestionIds.length || (session.game.questionsEasy + session.game.questionsMedium + session.game.questionsHard)
+
   const totalCorrect = answers.filter((a) => a.isCorrect).length
-  const totalIncorrect = answers.filter((a) => !a.isCorrect).length
+  // Las no respondidas cuentan como incorrectas
+  const totalIncorrect = totalQuestions - totalCorrect
+  
   const totalTime = answers.reduce((sum, a) => sum + a.timeTaken, 0)
+  
+  // Calculamos el puntaje final
+  // Puntos positivos por las correctas, puntos negativos por las incorrectas (incluyendo no respondidas)
   const score =
     totalCorrect * session.game.pointsCorrect -
     totalIncorrect * Math.abs(session.game.pointsIncorrect)

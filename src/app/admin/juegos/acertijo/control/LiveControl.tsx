@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Brain, Play, FastForward, Clock, RotateCcw, Users, Trophy, ChevronRight, CheckCircle2, AlertCircle, Settings2, Share2, Eye } from "lucide-react"
 import Link from "next/link"
-import { startLiveSession, nextLiveQuestion, startLiveTimer, resetLiveGame, getLiveStatus, getQuestions, revealLiveQuestion, beginLiveGame, revealLiveResults } from "@/app/actions/juegos"
+import { startLiveSession, nextLiveQuestion, startLiveTimer, resetLiveGame, getLiveStatus, getQuestions, revealLiveQuestion, beginLiveGame, revealLiveResults, pauseLiveGame, resumeLiveGame } from "@/app/actions/juegos"
 import { toast } from "sonner"
 
 interface Question {
@@ -20,6 +20,24 @@ export function LiveControl() {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [timerVal, setTimerVal] = useState(10)
   const [timeLeft, setTimeLeft] = useState<number | null>(null)
+
+  const handlePause = async () => {
+    try {
+      await pauseLiveGame()
+      toast.success("Juego pausado")
+    } catch {
+      toast.error("Error al pausar")
+    }
+  }
+
+  const handleResume = async () => {
+    try {
+      await resumeLiveGame()
+      toast.success("Juego reanudado")
+    } catch {
+      toast.error("Error al reanudar")
+    }
+  }
   
   // Polling for admin metrics
   useEffect(() => {
@@ -35,6 +53,11 @@ export function LiveControl() {
 
   // Timer logic for admin
   useEffect(() => {
+    if (status?.status === "PAUSED") {
+      setTimeLeft(status.pausedTimeRemaining)
+      return
+    }
+
     if (!status?.timerEndAt) {
       setTimeLeft(null)
       return
@@ -49,7 +72,7 @@ export function LiveControl() {
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [status?.timerEndAt])
+  }, [status?.timerEndAt, status?.status, status?.pausedTimeRemaining])
 
   useEffect(() => {
     async function loadQs() {
@@ -339,14 +362,35 @@ export function LiveControl() {
                    <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest text-zinc-400">
                      Pregunta {status.currentIndex + 1} de {status.totalQuestions}
                    </span>
-                   <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                     status.status === 'TIMER_ACTIVE' ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'
-                   }`}>
-                     {status.status === 'QUESTION_HIDDEN' ? 'PREGUNTA OCULTA' : status.status === 'TIMER_ACTIVE' ? 'CRONÓMETRO ACTIVO' : 'ESPERANDO ACCIÓN'}
-                   </span>
-                 </div>
-                 <div className="flex items-center gap-6">
-                    <div className="flex flex-col items-end">
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                      status.status === 'TIMER_ACTIVE' ? 'bg-red-500/20 text-red-400' : 
+                      status.status === 'PAUSED' ? 'bg-amber-500/20 text-amber-400' :
+                      'bg-emerald-500/20 text-emerald-400'
+                    }`}>
+                      {status.status === 'QUESTION_HIDDEN' ? 'PREGUNTA OCULTA' : 
+                       status.status === 'TIMER_ACTIVE' ? 'CRONÓMETRO ACTIVO' : 
+                       status.status === 'PAUSED' ? 'JUEGO PAUSADO' :
+                       'ESPERANDO ACCIÓN'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-6">
+                     {status.status === 'TIMER_ACTIVE' && (
+                        <button 
+                          onClick={handlePause}
+                          className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 rounded-xl border border-amber-500/30 transition-all active:scale-95 text-xs font-black"
+                        >
+                          PAUSAR
+                        </button>
+                     )}
+                     {status.status === 'PAUSED' && (
+                        <button 
+                          onClick={handleResume}
+                          className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 rounded-xl border border-emerald-500/30 transition-all active:scale-95 text-xs font-black animate-pulse"
+                        >
+                          REANUDAR
+                        </button>
+                     )}
+                     <div className="flex flex-col items-end">
                        <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">{status.connectedCount} en línea</span>
                        <span className="text-[8px] text-zinc-600 font-bold uppercase tracking-widest">JUGADORES CONECTADOS</span>
                     </div>

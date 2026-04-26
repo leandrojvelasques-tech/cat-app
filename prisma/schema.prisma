@@ -357,11 +357,12 @@ model TriviaGame {
   isActive         Boolean        @default(false)
   
   // -- Campos para Juego en Vivo --
-  status           String         @default("IDLE") // IDLE, WAITING_QUESTION, TIMER_ACTIVE, SHOWING_RESULTS
+  status           String         @default("IDLE") // IDLE, WAITING_FOR_START, QUESTION_HIDDEN, TIMER_ACTIVE, PAUSED, GAME_OVER, SHOWING_RESULTS
   currentQuestionId String?       
   currentQuestionIndex Int          @default(0)
   timerDuration    Int            @default(10)     // Segundos ajustables
   timerEndAt       DateTime?                        // Para sincronizar el reloj
+  pausedTimeRemaining Int?                         // Segundos que faltaban al pausar
   activeQuestionIds String[]      @default([])     // Las 10 preguntas elegidas para la sesión
   // -------------------------------
 

@@ -42,6 +42,11 @@ export function LiveGameScreen({ sessionId }: Props) {
 
   // Timer logic
   useEffect(() => {
+    if (liveStatus?.status === "PAUSED") {
+      setTimeLeft(liveStatus.pausedTimeRemaining || 0)
+      return
+    }
+
     if (liveStatus?.status === "TIMER_ACTIVE" && liveStatus.timerEndAt) {
       const endAt = new Date(liveStatus.timerEndAt).getTime()
       
@@ -55,7 +60,7 @@ export function LiveGameScreen({ sessionId }: Props) {
     } else {
       setTimeLeft(0)
     }
-  }, [liveStatus?.status, liveStatus?.timerEndAt])
+  }, [liveStatus?.status, liveStatus?.timerEndAt, liveStatus?.pausedTimeRemaining])
 
   const handleOptionSelect = async (option: string) => {
     if (hasAnsweredCurrent || liveStatus?.status !== "TIMER_ACTIVE") return
@@ -85,10 +90,22 @@ export function LiveGameScreen({ sessionId }: Props) {
   if (!liveStatus) return <div className="p-8 text-center text-zinc-500">Conectando...</div>
 
   const isLocked = liveStatus.status !== "TIMER_ACTIVE" || hasAnsweredCurrent
+  const isPaused = liveStatus.status === "PAUSED"
   const question = liveStatus.currentQuestion
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white relative overflow-hidden flex flex-col">
+      {isPaused && (
+        <div className="absolute inset-0 z-[100] bg-zinc-950/80 backdrop-blur-sm flex items-center justify-center p-6 text-center">
+          <div className="space-y-4 animate-in fade-in zoom-in duration-300">
+             <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto border border-amber-500/20">
+                <Clock size={40} className="text-amber-500 animate-pulse" />
+             </div>
+             <h2 className="text-3xl font-black text-white">JUEGO EN PAUSA</h2>
+             <p className="text-zinc-400 max-w-xs mx-auto text-sm">El administrador ha pausado la partida. El tiempo se reanudará en breve.</p>
+          </div>
+        </div>
+      )}
       <div className="absolute top-[20%] left-[30%] w-[300px] h-[300px] bg-amber-600/5 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Header */}
