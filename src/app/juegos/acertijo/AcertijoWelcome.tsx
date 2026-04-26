@@ -14,12 +14,13 @@ type GameConfig = Awaited<ReturnType<typeof getGameConfig>>
 
 interface Props {
   gameConfig: GameConfig
+  mode?: "solo" | "live"
 }
 
 type GamePhase = "welcome" | "instructions" | "playing" | "result" | "playing_live"
 
 
-export function AcertijoWelcome({ gameConfig }: Props) {
+export function AcertijoWelcome({ gameConfig, mode = "solo" }: Props) {
   const [phase, setPhase] = useState<GamePhase>("welcome")
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
@@ -69,8 +70,7 @@ export function AcertijoWelcome({ gameConfig }: Props) {
       setQuestions(qs)
       setSessionId(session.id)
       
-      // Si el juego está en modo "Vivo" (no está IDLE), vamos directo a la pantalla de vivo
-      if (gameConfig.status !== "IDLE") {
+      if (mode === "live") {
         setPhase("playing_live")
       } else {
         setPhase("instructions")

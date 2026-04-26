@@ -3,6 +3,7 @@ import Link from "next/link"
 import { Brain, Users, Target, Clock, Trophy, ListChecks, Settings, Gamepad2, ArrowRight, BarChart3, ChevronRight, Play } from "lucide-react"
 import { ToggleGameButton } from "./ToggleGameButton"
 import { GameSettingsForm } from "./GameSettingsForm"
+import { CopyLiveLink } from "./CopyLiveLink"
 
 export default async function AdminJuegosPage() {
   const [metrics, gameConfig] = await Promise.all([
@@ -81,9 +82,10 @@ export default async function AdminJuegosPage() {
                 <span className="font-black text-xs">2</span>
               </div>
               <h4 className="text-xs font-bold text-white mb-1 uppercase">Lanzar</h4>
-              <p className="text-[10px] text-zinc-500 leading-relaxed">
-                Desde <b>Control en Vivo</b> elegí las preguntas para esta noche y compartí el link por WhatsApp.
+              <p className="text-[10px] text-zinc-500 leading-relaxed mb-3">
+                Para el <b>Juego en Vivo</b> compartí el siguiente link con los jugadores:
               </p>
+              <CopyLiveLink />
             </div>
             <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
               <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-500 mb-3">

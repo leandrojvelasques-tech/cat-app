@@ -76,8 +76,8 @@ export default async function JuegosPage() {
                   <div className="flex items-center gap-3 mb-2">
                     <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">Acertijo 2.0</h2>
                     {game.isActive ? (
-                      <span className="px-2.5 py-1 bg-emerald-500/15 border border-emerald-500/30 rounded-full text-[10px] font-black text-emerald-400 uppercase tracking-wider animate-pulse">
-                        En vivo
+                      <span className="px-2.5 py-1 bg-emerald-500/15 border border-emerald-500/30 rounded-full text-[10px] font-black text-emerald-400 uppercase tracking-wider">
+                        Disponible
                       </span>
                     ) : (
                       <span className="px-2.5 py-1 bg-zinc-500/15 border border-zinc-500/30 rounded-full text-[10px] font-black text-zinc-500 uppercase tracking-wider">
