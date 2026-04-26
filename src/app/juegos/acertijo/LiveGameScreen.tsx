@@ -192,10 +192,10 @@ export function LiveGameScreen({ sessionId }: Props) {
 
             {/* Status Message */}
             <div className="mt-8 text-center text-zinc-500 flex flex-col items-center gap-3">
-              {liveStatus.status === "WAITING_QUESTION" && !hasAnsweredCurrent && (
+              {(liveStatus.status === "QUESTION_HIDDEN" || liveStatus.status === "WAITING_QUESTION") && !hasAnsweredCurrent && (
                 <>
                   <AlertCircle size={20} className="text-amber-500/50" />
-                  <p className="text-sm font-medium">Prestá atención al moderador... <br/><span className="text-zinc-600 italic">Habilitará el tiempo en breve.</span></p>
+                  <p className="text-sm font-medium">Leé la pregunta... <br/><span className="text-zinc-600 italic">El tiempo empezará en breve.</span></p>
                 </>
               )}
               {hasAnsweredCurrent && (

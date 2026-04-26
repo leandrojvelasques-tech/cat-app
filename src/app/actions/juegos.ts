@@ -182,9 +182,15 @@ export async function startLiveSession(questionIds?: string[], timerDuration = 1
 
 export async function beginLiveGame() {
   const game = await getGameConfig()
+  const d = game.timerDuration
+  const endAt = new Date(Date.now() + d * 1000)
+
   return db.triviaGame.update({
     where: { id: game.id },
-    data: { status: "QUESTION_HIDDEN" }
+    data: { 
+      status: "TIMER_ACTIVE",
+      timerEndAt: endAt
+    }
   })
 }
 
@@ -212,9 +218,15 @@ export async function nextLiveQuestion() {
 
 export async function revealLiveQuestion() {
   const game = await getGameConfig()
+  const d = game.timerDuration
+  const endAt = new Date(Date.now() + d * 1000)
+
   return db.triviaGame.update({
     where: { id: game.id },
-    data: { status: "WAITING_QUESTION" }
+    data: { 
+      status: "TIMER_ACTIVE", 
+      timerEndAt: endAt 
+    }
   })
 }
 
@@ -256,7 +268,7 @@ export async function resetLiveGame() {
   })
 }
 
-export async function getLiveStatus(sessionId?: string) {
+export async function getLiveStatus(sessionId?: string, isAdmin = false) {
   // Heartbeat: Si viene un sessionId, actualizamos su updatedAt
   if (sessionId) {
     try {
@@ -269,7 +281,7 @@ export async function getLiveStatus(sessionId?: string) {
     }
   }
 
-  const game = await db.triviaGame.findFirst({
+  let game = await db.triviaGame.findFirst({
     where: { name: "Acertijo 2.0" },
     include: {
       sessions: {
@@ -283,6 +295,33 @@ export async function getLiveStatus(sessionId?: string) {
   
   if (!game) return null
 
+  // --- AUTOMATIC PROGRESSION LOGIC ---
+  // If timer expired and we are in TIMER_ACTIVE, move to next question automatically
+  if (game.status === "TIMER_ACTIVE" && game.timerEndAt && new Date(game.timerEndAt) < new Date()) {
+    const nextIndex = game.currentQuestionIndex + 1
+    if (nextIndex >= game.activeQuestionIds.length) {
+      game = await db.triviaGame.update({
+        where: { id: game.id },
+        data: { status: "GAME_OVER", timerEndAt: null },
+        include: { sessions: { include: { player: true }, take: 10 } } // re-fetch for consistency
+      })
+    } else {
+      const d = game.timerDuration
+      const nextEndAt = new Date(Date.now() + d * 1000)
+      game = await db.triviaGame.update({
+        where: { id: game.id },
+        data: {
+          currentQuestionIndex: nextIndex,
+          currentQuestionId: game.activeQuestionIds[nextIndex],
+          status: "TIMER_ACTIVE",
+          timerEndAt: nextEndAt,
+        },
+        include: { sessions: { include: { player: true }, take: 10 } }
+      })
+    }
+  }
+  // ------------------------------------
+
   // 1. Contar y obtener nombres de jugadores activos (en los últimos 10 segundos)
   const activeThreshold = new Date(Date.now() - 10000)
   const activeSessions = await db.triviaSession.findMany({
@@ -291,6 +330,10 @@ export async function getLiveStatus(sessionId?: string) {
       updatedAt: { gte: activeThreshold },
     },
     include: { player: true },
+    orderBy: [
+      { score: 'desc' },
+      { totalTime: 'asc' }
+    ]
   })
 
   const connectedNames = activeSessions.map(s => 
@@ -317,19 +360,11 @@ export async function getLiveStatus(sessionId?: string) {
     })
   }
 
-  // 3. Ranking dinámico (incluye sesiones en curso)
-  const rankingSessions = await db.triviaSession.findMany({
-    where: { gameId: game.id },
-    include: { player: true },
-    orderBy: [
-      { score: "desc" },
-      { updatedAt: "desc" }
-    ],
-    take: 10
-  })
+  // 3. Ranking dinámico (las 10 mejores sesiones activas)
+  const rankingSessions = activeSessions.slice(0, 10)
 
   let currentQuestion = null
-  if (game.currentQuestionId && game.status !== "QUESTION_HIDDEN") {
+  if (game.currentQuestionId && (game.status !== "QUESTION_HIDDEN" || isAdmin)) {
     currentQuestion = await db.triviaQuestion.findUnique({
       where: { id: game.currentQuestionId },
       select: {
@@ -347,7 +382,7 @@ export async function getLiveStatus(sessionId?: string) {
   return {
     status: game.status,
     currentQuestion,
-    currentQuestionIndex: game.currentQuestionIndex,
+    currentIndex: game.currentQuestionIndex, // Consistent name for client
     totalQuestions: game.activeQuestionIds.length,
     timerEndAt: game.timerEndAt,
     timerDuration: game.timerDuration,
@@ -355,7 +390,7 @@ export async function getLiveStatus(sessionId?: string) {
     connectedNames,
     answerStats,
     ranking: rankingSessions.map(s => ({
-      name: s.player.nickname || `${s.player.firstName} ${s.player.lastName.charAt(0)}.`,
+      name: s.player.nickname || `${s.player.firstName} ${s.player.lastName.charAt(0)}.` ,
       score: s.score
     }))
   }
@@ -434,15 +469,31 @@ export async function submitAnswer(data: {
 
   const isCorrect = data.selectedOption === question.correctOption
 
-  return db.triviaAnswer.create({
-    data: {
-      sessionId: data.sessionId,
-      questionId: data.questionId,
-      selectedOption: data.selectedOption,
-      isCorrect,
-      timeTaken: data.timeTaken,
-    },
-  })
+  const game = await db.triviaGame.findFirst({ where: { name: "Acertijo 2.0" } })
+  const points = isCorrect ? (game?.pointsCorrect || 10) : -(Math.abs(game?.pointsIncorrect || 0))
+
+  const [answer] = await db.$transaction([
+    db.triviaAnswer.create({
+      data: {
+        sessionId: data.sessionId,
+        questionId: data.questionId,
+        selectedOption: data.selectedOption,
+        isCorrect,
+        timeTaken: data.timeTaken,
+      },
+    }),
+    db.triviaSession.update({
+      where: { id: data.sessionId },
+      data: {
+        totalCorrect: isCorrect ? { increment: 1 } : undefined,
+        totalIncorrect: !isCorrect ? { increment: 1 } : undefined,
+        score: { increment: points },
+        totalTime: { increment: data.timeTaken }
+      }
+    })
+  ])
+
+  return answer
 }
 
 export async function finishSession(sessionId: string) {

@@ -24,7 +24,7 @@ export function LiveControl() {
   // Polling for admin metrics
   useEffect(() => {
     async function refresh() {
-      const s = await getLiveStatus()
+      const s = await getLiveStatus(undefined, true)
       setStatus(s)
       setLoading(false)
     }
@@ -358,11 +358,16 @@ export function LiveControl() {
                </div>
 
                {status.currentQuestion ? (
-                 <div className={`space-y-6 transition-opacity duration-500 ${status.status === 'QUESTION_HIDDEN' ? 'opacity-30 blur-sm' : 'opacity-100'}`}>
+                 <div className="space-y-6">
                    <div className="flex justify-between items-start gap-4">
-                      <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight flex-1">
-                        {status.currentQuestion.statement}
-                      </h2>
+                      <div className="space-y-1 flex-1">
+                        <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight">
+                          {status.currentQuestion.statement}
+                        </h2>
+                        {status.status === 'QUESTION_HIDDEN' && (
+                          <span className="text-xs font-black text-amber-500 uppercase tracking-widest bg-amber-500/10 px-2 py-0.5 rounded">Oculta para jugadores</span>
+                        )}
+                      </div>
                       {timeLeft !== null && (
                          <div className={`w-16 h-16 rounded-2xl flex flex-col items-center justify-center border-2 ${timeLeft < 4 ? 'border-red-500 text-red-500 animate-pulse' : 'border-emerald-500 text-emerald-500'}`}>
                             <span className="text-2xl font-black">{timeLeft}</span>
@@ -372,26 +377,25 @@ export function LiveControl() {
                    </div>
 
                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                     {(status?.currentQuestion?.options || []).map((opt: string, i: number) => {
-                       const letter = ['A', 'B', 'C', 'D'][i]
+                     {['A', 'B', 'C', 'D'].map((letter) => {
+                       const optText = (status.currentQuestion as any)[`option${letter}`]
                        const stats = status?.answerStats || {}
                        const count = stats[letter] || 0
                        const total = Object.values(stats as Record<string, number>).reduce((a, b) => a + b, 0)
                        const percent = total > 0 ? (count / total) * 100 : 0
                        
                        return (
-                        <div key={i} className="relative p-4 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
-                           {/* Progress Bar Background */}
+                        <div key={letter} className="relative p-4 rounded-xl bg-white/5 border border-white/10 overflow-hidden">
                            <div 
                               className="absolute inset-y-0 left-0 bg-emerald-500/10 transition-all duration-1000" 
                               style={{ width: `${percent}%` }}
                            />
                            <div className="relative flex justify-between items-center gap-3">
-                              <div className="flex items-center gap-3">
-                                <span className="w-6 h-6 rounded bg-white/10 flex items-center justify-center text-[10px] font-black">{letter}</span>
-                                <span className="text-sm font-medium text-zinc-300">{opt}</span>
-                              </div>
-                              <span className="text-xs font-black text-emerald-500">{count}</span>
+                               <div className="flex items-center gap-3">
+                                 <span className="w-6 h-6 rounded bg-white/10 flex items-center justify-center text-[10px] font-black">{letter}</span>
+                                 <span className="text-sm font-medium text-zinc-300">{optText}</span>
+                               </div>
+                               <span className="text-xs font-black text-emerald-500">{count}</span>
                            </div>
                         </div>
                        )
@@ -400,9 +404,13 @@ export function LiveControl() {
                  </div>
                ) : (
                  <div className="text-center py-12">
-                    <Trophy size={48} className="text-amber-500 mx-auto mb-4" />
-                    <h3 className="text-2xl font-black text-white">¡Partida Finalizada!</h3>
-                    <p className="text-zinc-500 mt-2">Ya podés anunciar los resultados finales.</p>
+                    <Trophy size={48} className={`mx-auto mb-4 ${status.status === "GAME_OVER" ? "text-emerald-500" : "text-zinc-600 animate-pulse"}`} />
+                    <h3 className="text-2xl font-black text-white">
+                      {status.status === 'GAME_OVER' ? '¡Partida Finalizada!' : 'Iniciando...'}
+                    </h3>
+                    <p className="text-zinc-500 mt-2">
+                      {status.status === 'GAME_OVER' ? 'Ya podés anunciar los resultados finales.' : 'Preparando la primera pregunta.'}
+                    </p>
                  </div>
                )}
 
@@ -414,16 +422,6 @@ export function LiveControl() {
                      >
                        <Eye size={20} />
                        REVELAR PREGUNTA
-                     </button>
-                  )}
-
-                  {status.status === 'WAITING_QUESTION' && (
-                     <button
-                       onClick={handleStartTimer}
-                       className="flex-1 py-4 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-amber-500/20 transition-all active:scale-95"
-                     >
-                       <Clock size={20} />
-                       INICIAR {status.timerDuration} SEG.
                      </button>
                   )}
 
