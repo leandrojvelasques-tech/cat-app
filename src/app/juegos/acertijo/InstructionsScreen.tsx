@@ -33,8 +33,8 @@ export function InstructionsScreen({ gameConfig, totalQuestions, onStart }: Prop
     },
     {
       icon: Trophy,
-      title: "Ranking en vivo",
-      description: "Gana quien tenga más respuestas correctas. En caso de empate, el menor tiempo decide.",
+      title: "Ranking histórico",
+      description: "Acumulá puntos y competí contra todos los que alguna vez jugaron esta trivia. ¡Al final verás tu posición en el podio!",
       color: "yellow",
     },
   ]
