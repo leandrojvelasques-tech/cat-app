@@ -225,16 +225,16 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
            <section className="bg-gradient-to-br from-zinc-900 to-black border border-white/10 rounded-3xl p-6 backdrop-blur-md">
               <h2 className="font-semibold text-emerald-500 text-sm uppercase tracking-widest border-b border-white/5 pb-3 flex items-center gap-2"><DollarSign size={14}/> Tarifario</h2>
-              <div className="mt-4 space-y-3">
-                 <div className="flex justify-between items-center text-xs pt-2">
-                    <span className="text-zinc-500 font-bold uppercase tracking-tighter">Milonga Socio</span>
-                    <span className="text-white font-black text-lg">${event.priceSocioMilonga?.toLocaleString()}</span>
-                 </div>
-                 <div className="flex justify-between items-center text-xs">
-                    <span className="text-zinc-500 font-bold uppercase tracking-tighter">Milonga No Socio</span>
-                    <span className="text-white font-black text-lg">${event.priceNonSocioMilonga?.toLocaleString()}</span>
-                 </div>
-              </div>
+               <div className="mt-4 space-y-3">
+                  <div className="flex justify-between items-center text-xs pt-2">
+                     <span className="text-zinc-500 font-bold uppercase tracking-tighter">Milonga Socio</span>
+                     <span className="text-white font-black text-lg">${(event.priceSocioMilonga || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                     <span className="text-zinc-500 font-bold uppercase tracking-tighter">Milonga No Socio</span>
+                     <span className="text-white font-black text-lg">${(event.priceNonSocioMilonga || 0).toLocaleString()}</span>
+                  </div>
+               </div>
            </section>
         </div>
       </div>
