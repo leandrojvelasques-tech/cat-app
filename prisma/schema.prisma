@@ -138,7 +138,7 @@ model Event {
   startDate   DateTime
   endDate     DateTime?
   location    String?   @default("Sede Central CAT")
-  type        String // MILONGA, WORKSHOP, BOTH
+  type        String    @default("MILONGA") // MILONGA, OTRO
 
   // Specific Schedules and Locations
   milongaStart    DateTime?
@@ -146,22 +146,11 @@ model Event {
   milongaLocation String?
   tangoDJ         String?
 
-  workshopStart    DateTime?
-  workshopEnd      DateTime?
-  workshopLocation String?
-  workshopClasses  String? // JSON String with [{name, start, end, description}]
-
   organizer String @default("Centro Amigos del Tango")
 
-  // Pricing
+  // Pricing (Simplified to Milonga only)
   priceSocioMilonga        Float?
   priceNonSocioMilonga     Float?
-  priceSocioWorkshop       Float?
-  priceNonSocioWorkshop    Float?
-  priceSocioFull           Float?
-  priceNonSocioFull        Float?
-  priceSocioSingleClass    Float?
-  priceNonSocioSingleClass Float?
 
   status      String  @default("OPEN") // OPEN, CLOSED, ARCHIVED
   isPublic    Boolean @default(true) // For website visibility
@@ -170,6 +159,7 @@ model Event {
   teachers      Teacher[]           @relation("EventTeachers")
   registrations EventRegistration[]
   buffetSales   BuffetSale[]
+  buffetCashRegister BuffetCashRegister?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -190,7 +180,7 @@ model EventRegistration {
   email     String?
   phone     String?
 
-  registrationType String // MILONGA, WORKSHOP, FULL
+  registrationType String @default("MILONGA") // MILONGA
   amountPaid       Float   @default(0)
   paymentStatus    String  @default("PENDING") // PENDING, PAID
   paymentMethod    String? // CASH, TRANSFER, etc
@@ -203,6 +193,29 @@ model EventRegistration {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model BuffetCashRegister {
+  id             String   @id @default(uuid())
+  eventId        String   @unique
+  event          Event    @relation(fields: [eventId], references: [id])
+  openingBalance Float    @default(0)
+  closingBalance Float?
+  observations   String?
+  status         String   @default("OPEN") // OPEN, CLOSED
+  closedAt       DateTime?
+  withdrawals    BuffetCashWithdrawal[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model BuffetCashWithdrawal {
+  id          String   @id @default(uuid())
+  registerId  String
+  register    BuffetCashRegister @relation(fields: [registerId], references: [id])
+  amount      Float
+  reason      String
+  createdAt   DateTime @default(now())
 }
 
 model Championship {
