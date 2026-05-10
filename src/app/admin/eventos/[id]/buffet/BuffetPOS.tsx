@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useMemo } from "react"
 import { 
   ShoppingCart, Plus, Minus, Trash2, ArrowLeft, Wine, Beer, 

@@ -300,9 +300,3 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
     </div>
   )
 }
-button>
-        </form>
-      </div>
-    </div>
-  )
-}
