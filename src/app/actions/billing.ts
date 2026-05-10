@@ -5,10 +5,24 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 
 export async function getActiveEvents() {
-  return await db.event.findMany({
-    where: { status: 'OPEN' },
-    orderBy: { startDate: 'asc' }
-  })
+  const [events, settings] = await Promise.all([
+    db.event.findMany({
+      where: { status: 'OPEN' },
+      orderBy: { startDate: 'asc' }
+    }),
+    db.setting.findMany({
+      where: { key: { in: ['precio_milonga_socio', 'precio_milonga_nosocio'] } }
+    })
+  ])
+
+  const precioSocio = settings.find(s => s.key === 'precio_milonga_socio')?.value || "2000"
+  const precioNoSocio = settings.find(s => s.key === 'precio_milonga_nosocio')?.value || "9000"
+
+  return events.map(e => ({
+    ...e,
+    priceSocioMilonga: e.priceSocioMilonga || parseFloat(precioSocio),
+    priceNonSocioMilonga: e.priceNonSocioMilonga || parseFloat(precioNoSocio)
+  }))
 }
 
 export async function searchMembers(query: string) {

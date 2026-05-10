@@ -76,29 +76,22 @@ export default function CobrarWizard() {
     }
   }, [eventMemberQuery])
 
-  const calculateEventPrice = (type: string, qty: number, member: any) => {
+  const calculateEventPrice = (qty: number, member: any) => {
     if (!selectedEvent) return 0
     const isMember = !!member && member.status === 'ACTIVE'
-    let unitPrice = 0
-    
-    if (type === 'MILONGA') {
-      unitPrice = isMember ? (selectedEvent.priceSocioMilonga || selectedEvent.priceNonSocioMilonga || 0) : (selectedEvent.priceNonSocioMilonga || 0)
-    } else if (type === 'WORKSHOP') {
-      unitPrice = isMember ? (selectedEvent.priceSocioWorkshop || selectedEvent.priceNonSocioWorkshop || 0) : (selectedEvent.priceNonSocioWorkshop || 0)
-    } else if (type === 'FULL') {
-      unitPrice = isMember ? (selectedEvent.priceSocioFull || selectedEvent.priceNonSocioFull || 0) : (selectedEvent.priceNonSocioFull || 0)
-    }
-    
+    const unitPrice = isMember ? selectedEvent.priceSocioMilonga : selectedEvent.priceNonSocioMilonga
     return unitPrice * qty
   }
 
-  // Effect to update amount when type, qty or member changes
+  // Effect to update amount when qty or member changes
   useEffect(() => {
     if (step === 'EVENT_FORM' && selectedEvent) {
-      const newAmount = calculateEventPrice(eventFormData.registrationType, eventFormData.quantity, selectedMember)
+      const newAmount = calculateEventPrice(eventFormData.quantity, selectedMember)
       setEventFormData(prev => ({ ...prev, amountPaid: newAmount }))
     }
-  }, [eventFormData.registrationType, eventFormData.quantity, selectedMember, step])
+  }, [eventFormData.quantity, selectedMember, step, selectedEvent])
+
+  // ... (rest of search logic remains similar but I'll simplify the JSX)
 
   // Search members logic
   useEffect(() => {
@@ -236,8 +229,8 @@ export default function CobrarWizard() {
                  <div className="w-16 h-16 bg-red-600/20 text-red-500 rounded-2xl flex items-center justify-center mb-6 border border-red-600/20">
                     <TangoShoe size={32} />
                  </div>
-                 <h3 className="text-2xl font-bold mb-2">Eventos y Milongas</h3>
-                 <p className="text-zinc-400">Entradas, talleres y actividades especiales.</p>
+                 <h3 className="text-2xl font-bold mb-2">Milongas / Entradas</h3>
+                 <p className="text-zinc-400">Cobro de entradas a milongas y eventos sociales.</p>
                  <div className="mt-8 flex items-center gap-2 text-red-500 font-bold text-sm uppercase tracking-widest">
                     Continuar <ArrowRight size={16} />
                  </div>
@@ -379,14 +372,14 @@ export default function CobrarWizard() {
                 >
                    <div className="flex justify-between items-start mb-4">
                       <div className="p-3 rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20">
-                         {event.type === 'WORKSHOP' ? <GraduationCap size={24} /> : <TangoShoe size={24} />}
+                         <TangoShoe size={24} />
                       </div>
                       <span className="text-[10px] font-bold text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded-full border border-white/5 uppercase">
                          {new Date(event.startDate).toLocaleDateString()}
                       </span>
                    </div>
                    <h3 className="text-xl font-bold mb-1 group-hover:text-red-400 transition-colors uppercase tracking-tight">{event.title}</h3>
-                   <p className="text-zinc-500 text-sm line-clamp-2">{event.description}</p>
+                   <p className="text-zinc-500 text-sm line-clamp-1">{event.location}</p>
                 </button>
               ))}
               {activeEvents.length === 0 && (
@@ -530,16 +523,10 @@ export default function CobrarWizard() {
                     <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Opciones de Cobro</p>
                     <div className="space-y-4 flex-1">
                        <div className="space-y-2">
-                          <label className="text-xs font-medium text-zinc-500 uppercase ml-1">Tipo de Entrada</label>
-                          <select 
-                            value={eventFormData.registrationType}
-                            onChange={(e) => setEventFormData({...eventFormData, registrationType: e.target.value})}
-                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 outline-none appearance-none cursor-pointer focus:border-red-500/50"
-                          >
-                             <option value="MILONGA">Entrada Milonga</option>
-                             {selectedEvent.type !== 'MILONGA' && <option value="WORKSHOP">Taller / Clase</option>}
-                             {selectedEvent.type === 'BOTH' && <option value="FULL">Combo Completo</option>}
-                          </select>
+                          <label className="text-xs font-medium text-zinc-500 uppercase ml-1">Detalle</label>
+                          <div className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-zinc-300">
+                             ENTRADA MILONGA
+                          </div>
                        </div>
 
                        <div className="flex items-center justify-between bg-black/20 p-4 rounded-2xl border border-white/5">

@@ -28,8 +28,8 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
     dni: "",
     email: "",
     phone: "",
-    registrationType: event.type === 'MILONGA' ? 'MILONGA' : (event.type === 'WORKSHOP' ? 'WORKSHOP' : 'FULL'),
-    amountPaid: event.type === 'MILONGA' ? (event.priceNonSocioMilonga || 0) : (event.type === 'WORKSHOP' ? (event.priceNonSocioWorkshop || 0) : (event.priceNonSocioFull || 0)),
+    registrationType: 'MILONGA',
+    amountPaid: event.priceNonSocioMilonga || 0,
     paymentMethod: "CASH",
     paymentStatus: "PAID"
   })
@@ -63,22 +63,16 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
       dni: m.dni,
       email: m.email || "",
       phone: m.phone || "",
-      amountPaid: getPrice(formData.registrationType, m.status === 'ACTIVE')
+      amountPaid: m.status === 'ACTIVE' ? (event.priceSocioMilonga || 0) : (event.priceNonSocioMilonga || 0)
     })
     setSearchTerm("")
     setSearchResults([])
     setConfirmedDuplicate(false)
   }
 
-  const getPrice = (type: string, isSocio: boolean) => {
-    if (type === 'MILONGA') return isSocio ? (event.priceSocioMilonga || 0) : (event.priceNonSocioMilonga || 0)
-    if (type === 'WORKSHOP') return isSocio ? (event.priceSocioWorkshop || 0) : (event.priceNonSocioWorkshop || 0)
-    return isSocio ? (event.priceSocioFull || 0) : (event.priceNonSocioFull || 0)
-  }
-
   const handleTypeChange = (type: string) => {
     const isSocio = selectedMember?.status === 'ACTIVE'
-    const price = getPrice(type, isSocio)
+    const price = isSocio ? (event.priceSocioMilonga || 0) : (event.priceNonSocioMilonga || 0)
     setFormData(prev => ({ ...prev, registrationType: type, amountPaid: price }))
   }
 
@@ -220,28 +214,13 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
           {/* Options */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
              <div className="space-y-4">
-                <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-widest">¿A qué se inscribe?</label>
+                <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-widest">Inscripción</label>
                  <div className="space-y-2">
-                   {[
-                     { id: 'MILONGA', label: 'Solo Milonga', visible: event.type !== 'WORKSHOP' },
-                     { id: 'WORKSHOP', label: 'Solo Workshop', visible: event.type !== 'MILONGA' },
-                     { id: 'FULL', label: 'Combo Full Pass', visible: event.type === 'BOTH' },
-                   ].filter(o => o.visible).map(opt => (
-                     <button 
-                      key={opt.id}
-                      type="button" 
-                      onClick={() => handleTypeChange(opt.id)}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all text-xs font-bold ${
-                        formData.registrationType === opt.id 
-                          ? "bg-amber-600/10 border-amber-600/40 text-amber-500" 
-                          : "bg-black/20 border-white/5 text-zinc-500 hover:border-white/20"
-                      }`}
-                     >
-                       {opt.label}
-                       {formData.registrationType === opt.id && <CheckCircle2 size={14} />}
-                     </button>
-                   ))}
-                   <input type="hidden" name="registrationType" value={formData.registrationType} />
+                    <div className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-amber-600/40 bg-amber-600/10 text-amber-500 text-xs font-bold">
+                       ENTRADA MILONGA
+                       <CheckCircle2 size={14} />
+                    </div>
+                    <input type="hidden" name="registrationType" value="MILONGA" />
                 </div>
              </div>
 
@@ -249,7 +228,7 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
                 <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-widest">Pago y Estado</label>
                 <div className="bg-black/40 border border-white/10 rounded-2xl p-4 space-y-4">
                    <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                      <span className="text-xs text-zinc-400">Importe sugerido</span>
+                      <span className="text-xs text-zinc-400">Importe</span>
                       <div className="relative">
                         <span className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px]">$</span>
                         <input 
@@ -276,18 +255,8 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
                          <select name="paymentStatus" className="bg-zinc-800 border border-white/10 rounded-lg text-[10px] font-bold text-amber-500 uppercase px-2 py-1.5 outline-none w-full shadow-lg">
                             <option value="PAID" className="bg-zinc-800">YA PAGÓ</option>
                             <option value="PENDING" className="bg-zinc-800">PENDIENTE / RESERVA</option>
-                         </select>
+                          </select>
                       </div>
-                   </div>
-
-                   <div className="pt-4 border-t border-white/5 space-y-2">
-                       <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-widest pl-1">Comprobante de Pago</label>
-                       <input
-                         type="file"
-                         name="paymentProof"
-                         accept="image/*,.pdf"
-                         className="w-full bg-zinc-900/50 border border-white/5 rounded-xl px-3 py-2 text-[10px] text-zinc-400 file:mr-3 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:bg-amber-500/10 file:text-amber-500 hover:file:bg-amber-500/20"
-                       />
                    </div>
                 </div>
              </div>
@@ -300,8 +269,7 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
                   <div className="space-y-1">
                     <p className="text-sm font-bold text-red-500 uppercase tracking-tighter">¡Detección de Duplicado!</p>
                     <p className="text-xs text-zinc-400 leading-relaxed">
-                      Ya existe una persona registrada con este nombre o DNI en el evento. 
-                      Por favor, verifica si es un error o si el asistente realmente desea adquirir otra entrada.
+                      Ya existe una persona registrada con este nombre o DNI en el evento.
                     </p>
                   </div>
                   <button 
@@ -327,6 +295,12 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
             <Save size={18} className="group-hover:scale-110 transition-transform" />
             {hasDuplicate && !confirmedDuplicate ? "VERIFICAR DUPLICADO" : "CONFIRMAR INSCRIPCIÓN"}
           </button>
+        </form>
+      </div>
+    </div>
+  )
+}
+button>
         </form>
       </div>
     </div>

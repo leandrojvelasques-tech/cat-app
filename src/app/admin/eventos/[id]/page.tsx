@@ -13,13 +13,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
       registrations: {
         orderBy: { createdAt: 'desc' },
         include: { member: true }
-      }
+      },
+      buffetCashRegister: true
     }
   })
 
   if (!event) notFound()
-
-  const classes = event.workshopClasses ? JSON.parse(event.workshopClasses) : []
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
@@ -55,9 +54,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                >
                   <Edit size={16} /> Editar
                </Link>
-               <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white px-4 py-2.5 rounded-xl font-medium transition-all text-sm border border-white/10">
-                  <Copy size={16} /> Duplicar
-               </button>
                <Link
                   href={`/admin/eventos/${event.id}/buffet`}
                   className="flex items-center gap-2 bg-purple-500/20 hover:bg-purple-500/30 backdrop-blur-md text-purple-300 px-4 py-2.5 rounded-xl font-medium transition-all text-sm border border-purple-500/20"
@@ -105,9 +101,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
              >
                 <Edit size={16} /> Editar
              </Link>
-             <button className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-zinc-300 px-4 py-2.5 rounded-xl font-medium transition-all text-sm border border-white/5">
-                <Copy size={16} /> Duplicar para Próxima Fecha
-             </button>
              <Link
                 href={`/admin/eventos/${event.id}/buffet`}
                 className="flex items-center gap-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 px-4 py-2.5 rounded-xl font-medium transition-all text-sm border border-purple-500/20"
@@ -131,7 +124,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
           {/* List of Attendees */}
           <section className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden backdrop-blur-md">
             <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
-               <h2 className="font-semibold text-white/90">Registro de Asistentes</h2>
+               <h2 className="font-semibold text-white/90">Asistencia a la Milonga</h2>
                <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-tighter">
                   <span className="text-zinc-600">Total: <span className="text-white">{event.registrations.length}</span></span>
                   <span className="text-emerald-500/50">Recaudación: <span className="text-emerald-400">${event.registrations.reduce((acc, r) => acc + r.amountPaid, 0).toLocaleString()}</span></span>
@@ -142,16 +135,18 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               {event.registrations.length === 0 ? (
                 <div className="py-20 text-center flex flex-col items-center gap-4">
                    <Users size={32} className="text-zinc-700 opacity-20" />
-                   <div className="text-sm font-medium text-zinc-600">No hay inscripciones registradas aún.</div>
+                   <div className="text-sm font-medium text-zinc-600">No hay entradas cobradas aún.</div>
+                   <Link href={`/admin/cobrar?eventId=${event.id}`} className="mt-4 bg-amber-500 hover:bg-amber-400 text-zinc-950 px-6 py-2 rounded-xl font-bold text-xs uppercase transition-all">
+                      Cobrar Primera Entrada
+                   </Link>
                 </div>
               ) : (
                 <table className="w-full">
                   <thead>
                     <tr className="text-left text-[10px] uppercase tracking-widest text-zinc-500 border-b border-white/5">
                       <th className="px-6 py-4 font-bold">Asistente</th>
-                      <th className="px-6 py-4 font-bold text-center">Inscripción</th>
                       <th className="px-6 py-4 font-bold">Pago</th>
-                      <th className="px-6 py-4 font-bold text-right">Acciones</th>
+                      <th className="px-6 py-4 font-bold text-right">Hora</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -168,14 +163,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                               </div>
                            </div>
                         </td>
-                        <td className="px-6 py-4 text-center">
-                           <span className={`px-2 py-0.5 rounded-lg text-[9px] font-bold border ${
-                             reg.registrationType === 'FULL' ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
-                             reg.registrationType === 'WORKSHOP' ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"
-                           }`}>
-                             {reg.registrationType}
-                           </span>
-                        </td>
                         <td className="px-6 py-4">
                            <div className="flex flex-col gap-1">
                               <div className="flex items-center gap-2">
@@ -186,7 +173,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                            </div>
                         </td>
                         <td className="px-6 py-4 text-right">
-                           <button className="text-zinc-600 hover:text-red-400 p-2 transition-colors transition-colors"><Trash2 size={16}/></button>
+                           <span className="text-[10px] text-zinc-500 font-bold">{new Date(reg.createdAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>
                         </td>
                       </tr>
                     ))}
@@ -199,15 +186,15 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
         {/* Info Sidebar */}
         <div className="space-y-6">
-           <section className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md space-y-6">
-              <h2 className="font-semibold text-amber-500 text-sm uppercase tracking-widest border-b border-white/5 pb-3 flex items-center gap-2"><LayoutDashboard size={14}/> Detalles del Evento</h2>
+            <section className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md space-y-6">
+              <h2 className="font-semibold text-amber-500 text-sm uppercase tracking-widest border-b border-white/5 pb-3 flex items-center gap-2"><LayoutDashboard size={14}/> Detalles Milonga</h2>
               
               <div className="space-y-4">
                  {event.milongaStart && (
                    <div className="p-4 bg-red-500/5 border border-red-500/10 rounded-2xl flex items-start gap-4">
                       <Music className="text-red-400 shrink-0" size={18} />
                       <div>
-                         <div className="text-xs font-bold text-red-500/80 uppercase">Milonga</div>
+                         <div className="text-xs font-bold text-red-500/80 uppercase">Horario</div>
                          <div className="text-sm font-medium text-white/90">
                             {new Date(event.milongaStart).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                             {event.milongaEnd && ` a ${new Date(event.milongaEnd).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`}
@@ -219,48 +206,33 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                    </div>
                  )}
 
-                 {event.workshopStart && (
-                   <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl flex items-start gap-4">
-                      <Users className="text-blue-400 shrink-0" size={18} />
-                      <div>
-                         <div className="text-xs font-bold text-blue-500/80 uppercase">Workshop</div>
-                         <div className="text-sm font-medium text-white/90">
-                            {new Date(event.workshopStart).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                 <div className="p-4 bg-purple-500/5 border border-purple-500/10 rounded-2xl flex items-start gap-4">
+                    <ShoppingBag className="text-purple-400 shrink-0" size={18} />
+                    <div>
+                       <div className="text-xs font-bold text-purple-500/80 uppercase">Buffet</div>
+                       <div className="text-sm font-medium text-white/90">
+                          {event.buffetCashRegister?.status === 'OPEN' ? "ABIERTO" : "CERRADO / SIN INICIAR"}
+                       </div>
+                       {event.buffetCashRegister && (
+                         <div className="text-[10px] text-purple-400/60 mt-1">
+                            Caja inicial: ${event.buffetCashRegister.openingBalance.toLocaleString()}
                          </div>
-                         
-                         {classes.length > 0 && (
-                           <div className="mt-2 space-y-1">
-                              {classes.map((c: any, i: number) => (
-                                <div key={i} className="text-[10px] text-blue-400/60 leading-tight">
-                                   • {c.name}
-                                </div>
-                              ))}
-                           </div>
-                         )}
-                      </div>
-                   </div>
-                 )}
+                       )}
+                    </div>
+                 </div>
               </div>
            </section>
 
            <section className="bg-gradient-to-br from-zinc-900 to-black border border-white/10 rounded-3xl p-6 backdrop-blur-md">
               <h2 className="font-semibold text-emerald-500 text-sm uppercase tracking-widest border-b border-white/5 pb-3 flex items-center gap-2"><DollarSign size={14}/> Tarifario</h2>
               <div className="mt-4 space-y-3">
-                 <div className="flex justify-between items-center text-xs">
-                    <span className="text-zinc-500">Combo Socio</span>
-                    <span className="text-emerald-400 font-bold">${event.priceSocioFull?.toLocaleString()}</span>
+                 <div className="flex justify-between items-center text-xs pt-2">
+                    <span className="text-zinc-500 font-bold uppercase tracking-tighter">Milonga Socio</span>
+                    <span className="text-white font-black text-lg">${event.priceSocioMilonga?.toLocaleString()}</span>
                  </div>
                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-zinc-500">Combo No Socio</span>
-                    <span className="text-emerald-400 font-bold">${event.priceNonSocioFull?.toLocaleString()}</span>
-                 </div>
-                 <div className="flex justify-between items-center text-xs pt-2 border-t border-white/5">
-                    <span className="text-zinc-500">Milonga Socio</span>
-                    <span className="text-white font-medium">${event.priceSocioMilonga?.toLocaleString()}</span>
-                 </div>
-                 <div className="flex justify-between items-center text-xs">
-                    <span className="text-zinc-500">Milonga No Socio</span>
-                    <span className="text-white font-medium">${event.priceNonSocioMilonga?.toLocaleString()}</span>
+                    <span className="text-zinc-500 font-bold uppercase tracking-tighter">Milonga No Socio</span>
+                    <span className="text-white font-black text-lg">${event.priceNonSocioMilonga?.toLocaleString()}</span>
                  </div>
               </div>
            </section>

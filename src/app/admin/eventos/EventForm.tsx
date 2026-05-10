@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { createEvent, updateEvent } from "@/app/actions/eventos"
-import { Calendar, Music, Users, MapPin, DollarSign, ArrowLeft, Save, Globe, Lock, Clock, Plus, Trash2, User, Headphones } from "lucide-react"
+import { Calendar, Music, MapPin, DollarSign, ArrowLeft, Save, Globe, Lock, Plus, User, Headphones } from "lucide-react"
 import Link from "next/link"
 
 interface EventFormProps {
@@ -11,9 +11,7 @@ interface EventFormProps {
 }
 
 export function EventForm({ initialData, isEditing = false }: EventFormProps) {
-  const [type, setType] = useState(initialData?.type || "BOTH")
   const [isPublic, setIsPublic] = useState(initialData?.isPublic ?? true)
-  const [classes, setClasses] = useState(initialData?.workshopClasses ? JSON.parse(initialData.workshopClasses) : [{ id: 1, name: "", start: "", end: "", description: "" }])
   const [bannerPreview, setBannerPreview] = useState<string | null>(initialData?.eventBanner || null)
 
   const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,20 +23,6 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
       }
       reader.readAsDataURL(file)
     }
-  }
-
-  const addClass = () => {
-    if (classes.length < 4) {
-      setClasses([...classes, { id: Date.now(), name: "", start: "", end: "", description: "" }])
-    }
-  }
-
-  const removeClass = (id: number) => {
-    setClasses(classes.filter((c: any) => c.id !== id))
-  }
-
-  const updateClass = (id: number, field: string, value: string) => {
-    setClasses(classes.map((c: any) => c.id === id ? { ...c, [field]: value } : c))
   }
 
   const formatDateForInput = (date: any) => {
@@ -73,7 +57,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
             <h1 className="text-3xl font-semibold tracking-tight text-white/90">
                 {isEditing ? "Editar Evento" : "Programar Nuevo Evento"}
             </h1>
-            <p className="text-zinc-400 mt-1">Gestión avanzada de clases, DJ y organizadores.</p>
+            <p className="text-zinc-400 mt-1">Gestión de milonga y recaudación por buffet.</p>
           </div>
         </div>
       </div>
@@ -99,7 +83,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2 space-y-2">
                 <label className="text-xs text-zinc-500 uppercase tracking-wider">Nombre del Evento</label>
-                <input name="title" defaultValue={initialData?.title} required placeholder="Ej: Festival de Tango CAT" className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-amber-500/50 outline-none" />
+                <input name="title" defaultValue={initialData?.title} required placeholder="Ej: Milonga del CAT" className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-amber-500/50 outline-none" />
               </div>
 
                <div className="space-y-2">
@@ -130,95 +114,32 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
           </section>
 
           {/* Milonga Section */}
-          {(type === 'MILONGA' || type === 'BOTH') && (
-            <section className="bg-red-500/5 border border-red-500/10 rounded-3xl p-6 md:p-8 backdrop-blur-md space-y-6">
-              <div className="flex items-center justify-between border-b border-red-500/10 pb-4">
-                <div className="flex items-center gap-3">
-                  <Music className="text-red-400" size={20} />
-                  <h2 className="text-lg font-medium">Organización de la Milonga</h2>
-                </div>
-                <div className="flex items-center gap-2 text-red-400">
-                   <Headphones size={18} />
-                   <input name="tangoDJ" defaultValue={initialData?.tangoDJ} placeholder="Tango DJ Invitado" className="bg-transparent border-b border-red-500/20 text-sm py-1 outline-none focus:border-red-500" />
-                </div>
+          <section className="bg-red-500/5 border border-red-500/10 rounded-3xl p-6 md:p-8 backdrop-blur-md space-y-6">
+            <div className="flex items-center justify-between border-b border-red-500/10 pb-4">
+              <div className="flex items-center gap-3">
+                <Music className="text-red-400" size={20} />
+                <h2 className="text-lg font-medium">Programación Milonga</h2>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-zinc-500 uppercase">Horario Milonga</label>
-                    <div className="flex items-center gap-2">
-                      <input name="milongaStart" type="datetime-local" defaultValue={formatDateTimeForInput(initialData?.milongaStart)} className="bg-black/40 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none w-full" />
-                      <span className="text-zinc-600">→</span>
-                      <input name="milongaEnd" type="time" defaultValue={formatTimeOnly(initialData?.milongaEnd)} className="bg-black/40 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none w-full" />
-                    </div>
-                 </div>
-                 <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-zinc-500 uppercase">Lugar Provisorio</label>
-                    <input name="milongaLocation" defaultValue={initialData?.milongaLocation} className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2 text-sm text-white outline-none" />
-                 </div>
+              <div className="flex items-center gap-2 text-red-400">
+                  <Headphones size={18} />
+                  <input name="tangoDJ" defaultValue={initialData?.tangoDJ} placeholder="Tango DJ Invitado" className="bg-transparent border-b border-red-500/20 text-sm py-1 outline-none focus:border-red-500" />
               </div>
-            </section>
-          )}
-
-          {/* Workshop Section with multiple classes */}
-          {(type === 'WORKSHOP' || type === 'BOTH') && (
-            <section className="bg-blue-500/5 border border-blue-500/10 rounded-3xl p-6 md:p-8 backdrop-blur-md space-y-6">
-               <div className="flex items-center justify-between border-b border-blue-500/10 pb-4">
-                <div className="flex items-center gap-3">
-                  <Users className="text-blue-400" size={20} />
-                  <h2 className="text-lg font-medium">Estructura del Workshop</h2>
-                </div>
-                <button 
-                  type="button" 
-                  onClick={addClass}
-                  disabled={classes.length >= 4}
-                  className="flex items-center gap-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  <Plus size={14} /> AGREGAR CLASE ({classes.length}/4)
-                </button>
-               </div>
-
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-zinc-500 uppercase">Lugar del Workshop</label>
-                    <input name="workshopLocation" defaultValue={initialData?.workshopLocation} className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2 text-sm text-white outline-none" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-zinc-500 uppercase">Horario Inicio/Fin</label>
+                  <div className="flex items-center gap-2">
+                    <input name="milongaStart" type="datetime-local" defaultValue={formatDateTimeForInput(initialData?.milongaStart)} className="bg-black/40 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none w-full" />
+                    <span className="text-zinc-600">→</span>
+                    <input name="milongaEnd" type="time" defaultValue={formatTimeOnly(initialData?.milongaEnd)} className="bg-black/40 border border-white/5 rounded-xl px-3 py-2 text-xs text-white outline-none w-full" />
                   </div>
-               </div>
-
-               <div className="space-y-4">
-                  {classes.map((cls: any, idx: number) => (
-                    <div key={cls.id} className="relative bg-black/30 border border-white/5 rounded-2xl p-5 space-y-4 animate-in slide-in-from-right-4 duration-300">
-                       <div className="flex justify-between items-center">
-                          <span className="text-xs font-bold text-blue-500/80 uppercase">Clase #{idx + 1}</span>
-                          {classes.length > 1 && (
-                            <button type="button" onClick={() => removeClass(cls.id)} className="text-zinc-600 hover:text-red-400 p-1 transition-colors"><Trash2 size={14}/></button>
-                          )}
-                       </div>
-                       
-                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <input 
-                            placeholder="Nombre de la Clase (ej: Técnica de Mujer)" 
-                            className="bg-zinc-900/50 border border-white/5 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-blue-500/50"
-                            value={cls.name}
-                            onChange={(e) => updateClass(cls.id, "name", e.target.value)}
-                          />
-                          <div className="flex items-center gap-2">
-                             <input type="datetime-local" className="bg-zinc-900/50 border border-white/5 rounded-xl px-2 py-2 text-[10px] text-white outline-none w-full" value={cls.start} onChange={(e) => updateClass(cls.id, "start", e.target.value)} />
-                             <span className="text-zinc-600 text-xs">→</span>
-                             <input type="time" className="bg-zinc-900/50 border border-white/5 rounded-xl px-2 py-2 text-[10px] text-white outline-none w-full" value={cls.end.includes('T') ? cls.end.split('T')[1].slice(0,5) : cls.end} onChange={(e) => updateClass(cls.id, "end", e.target.value)} />
-                          </div>
-                       </div>
-                       <input 
-                        placeholder="Descripción corta de lo que se verá en la clase..." 
-                        className="w-full bg-zinc-900/50 border border-white/5 rounded-xl px-4 py-2 text-xs text-zinc-400 outline-none focus:border-blue-500/30"
-                        value={cls.description}
-                        onChange={(e) => updateClass(cls.id, "description", e.target.value)}
-                       />
-                    </div>
-                  ))}
-               </div>
-               <input type="hidden" name="workshopClasses" value={JSON.stringify(classes)} />
-            </section>
-          )}
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-zinc-500 uppercase">Lugar Específico</label>
+                  <input name="milongaLocation" defaultValue={initialData?.milongaLocation} className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2 text-sm text-white outline-none" />
+                </div>
+            </div>
+          </section>
 
           <section className="bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-md space-y-4">
             <div className="flex items-center gap-3 mb-2">
@@ -241,7 +162,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
                       <Plus className="text-zinc-500" size={24} />
                     </div>
                     <p className="text-xs text-zinc-500 font-medium uppercase tracking-widest">Subir Banner Publicitario</p>
-                    <p className="text-[10px] text-zinc-600 mt-1 italic">Recomendado: 1200x600px o similar</p>
+                    <p className="text-[10px] text-zinc-600 mt-1 italic">Recomendado: 1200x600px</p>
                   </div>
                 )}
                 <input 
@@ -264,57 +185,26 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          <section className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md">
-            <h2 className="text-lg font-medium mb-4 flex items-center gap-2"><Save size={18} className="text-amber-500"/> Categoría</h2>
-            <div className="grid grid-cols-1 gap-2">
-               {[
-                 { id: 'MILONGA', icon: Music, label: 'Solo Milonga' },
-                 { id: 'WORKSHOP', icon: Users, label: 'Solo Workshop' },
-                 { id: 'BOTH', icon: Calendar, label: 'Milonga + Workshop' },
-               ].map(opt => {
-                 const Icon = opt.icon
-                 return (
-                   <button key={opt.id} type="button" onClick={() => setType(opt.id)} className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-xs font-medium ${type === opt.id ? "bg-white/10 border-white/20 text-white" : "bg-black/40 border-white/5 text-zinc-500 hover:text-zinc-300"}`}>
-                     <Icon size={16} /> {opt.label}
-                   </button>
-                 )
-               })}
-               <input type="hidden" name="type" value={type} />
-            </div>
-          </section>
-
           <section className="bg-gradient-to-br from-zinc-900 to-black border border-white/10 rounded-3xl p-6 shadow-2xl sticky top-8">
             <h2 className="text-lg font-medium mb-6 flex items-center gap-2"><DollarSign size={18} className="text-emerald-500"/> Tarifas</h2>
-            <div className="space-y-4">
-              {(type === 'MILONGA' || type === 'BOTH') && (
-                <div className="space-y-2">
-                   <p className="text-[10px] font-bold text-red-500/60 uppercase tracking-widest px-1">Tarifa Milonga</p>
-                   <input name="priceSocioMilonga" type="number" defaultValue={initialData?.priceSocioMilonga} placeholder="Pr. Socio" className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2 text-xs text-white outline-none" />
-                   <input name="priceNonSocioMilonga" type="number" defaultValue={initialData?.priceNonSocioMilonga} placeholder="Pr. No Socio" className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2 text-xs text-white outline-none" />
-                </div>
-              )}
-              {(type === 'WORKSHOP' || type === 'BOTH') && (
-                <div className="space-y-2">
-                   <p className="text-[10px] font-bold text-blue-500/60 uppercase tracking-widest px-1">Tarifa Workshop</p>
-                   <input name="priceSocioWorkshop" type="number" defaultValue={initialData?.priceSocioWorkshop} placeholder="Pr. Socio Wk" className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2 text-xs text-white outline-none" />
-                   <input name="priceNonSocioWorkshop" type="number" defaultValue={initialData?.priceNonSocioWorkshop} placeholder="Pr. No Socio Wk" className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-2 text-xs text-white outline-none" />
-                   <div className="bg-blue-500/10 p-2 rounded-xl mt-1 space-y-1">
-                      <p className="text-[9px] font-bold text-blue-400 uppercase text-center mb-1">Clase Suelta (Solo Workshop)</p>
-                      <input name="priceSocioSingleClass" type="number" defaultValue={initialData?.priceSocioSingleClass} placeholder="Socio: Clase Suelta" className="w-full bg-black/40 border border-blue-500/20 rounded-lg px-3 py-1.5 text-xs text-white outline-none" />
-                      <input name="priceNonSocioSingleClass" type="number" defaultValue={initialData?.priceNonSocioSingleClass} placeholder="No Socio: Clase Suelta" className="w-full bg-black/40 border border-blue-500/20 rounded-lg px-3 py-1.5 text-xs text-white outline-none" />
+            <div className="space-y-6">
+                <div className="space-y-3">
+                   <p className="text-[10px] font-black text-red-500 uppercase tracking-widest px-1">Milonga</p>
+                   <div className="space-y-1">
+                      <label className="text-[9px] text-zinc-500 uppercase font-bold ml-1">Precio Socio</label>
+                      <input name="priceSocioMilonga" type="number" defaultValue={initialData?.priceSocioMilonga} placeholder="2000" className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald-500/30" />
+                   </div>
+                   <div className="space-y-1">
+                      <label className="text-[9px] text-zinc-500 uppercase font-bold ml-1">Precio No Socio</label>
+                      <input name="priceNonSocioMilonga" type="number" defaultValue={initialData?.priceNonSocioMilonga} placeholder="9000" className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald-500/30" />
                    </div>
                 </div>
-              )}
-              {type === 'BOTH' && (
-                <div className="space-y-2 pt-2 border-t border-white/5">
-                   <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest px-1">Combo Full Pass</p>
-                   <input name="priceSocioFull" type="number" defaultValue={initialData?.priceSocioFull} placeholder="Combo Socio" className="w-full bg-white/5 border border-amber-500/20 rounded-xl px-4 py-2 text-xs text-white outline-none" />
-                   <input name="priceNonSocioFull" type="number" defaultValue={initialData?.priceNonSocioFull} placeholder="Combo No Socio" className="w-full bg-white/5 border border-amber-500/20 rounded-xl px-4 py-2 text-xs text-white outline-none" />
-                </div>
-              )}
-              <button type="submit" className="w-full bg-amber-600 hover:bg-amber-500 text-white py-4 rounded-2xl font-bold transition-all shadow-lg shadow-amber-950/30 flex items-center justify-center gap-3 mt-4">
-                <Save size={18} /> {isEditing ? "Guardar Cambios" : "Publicar Evento"}
-              </button>
+                
+                <input type="hidden" name="type" value="MILONGA" />
+
+                <button type="submit" className="w-full bg-amber-600 hover:bg-amber-500 text-white py-4 rounded-2xl font-bold transition-all shadow-lg shadow-amber-950/30 flex items-center justify-center gap-3 mt-4">
+                  <Save size={18} /> {isEditing ? "Guardar Cambios" : "Publicar Evento"}
+                </button>
             </div>
           </section>
         </div>

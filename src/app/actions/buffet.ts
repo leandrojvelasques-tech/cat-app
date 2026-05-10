@@ -89,3 +89,63 @@ export async function registerBuffetSale({
   revalidatePath(`/admin/eventos/${eventId}/buffet`)
   revalidatePath(`/admin/eventos/${eventId}/caja`)
 }
+
+export async function openBuffetCashRegister(eventId: string, openingBalance: number) {
+  await db.buffetCashRegister.create({
+    data: {
+      eventId,
+      openingBalance,
+      status: "OPEN"
+    }
+  })
+  revalidatePath(`/admin/eventos/${eventId}/buffet`)
+}
+
+export async function addBuffetWithdrawal(registerId: string, eventId: string, amount: number, reason: string) {
+  await db.buffetCashWithdrawal.create({
+    data: {
+      registerId,
+      amount,
+      reason
+    }
+  })
+  revalidatePath(`/admin/eventos/${eventId}/buffet`)
+}
+
+export async function closeBuffetCashRegister(registerId: string, eventId: string, closingBalance: number, observations?: string) {
+  const register = await db.buffetCashRegister.findUnique({
+    where: { id: registerId },
+    include: { event: true }
+  })
+
+  if (!register) throw new Error("Caja no encontrada")
+
+  // Actualizar registro de caja
+  await db.buffetCashRegister.update({
+    where: { id: registerId },
+    data: {
+      closingBalance,
+      observations,
+      status: "CLOSED",
+      closedAt: new Date()
+    }
+  })
+
+  // Volcado a Cobranzas (como EventRegistration especial)
+  // Nota: amountPaid es el balance final (efectivo real recaudado)
+  await db.eventRegistration.create({
+    data: {
+      eventId,
+      firstName: "RECAUDACIÓN",
+      lastName: "BUFFET",
+      amountPaid: closingBalance,
+      registrationType: "BUFFET",
+      paymentStatus: "PAID",
+      paymentMethod: "EFECTIVO",
+      source: "MANAGEMENT"
+    }
+  })
+
+  revalidatePath(`/admin/eventos/${eventId}/buffet`)
+  revalidatePath(`/admin/cuotas`)
+}
