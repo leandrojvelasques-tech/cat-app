@@ -80,8 +80,12 @@ export async function getMemberDebt(memberId: string) {
   if (!member) return { months: [], total: 0 }
 
   const joinDate = member.joinDate
-  const joinYear = joinDate.getFullYear()
-  const joinMonth = joinDate.getMonth() + 1
+  // Ensure we don't calculate debt before Jan 2026
+  const START_DATE = new Date(2026, 0, 1)
+  const trackFrom = joinDate > START_DATE ? joinDate : START_DATE
+  
+  const trackYear = trackFrom.getFullYear()
+  const trackMonth = trackFrom.getMonth() + 1
 
   const now = new Date()
   const currentYear = now.getFullYear()
@@ -94,9 +98,9 @@ export async function getMemberDebt(memberId: string) {
   const cuotaSetting = await db.setting.findUnique({ where: { key: 'cuota_mensual' } })
   const cuotaMensual = parseFloat(cuotaSetting?.value || "6000")
 
-  // Iterate from join date to now
-  let y = joinYear
-  let m = joinMonth
+  // Iterate from track date to now
+  let y = trackYear
+  let m = trackMonth
 
   while (y < currentYear || (y === currentYear && m <= currentMonth)) {
     const paidRecord = member.fees.find(f => f.periodYear === y && f.periodMonth === m)
