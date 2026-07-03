@@ -10,10 +10,26 @@ export async function createPayment(memberId: string, formData: FormData) {
   const session = await auth()
   const userId = session?.user?.id
 
-  const periodMonth = parseInt(formData.get("periodMonth") as string)
+  const periodMonthsStr = formData.get("periodMonths") as string
+  const singlePeriodMonth = parseInt(formData.get("periodMonth") as string)
+  
+  let months: number[] = []
+  if (periodMonthsStr) {
+    try {
+      months = JSON.parse(periodMonthsStr)
+    } catch(e) {}
+  }
+  if (months.length === 0 && !isNaN(singlePeriodMonth)) {
+    months = [singlePeriodMonth]
+  }
+
+  if (months.length === 0) {
+    throw new Error("Debe seleccionar al menos un mes.")
+  }
+
   const periodYear = parseInt(formData.get("periodYear") as string)
-  const amountPaid = parseFloat(formData.get("amountPaid") as string)
-  const amountDue = parseFloat(formData.get("amountDue") as string)
+  const totalAmountPaid = parseFloat(formData.get("amountPaid") as string)
+  const totalAmountDue = parseFloat(formData.get("amountDue") as string)
   const paymentMethod = formData.get("paymentMethod") as string
   const notes = formData.get("notes") as string
   const file = formData.get("paymentProof") as File | null
@@ -40,36 +56,51 @@ export async function createPayment(memberId: string, formData: FormData) {
     finalNotes = `[COMPROBANTE: /uploads/${uniqueName}]\n${finalNotes}`
   }
 
-  // Simple validation for duplicates
-  const existing = await db.membershipFee.findUnique({
-    where: {
-      memberId_periodYear_periodMonth: {
-        memberId,
-        periodYear,
-        periodMonth
-      }
-    }
-  })
+  const amountPaidPerMonth = totalAmountPaid / months.length
+  const amountDuePerMonth = totalAmountDue / months.length
 
-  if (existing) {
-    throw new Error("Ya existe un pago registrado para este período.")
+  // Check for duplicates
+  for (const m of months) {
+    const existing = await db.membershipFee.findUnique({
+      where: {
+        memberId_periodYear_periodMonth: {
+          memberId,
+          periodYear,
+          periodMonth: m
+        }
+      }
+    })
+
+    if (existing) {
+      throw new Error(`Ya existe un pago registrado para el mes ${m}.`)
+    }
   }
 
-  await db.membershipFee.create({
-    data: {
-      memberId,
-      periodMonth,
-      periodYear,
-      amountDue,
-      amountPaid,
-      paymentDate: new Date(),
-      paymentMethod,
-      paymentStatus: amountPaid >= amountDue ? "PAID" : "PARTIAL",
-      notes: finalNotes,
-      recordedById: userId
-    }
-  })
+  // Create payments
+  for (const m of months) {
+    await db.membershipFee.create({
+      data: {
+        memberId,
+        periodMonth: m,
+        periodYear,
+        amountDue: amountDuePerMonth,
+        amountPaid: amountPaidPerMonth,
+        paymentDate: new Date(),
+        paymentMethod,
+        paymentStatus: amountPaidPerMonth >= amountDuePerMonth ? "PAID" : "PARTIAL",
+        notes: finalNotes,
+        recordedById: userId
+      }
+    })
+  }
+
+  const returnTo = formData.get("returnTo") as string | null
 
   revalidatePath(`/admin/socios/${memberId}`)
-  redirect(`/admin/socios/${memberId}`)
+  
+  if (returnTo) {
+    redirect(returnTo)
+  } else {
+    redirect(`/admin/socios/${memberId}`)
+  }
 }

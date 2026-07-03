@@ -150,7 +150,17 @@ export default async function EstadoSociosPage({
             <thead>
               <tr className="border-b border-white/10 bg-white/[0.02]">
                 <th className="py-5 pl-6 text-xs font-bold uppercase tracking-widest text-zinc-500">Socio</th>
-                <th className="py-5 text-xs font-bold uppercase tracking-widest text-zinc-500">Estado Real</th>
+                <th className="py-5 text-xs font-bold uppercase tracking-widest text-zinc-500 group">
+                  <Link 
+                    href={`/admin/estado-socios?query=${query}&sort=${sort === 'estado_asc' ? 'estado_desc' : 'estado_asc'}`}
+                    className="flex items-center gap-2 hover:text-white transition-colors"
+                  >
+                    Estado Real
+                    <span className="text-[10px]">
+                      {sort === 'estado_asc' ? '▲' : sort === 'estado_desc' ? '▼' : '↕'}
+                    </span>
+                  </Link>
+                </th>
                 <th className="py-5 text-xs font-bold uppercase tracking-widest text-zinc-500">Último Pago</th>
                 <th className="py-5 pr-6 text-right text-xs font-bold uppercase tracking-widest text-zinc-500">Acciones</th>
               </tr>
@@ -210,7 +220,7 @@ export default async function EstadoSociosPage({
                             Ver ficha
                           </Link>
                           <Link 
-                            href={`/admin/socios/${member.id}/pagar`}
+                            href={`/admin/socios/${member.id}/pagar?returnTo=/admin/estado-socios`}
                             className="inline-flex items-center gap-1.5 bg-amber-600/10 hover:bg-amber-600/20 text-amber-500 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-amber-500/20"
                           >
                             Cobrar
