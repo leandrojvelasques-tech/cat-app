@@ -50,7 +50,7 @@ export default async function FichaSocioPage(props: any) {
   const feeAmount = member.isFamilyDiscount ? baseFeeAmount / 2 : baseFeeAmount
   
   // Dynamic Debt Calculation (matching business logic)
-  const START_DATE = new Date(2025, 0, 1)
+  const START_DATE = new Date(2026, 0, 1)
   const joinDate = member.joinDate ? new Date(member.joinDate) : START_DATE
   const trackFrom = joinDate > START_DATE ? joinDate : START_DATE
   const monthsExpected = (now.getFullYear() - trackFrom.getFullYear()) * 12 + (now.getMonth() - trackFrom.getMonth()) + 1

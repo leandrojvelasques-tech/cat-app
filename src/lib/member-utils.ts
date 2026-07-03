@@ -28,8 +28,8 @@ export function calculateMemberStatus(member: any, now: Date = new Date()): Calc
     return 'AL DIA'
   }
 
-  // Define the base tracking date (Jan 2025 as per previous requirements)
-  const START_DATE = new Date(2025, 0, 1) // Jan 1, 2025
+  // Define the base tracking date (Jan 2026 as per new requirements - No debts prior to Dec 2025)
+  const START_DATE = new Date(2026, 0, 1) // Jan 1, 2026
   const joinDate = member.joinDate ? new Date(member.joinDate) : START_DATE
   const trackFrom = joinDate > START_DATE ? joinDate : START_DATE
   
