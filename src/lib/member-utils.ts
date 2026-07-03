@@ -49,6 +49,10 @@ export function calculateMemberStatus(member: any, now: Date = new Date()): Calc
 
   const debtMonths = Math.max(0, monthsExpected - paidMonthsCount)
 
+  if (debtMonths === 0) {
+    return 'AL DIA'
+  }
+
   // 2. EN MORA: Debt < 3 months
   if (debtMonths < 3) {
     return 'EN MORA'
