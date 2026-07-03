@@ -114,16 +114,15 @@ export default async function EstadoSociosPage({
             <thead>
               <tr className="border-b border-white/10 bg-white/[0.02]">
                 <th className="py-5 pl-6 text-xs font-bold uppercase tracking-widest text-zinc-500">Socio</th>
-                <th className="py-5 text-xs font-bold uppercase tracking-widest text-zinc-500">DNI</th>
-                <th className="py-5 text-xs font-bold uppercase tracking-widest text-zinc-500">Último Pago</th>
                 <th className="py-5 text-xs font-bold uppercase tracking-widest text-zinc-500">Estado Real</th>
+                <th className="py-5 text-xs font-bold uppercase tracking-widest text-zinc-500">Último Pago</th>
                 <th className="py-5 pr-6 text-right text-xs font-bold uppercase tracking-widest text-zinc-500">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-20 text-center text-zinc-500 italic">
+                  <td colSpan={4} className="py-20 text-center text-zinc-500 italic">
                     {query ? "No se encontraron socios con esa búsqueda." : "No hay socios con pagos registrados desde Enero 2026."}
                   </td>
                 </tr>
@@ -150,25 +149,32 @@ export default async function EstadoSociosPage({
                           </div>
                         </div>
                       </td>
-                      <td className="py-4 text-zinc-400 text-sm font-mono">{member.dni}</td>
+                      <td className="py-4">
+                        <span className={`px-3 py-1 text-[9px] uppercase font-black rounded-lg border shadow-sm ${getStatusBadgeStyles(calculated)}`}>
+                          {calculated}
+                        </span>
+                      </td>
                       <td className="py-4">
                         <div className="flex flex-col">
                           <span className="text-zinc-300 text-sm">{lastPaidLabel}</span>
                           {member.isFamilyDiscount && <span className="text-[9px] text-blue-400 font-black flex items-center gap-1 mt-1 uppercase tracking-tighter"><Users size={10}/> 50% PAREJA</span>}
                         </div>
                       </td>
-                      <td className="py-4">
-                        <span className={`px-3 py-1 text-[9px] uppercase font-black rounded-lg border shadow-sm ${getStatusBadgeStyles(calculated)}`}>
-                          {calculated}
-                        </span>
-                      </td>
                       <td className="py-4 pr-6 text-right">
-                        <Link 
-                          href={`/admin/socios/${member.id}`}
-                          className="inline-flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5"
-                        >
-                          Ver ficha
-                        </Link>
+                        <div className="flex justify-end gap-2">
+                          <Link 
+                            href={`/admin/socios/${member.id}`}
+                            className="inline-flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5"
+                          >
+                            Ver ficha
+                          </Link>
+                          <Link 
+                            href={`/admin/socios/${member.id}/pagar`}
+                            className="inline-flex items-center gap-1.5 bg-amber-600/10 hover:bg-amber-600/20 text-amber-500 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-amber-500/20"
+                          >
+                            Cobrar
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   )
