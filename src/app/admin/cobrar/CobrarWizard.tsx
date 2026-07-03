@@ -111,7 +111,7 @@ export default function CobrarWizard() {
     setSelectedMember(member)
     const data = await getMemberDebt(member.id)
     setDebts(data)
-    setSelectedMonths(data.months) // Select all by default
+    setSelectedMonths([]) // Unchecked by default
     setStep('DEBT_SELECTION')
   }
 
