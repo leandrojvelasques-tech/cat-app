@@ -10,17 +10,34 @@ export function PagarCuotaForm({
   baseAmount, 
   currentMonth, 
   currentYear,
-  returnTo
+  returnTo,
+  paidFees = []
 }: { 
   memberId: string, 
   baseAmount: number, 
   currentMonth: number, 
   currentYear: number,
-  returnTo?: string
+  returnTo?: string,
+  paidFees?: { month: number, year: number }[]
 }) {
-  const [selectedMonths, setSelectedMonths] = useState<number[]>([currentMonth])
-  const [amountDue, setAmountDue] = useState(baseAmount)
-  const [amountPaid, setAmountPaid] = useState(baseAmount)
+  const [year, setYear] = useState(currentYear)
+  
+  // Calculate initial selected months (first unpaid month)
+  const getInitialSelected = () => {
+    const currentPaid = paidFees.some(f => f.year === currentYear && f.month === currentMonth)
+    if (!currentPaid) return [currentMonth]
+    
+    for (let m = 1; m <= 12; m++) {
+      const isPaid = paidFees.some(f => f.year === currentYear && f.month === m)
+      if (!isPaid) return [m]
+    }
+    return []
+  }
+
+  const initialSelected = getInitialSelected()
+  const [selectedMonths, setSelectedMonths] = useState<number[]>(initialSelected)
+  const [amountDue, setAmountDue] = useState(initialSelected.length * baseAmount)
+  const [amountPaid, setAmountPaid] = useState(initialSelected.length * baseAmount)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const monthNames = [
@@ -28,7 +45,13 @@ export function PagarCuotaForm({
     "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
   ]
 
+  const isMonthPaid = (m: number, y: number) => {
+    return paidFees.some(f => f.year === y && f.month === m)
+  }
+
   const toggleMonth = (m: number) => {
+    if (isMonthPaid(m, year)) return
+    
     let newSelected: number[]
     if (selectedMonths.includes(m)) {
       if (selectedMonths.length === 1) return // Prevent deselecting the last one
@@ -40,6 +63,21 @@ export function PagarCuotaForm({
     setSelectedMonths(newSelected)
     setAmountDue(newSelected.length * baseAmount)
     setAmountPaid(newSelected.length * baseAmount)
+  }
+
+  const handleYearChange = (newYear: number) => {
+    setYear(newYear)
+    // Find first unpaid month for newYear
+    let found: number[] = []
+    for (let m = 1; m <= 12; m++) {
+      if (!isMonthPaid(m, newYear)) {
+        found = [m]
+        break
+      }
+    }
+    setSelectedMonths(found)
+    setAmountDue(found.length * baseAmount)
+    setAmountPaid(found.length * baseAmount)
   }
 
   const createPaymentWithId = createPayment.bind(null, memberId)
@@ -66,15 +104,19 @@ export function PagarCuotaForm({
             {monthNames.map((name, index) => {
               const m = index + 1
               const isSelected = selectedMonths.includes(m)
+              const isPaid = isMonthPaid(m, year)
               return (
                 <button
                   type="button"
                   key={m}
+                  disabled={isPaid}
                   onClick={() => toggleMonth(m)}
                   className={`py-2 px-1 text-xs font-bold uppercase tracking-wider rounded-xl transition-all border ${
-                    isSelected 
-                      ? "bg-amber-600/20 text-amber-500 border-amber-500/50 shadow-inner" 
-                      : "bg-black/20 text-zinc-500 border-white/5 hover:bg-white/5 hover:border-white/10"
+                    isPaid
+                      ? "bg-zinc-800/10 text-zinc-600 border-white/5 cursor-not-allowed line-through opacity-40"
+                      : isSelected 
+                        ? "bg-amber-600/20 text-amber-500 border-amber-500/50 shadow-inner" 
+                        : "bg-black/20 text-zinc-400 border-white/5 hover:bg-white/5 hover:border-white/10"
                   }`}
                 >
                   {name.substring(0, 3)}
@@ -89,7 +131,8 @@ export function PagarCuotaForm({
           <input 
             name="periodYear"
             type="number"
-            defaultValue={currentYear}
+            value={year}
+            onChange={(e) => handleYearChange(parseInt(e.target.value) || currentYear)}
             className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50"
           />
         </div>

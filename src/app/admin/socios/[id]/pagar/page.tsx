@@ -12,13 +12,23 @@ export default async function PagarCuotaPage(props: any) {
   
   if (!id) return null
 
-  const member = await db.member.findUnique({ where: { id } })
+  const member = await db.member.findUnique({ 
+    where: { id },
+    include: {
+      fees: {
+        where: { paymentStatus: 'PAID' },
+        select: { periodMonth: true, periodYear: true }
+      }
+    }
+  })
   if (!member) return null
 
   // Use a stable amount for V1, or query Settings
   const baseAmount = 6000
   const currentMonth = new Date().getMonth() + 1
   const currentYear = new Date().getFullYear()
+
+  const paidFees = member.fees.map(f => ({ month: f.periodMonth, year: f.periodYear }))
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in max-w-2xl mx-auto">
@@ -42,6 +52,7 @@ export default async function PagarCuotaPage(props: any) {
           currentMonth={currentMonth}
           currentYear={currentYear}
           returnTo={returnTo}
+          paidFees={paidFees}
         />
       </div>
     </div>
