@@ -53,7 +53,10 @@ export default async function FichaSocioPage(props: any) {
   const START_DATE = new Date(2026, 0, 1)
   const joinDate = member.joinDate ? new Date(member.joinDate) : START_DATE
   const trackFrom = joinDate > START_DATE ? joinDate : START_DATE
-  const monthsExpected = (now.getFullYear() - trackFrom.getFullYear()) * 12 + (now.getMonth() - trackFrom.getMonth()) + 1
+  let monthsExpected = (now.getFullYear() - trackFrom.getFullYear()) * 12 + (now.getMonth() - trackFrom.getMonth()) + 1
+  if (now.getDate() <= 10) {
+    monthsExpected = Math.max(0, monthsExpected - 1)
+  }
   const paidMonthsCount = member.fees.filter((f: any) => f.paymentStatus === "PAID").length
   const unpaidMonths = Math.max(0, monthsExpected - paidMonthsCount)
   const totalDebt = unpaidMonths * feeAmount

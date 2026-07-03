@@ -34,7 +34,12 @@ export function calculateMemberStatus(member: any, now: Date = new Date()): Calc
   const trackFrom = joinDate > START_DATE ? joinDate : START_DATE
   
   // Calculate total months expected since start until current month
-  const monthsExpected = (now.getFullYear() - trackFrom.getFullYear()) * 12 + (now.getMonth() - trackFrom.getMonth()) + 1
+  let monthsExpected = (now.getFullYear() - trackFrom.getFullYear()) * 12 + (now.getMonth() - trackFrom.getMonth()) + 1
+  
+  // Si estamos a día 10 o menos, el mes actual no se cuenta como deuda exigible.
+  if (now.getDate() <= 10) {
+    monthsExpected = Math.max(0, monthsExpected - 1)
+  }
   
   // Count uniques paid months in the tracking period
   const paidMonthsCount = (member.fees || []).filter((f: any) => 

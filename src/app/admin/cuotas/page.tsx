@@ -140,7 +140,7 @@ export default async function CobranzasPage({
       
       <div className="flex justify-between items-end flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-black text-white italic uppercase tracking-tighter">Historial de Cobranzas</h1>
+          <h1 className="text-3xl font-black text-white italic uppercase tracking-tighter">Historial de Caja</h1>
           <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-1">Registro unificado de todos los ingresos de la institución</p>
         </div>
         <Link

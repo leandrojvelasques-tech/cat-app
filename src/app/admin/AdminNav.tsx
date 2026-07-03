@@ -10,7 +10,8 @@ export function AdminNav() {
   const links = [
     { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
     { href: "/admin/socios", icon: Users, label: "Directorio de Socios" },
-    { href: "/admin/cuotas", icon: CreditCard, label: "Cobranzas" },
+    { href: "/admin/estado-socios", icon: Users, label: "Estado de Socios" },
+    { href: "/admin/cuotas", icon: CreditCard, label: "Caja" },
     { href: "/admin/eventos", icon: Calendar, label: "Eventos" },
     { href: "/admin/escuelita", icon: GraduationCap, label: "Escuelita CAT" },
     { href: "/admin/vientos-de-tango", icon: Trophy, label: "Vientos de Tango" },
