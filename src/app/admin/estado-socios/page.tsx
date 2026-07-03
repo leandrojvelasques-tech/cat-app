@@ -7,9 +7,9 @@ import { calculateMemberStatus, getStatusBadgeStyles } from "@/lib/member-utils"
 export default async function EstadoSociosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ query?: string }>
+  searchParams: Promise<{ query?: string; sort?: string }>
 }) {
-  const { query = "" } = await searchParams
+  const { query = "", sort = "" } = await searchParams
   
   const now = new Date()
   const monthNames = [
@@ -83,6 +83,27 @@ export default async function EstadoSociosPage({
     }
   })
 
+  // Calcular resumen
+  const totalAlDia = filteredMembers.filter((m: any) => m.calculatedStatus === 'AL DIA').length
+  const totalEnMora = filteredMembers.filter((m: any) => m.calculatedStatus === 'EN MORA').length
+  const totalInactivos = filteredMembers.filter((m: any) => m.calculatedStatus === 'INACTIVO' || m.calculatedStatus === 'SUSPENDIDO' || m.calculatedStatus === 'BAJA').length
+
+  // Ordenar
+  filteredMembers.sort((a: any, b: any) => {
+    if (sort === "apellido_asc") return a.lastName.localeCompare(b.lastName)
+    if (sort === "apellido_desc") return b.lastName.localeCompare(a.lastName)
+    if (sort === "estado_asc") return a.calculatedStatus.localeCompare(b.calculatedStatus)
+    if (sort === "estado_desc") return b.calculatedStatus.localeCompare(a.calculatedStatus)
+    
+    if (sort === "pago_desc" || sort === "pago_asc") {
+      const aDate = a.fees[0]?.paymentDate ? new Date(a.fees[0].paymentDate).getTime() : 0
+      const bDate = b.fees[0]?.paymentDate ? new Date(b.fees[0].paymentDate).getTime() : 0
+      if (sort === "pago_desc") return bDate - aDate
+      if (sort === "pago_asc") return aDate - bDate
+    }
+    return 0
+  })
+
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/5 p-6 rounded-[32px] border border-white/10 backdrop-blur-md">
@@ -103,6 +124,21 @@ export default async function EstadoSociosPage({
           >
             Ir a Caja
           </Link>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-emerald-900/20 border border-emerald-500/20 p-5 rounded-[24px] flex flex-col justify-center items-center">
+          <span className="text-3xl font-black text-emerald-400">{totalAlDia}</span>
+          <span className="text-xs uppercase font-bold tracking-widest text-emerald-500/70 mt-1">Socios Al Día</span>
+        </div>
+        <div className="bg-amber-900/20 border border-amber-500/20 p-5 rounded-[24px] flex flex-col justify-center items-center">
+          <span className="text-3xl font-black text-amber-400">{totalEnMora}</span>
+          <span className="text-xs uppercase font-bold tracking-widest text-amber-500/70 mt-1">En Mora (90 días)</span>
+        </div>
+        <div className="bg-zinc-900/50 border border-white/10 p-5 rounded-[24px] flex flex-col justify-center items-center">
+          <span className="text-3xl font-black text-zinc-400">{totalInactivos}</span>
+          <span className="text-xs uppercase font-bold tracking-widest text-zinc-500 mt-1">Inactivos (+90 días)</span>
         </div>
       </div>
 
@@ -157,6 +193,11 @@ export default async function EstadoSociosPage({
                       <td className="py-4">
                         <div className="flex flex-col">
                           <span className="text-zinc-300 text-sm">{lastPaidLabel}</span>
+                          {lastFee?.paymentDate && (
+                            <span className="text-[10px] text-zinc-500 font-medium">
+                              {new Date(lastFee.paymentDate).toLocaleDateString('es-AR')}
+                            </span>
+                          )}
                           {member.isFamilyDiscount && <span className="text-[9px] text-blue-400 font-black flex items-center gap-1 mt-1 uppercase tracking-tighter"><Users size={10}/> 50% PAREJA</span>}
                         </div>
                       </td>
