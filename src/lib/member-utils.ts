@@ -15,69 +15,99 @@ export function calculateMemberStatus(member: any, now: Date = new Date()): Calc
 
   const currentMonth = now.getMonth() + 1
   const currentYear = now.getFullYear()
+  const currentDay = now.getDate()
 
-  // 1. Check if paid March 2026 (or current month)
-  // Re-alignment with user's specific request for March 2026 as the 'now' marker
-  const paidCurrentMonth = (member.fees || []).some((f: any) => 
-    f.periodMonth === currentMonth && 
-    f.periodYear === currentYear && 
-    f.paymentStatus === 'PAID'
-  )
+  // Determinar el mes de referencia exigible (si es día 10 o menos, el mes actual no venció)
+  let referenceMonth = currentMonth
+  let referenceYear = currentYear
 
-  if (paidCurrentMonth) {
+  if (currentDay <= 10) {
+    referenceMonth = currentMonth - 1
+    if (referenceMonth === 0) {
+      referenceMonth = 12
+      referenceYear = currentYear - 1
+    }
+  }
+
+  const paidFees = (member.fees || []).filter((f: any) => f.paymentStatus === 'PAID')
+
+  const hasPaid = (month: number, year: number) => {
+    return paidFees.some((f: any) => f.periodMonth === month && f.periodYear === year)
+  }
+
+  const hasPaidOnOrAfter = (month: number, year: number) => {
+    return paidFees.some((f: any) => 
+      f.periodYear > year || (f.periodYear === year && f.periodMonth >= month)
+    )
+  }
+
+  // 1. AL DIA: Pagó el mes de referencia exigible o posterior (ej. Junio o posterior)
+  if (hasPaidOnOrAfter(referenceMonth, referenceYear)) {
     return 'AL DIA'
   }
 
-  // Define the base tracking date (Jan 2026 as per new requirements - No debts prior to Dec 2025)
-  const START_DATE = new Date(2026, 0, 1) // Jan 1, 2026
-  const joinDate = member.joinDate ? new Date(member.joinDate) : START_DATE
-  const trackFrom = joinDate > START_DATE ? joinDate : START_DATE
-  
-  // Calculate total months expected since start until current month
-  let monthsExpected = (now.getFullYear() - trackFrom.getFullYear()) * 12 + (now.getMonth() - trackFrom.getMonth()) + 1
-  
-  // Si estamos a día 10 o menos, el mes actual no se cuenta como deuda exigible.
-  if (now.getDate() <= 10) {
-    monthsExpected = Math.max(0, monthsExpected - 1)
-  }
-  
-  // Count uniques paid months in the tracking period
-  const paidMonthsCount = (member.fees || []).filter((f: any) => 
-    f.paymentStatus === 'PAID' && 
-    (f.periodYear > START_DATE.getFullYear() || (f.periodYear === START_DATE.getFullYear() && f.periodMonth >= START_DATE.getMonth() + 1))
-  ).length
-
-  const debtMonths = Math.max(0, monthsExpected - paidMonthsCount)
-
-  if (debtMonths === 0) {
-    return 'AL DIA'
+  // Calcular meses previos de referencia M1 (Mayo) y M2 (Abril)
+  let monthM1 = referenceMonth - 1
+  let yearM1 = referenceYear
+  if (monthM1 === 0) {
+    monthM1 = 12
+    yearM1 = referenceYear - 1
   }
 
-  // 2. EN MORA: Debt < 3 months
-  if (debtMonths < 3) {
+  let monthM2 = referenceMonth - 2
+  let yearM2 = referenceYear
+  if (monthM2 <= 0) {
+    monthM2 = 12 + monthM2
+    yearM2 = referenceYear - 1
+  }
+
+  // Calcular meses de deuda esperados en 2026 desde su ingreso
+  const START_YEAR = 2026
+  const START_MONTH = 1
+  
+  let trackFromMonth = START_MONTH
+  let trackFromYear = START_YEAR
+  
+  if (member.joinDate) {
+    const joinDate = new Date(member.joinDate)
+    const joinYear = joinDate.getFullYear()
+    const joinMonth = joinDate.getMonth() + 1
+    
+    if (joinYear > START_YEAR || (joinYear === START_YEAR && joinMonth > START_MONTH)) {
+      trackFromMonth = joinMonth
+      trackFromYear = joinYear
+    }
+  }
+
+  const expectedMonths: { month: number; year: number }[] = []
+  let y = trackFromYear
+  let m = trackFromMonth
+  
+  while (y < referenceYear || (y === referenceYear && m <= referenceMonth)) {
+    expectedMonths.push({ month: m, year: y })
+    m++
+    if (m > 12) {
+      m = 1
+      y++
+    }
+  }
+
+  const unpaidMonths = expectedMonths.filter(em => !hasPaid(em.month, em.year))
+  const debtMonths = unpaidMonths.length
+
+  // 2. EN MORA: Pagó Mayo o Abril, o debe menos de 3 meses en total
+  if (hasPaid(monthM1, yearM1) || hasPaid(monthM2, yearM2) || (debtMonths > 0 && debtMonths < 3)) {
     return 'EN MORA'
   }
 
-  // 3. Activity Check: Any activity in last 12 months (365 days)
-  const oneYearAgo = new Date(now)
-  oneYearAgo.setFullYear(now.getFullYear() - 1)
-
-  const hasPaymentActivity = (member.fees || []).some((f: any) => 
-    new Date(f.paymentDate) >= oneYearAgo
-  )
-
-  const hasEventActivity = (member.eventRegistrations || []).some((er: any) => 
-    new Date(er.createdAt) >= oneYearAgo
-  )
-
-  const hasActivity = hasPaymentActivity || hasEventActivity
-
-  // 4. Distinction between INACTIVO and SUSPENDIDO
-  if (hasActivity) {
+  // 3. INACTIVO: Pagó al menos una cuota en 2026 (Enero, Febrero, Marzo)
+  const hasPaidInReferenceYear = paidFees.some((f: any) => f.periodYear === referenceYear)
+  if (hasPaidInReferenceYear) {
     return 'INACTIVO'
-  } else {
-    return 'SUSPENDIDO'
   }
+
+  // 4. SUSPENDIDO: No registra ningún pago en 2026
+  return 'SUSPENDIDO'
 }
 
 /**
