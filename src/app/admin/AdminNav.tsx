@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Users, CreditCard, LayoutDashboard, Settings, Archive, Calendar, Trophy, ShieldCheck, GraduationCap, Gamepad2 } from "lucide-react"
 
-export function AdminNav() {
+export function AdminNav({ role }: { role?: string }) {
   const pathname = usePathname()
 
   const links = [
@@ -17,7 +17,7 @@ export function AdminNav() {
     { href: "/admin/vientos-de-tango", icon: Trophy, label: "Vientos de Tango" },
     { href: "/admin/juegos", icon: Gamepad2, label: "Juegos" },
     // Usuarios now lives inside Ajustes (configuracion)
-    { href: "/admin/configuracion", icon: Settings, label: "Ajustes" },
+    ...(role === "ADMIN" || role === "SUPERADMIN" ? [{ href: "/admin/configuracion", icon: Settings, label: "Ajustes" }] : []),
   ]
 
   return (

@@ -1,8 +1,15 @@
 import { db } from "@/lib/db"
 import { Users, Key, Mail, Trash2, ShieldCheck, User as UserIcon } from "lucide-react"
 import { UserManagementTable } from "./UserManagementTable"
+import { auth } from "@/auth"
+import { redirect } from "next/navigation"
 
 export default async function UsuariosAdminPage() {
+  const session = await auth()
+  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "SUPERADMIN")) {
+    redirect("/admin")
+  }
+
   const users = await db.user.findMany({
     orderBy: { createdAt: "desc" },
     include: {

@@ -2,6 +2,8 @@ import { db } from "@/lib/db"
 import { Shield, Mail, Calendar, Bell, Users, Save, ShieldCheck, Crown, User, Key, ShoppingBag } from "lucide-react"
 import { revalidatePath } from "next/cache"
 import Link from "next/link"
+import { auth } from "@/auth"
+import { redirect } from "next/navigation"
 
 async function getSetting(key: string, defaultValue: string = "") {
   const setting = await db.setting.findUnique({ where: { key } })
@@ -10,6 +12,10 @@ async function getSetting(key: string, defaultValue: string = "") {
 
 async function updateSetting(formData: FormData) {
   "use server"
+  const session = await auth()
+  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "SUPERADMIN")) {
+    throw new Error("No autorizado")
+  }
   const entries = Array.from(formData.entries())
   
   for (const [key, value] of entries) {
@@ -76,6 +82,11 @@ const ROLE_PERMISSIONS = [
 ]
 
 export default async function SettingsPage() {
+  const session = await auth()
+  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "SUPERADMIN")) {
+    redirect("/admin")
+  }
+
   // Fetch settings or use defaults
   const cuotaMensual = await getSetting("cuota_mensual", "6000")
   const vencimientoDia = await getSetting("vencimiento_dia", "10")

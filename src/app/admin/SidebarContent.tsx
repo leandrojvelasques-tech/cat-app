@@ -29,7 +29,7 @@ export function SidebarContent({ user, onNavigate }: SidebarContentProps) {
         </div>
         
         <div onClick={onNavigate} className="w-full">
-           <AdminNav />
+           <AdminNav role={user.role} />
         </div>
       </div>
 
