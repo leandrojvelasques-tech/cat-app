@@ -3,6 +3,7 @@
 import { useActionState } from "react"
 import { authenticate } from "@/app/actions/auth"
 import { LogIn, Info } from "lucide-react"
+import Link from "next/link"
 
 export default function LoginPage() {
   const [errorMessage, formAction, isPending] = useActionState(authenticate, undefined)
@@ -35,7 +36,12 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-300" htmlFor="password">Contraseña</label>
+              <div className="flex justify-between items-center">
+                <label className="text-sm font-medium text-zinc-300" htmlFor="password">Contraseña</label>
+                <Link href="/forgot-password" className="text-xs text-amber-500 hover:text-amber-400 transition-colors">
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
               <input
                 id="password"
                 name="password"

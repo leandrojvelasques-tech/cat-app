@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { Search, Filter } from "lucide-react"
+import { Search, Filter, ArrowUpDown } from "lucide-react"
 import { useTransition } from "react"
 
 export function SociosFilters() {
@@ -33,6 +33,18 @@ export function SociosFilters() {
     })
   }
 
+  const handleSortChange = (sort: string) => {
+    const params = new URLSearchParams(searchParams)
+    if (sort && sort !== "num_desc") {
+      params.set("sort", sort)
+    } else {
+      params.delete("sort")
+    }
+    startTransition(() => {
+      router.replace(`/admin/socios?${params.toString()}`)
+    })
+  }
+
   const handleViewChange = (view: string) => {
     const params = new URLSearchParams(searchParams)
     params.set("view", view)
@@ -44,6 +56,7 @@ export function SociosFilters() {
 
   const currentView = searchParams.get("view") || "active"
   const currentStatus = searchParams.get("status") || ""
+  const currentSort = searchParams.get("sort") || "num_desc"
 
   return (
     <div className="space-y-6">
@@ -63,8 +76,8 @@ export function SociosFilters() {
           </button>
         </div>
 
-        <div className="flex gap-2 w-full md:w-auto">
-          <div className="relative flex-1 md:w-80">
+        <div className="flex flex-wrap md:flex-nowrap gap-2 w-full md:w-auto">
+          <div className="relative flex-1 md:w-72">
             <Search className={`absolute left-4 top-1/2 -translate-y-1/2 ${isPending ? "text-amber-500 animate-pulse" : "text-zinc-500"}`} size={16} />
             <input 
               type="text"
@@ -75,12 +88,30 @@ export function SociosFilters() {
             />
           </div>
 
+          {/* Ordenamiento por N° de Socio / Registro */}
+          <div className="relative">
+            <ArrowUpDown className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={16} />
+            <select 
+              value={currentSort}
+              onChange={(e) => handleSortChange(e.target.value)}
+              className="bg-white/5 border border-white/10 rounded-2xl pl-11 pr-10 py-3 text-sm text-white focus:outline-none appearance-none cursor-pointer hover:bg-white/10 transition-all font-medium min-w-[200px]"
+            >
+              <option value="num_desc" className="bg-zinc-900 font-bold">N° Socio: Más nuevo arriba</option>
+              <option value="num_asc" className="bg-zinc-900">N° Socio: Más antiguo arriba</option>
+              <option value="name_asc" className="bg-zinc-900">Apellido (A-Z)</option>
+              <option value="name_desc" className="bg-zinc-900">Apellido (Z-A)</option>
+            </select>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none border-l border-white/10 pl-2">
+               <div className="w-1.5 h-1.5 border-r border-b border-zinc-500 rotate-45 transform -translate-y-0.5"></div>
+            </div>
+          </div>
+
           <div className="relative">
             <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={16} />
             <select 
               value={currentStatus}
               onChange={(e) => handleStatusChange(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-2xl pl-11 pr-10 py-3 text-sm text-white focus:outline-none appearance-none cursor-pointer hover:bg-white/10 transition-all font-medium min-w-[160px]"
+              className="bg-white/5 border border-white/10 rounded-2xl pl-11 pr-10 py-3 text-sm text-white focus:outline-none appearance-none cursor-pointer hover:bg-white/10 transition-all font-medium min-w-[150px]"
             >
               <option value="" className="bg-zinc-900 italic">Todos</option>
               {currentView === 'active' ? (

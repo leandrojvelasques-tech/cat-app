@@ -7,9 +7,9 @@ import { calculateMemberStatus, getStatusBadgeStyles } from "@/lib/member-utils"
 export default async function SociosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ query?: string; status?: string; view?: string }>
+  searchParams: Promise<{ query?: string; status?: string; view?: string; sort?: string }>
 }) {
-  const { query = "", status = "", view = "active" } = await searchParams
+  const { query = "", status = "", view = "active", sort = "num_desc" } = await searchParams
   
   const now = new Date()
   const monthNames = [
@@ -52,11 +52,10 @@ export default async function SociosPage({
         orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }]
       },
       eventRegistrations: true
-    },
-    orderBy: { memberNumber: "asc" },
+    }
   } as any) as any[]
 
-  // Apply final filtering based on our new dynamic status logic
+  // Apply final filtering based on our dynamic status logic
   const filteredMembers = membersData.filter((member: any) => {
     const calculated = calculateMemberStatus(member, now)
     
@@ -73,6 +72,26 @@ export default async function SociosPage({
 
     // By default, in "active" view, we show everyone EXCEPT those manually archived or calculated as BAJA
     return calculated !== 'BAJA'
+  }).sort((a: any, b: any) => {
+    const numA = Number(a.memberNumber) || 0
+    const numB = Number(b.memberNumber) || 0
+
+    if (sort === "num_asc") {
+      return numA - numB
+    }
+    if (sort === "name_asc") {
+      return a.lastName.localeCompare(b.lastName)
+    }
+    if (sort === "name_desc") {
+      return b.lastName.localeCompare(a.lastName)
+    }
+    // Default: num_desc (el más nuevo arriba)
+    return numB - numA
+  })
+
+  // Obtener cantidad de solicitudes pendientes
+  const pendingCount = await db.enrollmentRequest.count({
+    where: { status: "PENDING" }
   })
 
   return (
@@ -86,13 +105,7 @@ export default async function SociosPage({
             {filteredMembers.length} {filteredMembers.length === 1 ? 'socio encontrado' : 'socios encontrados'}
           </p>
         </div>
-        <div className="flex gap-3">
-          <Link 
-            href="/admin/socios/nuevo"
-            className="flex items-center gap-2 bg-white text-zinc-950 px-5 py-2.5 rounded-2xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-white/5"
-          >
-            <UserPlus size={18} /> Nuevo Socio
-          </Link>
+        <div className="flex flex-wrap gap-3">
           {view !== "archive" && (
              <Link 
               href="/admin/socios?view=archive"

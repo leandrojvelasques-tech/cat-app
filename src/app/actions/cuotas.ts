@@ -2,6 +2,7 @@
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { sendPaymentValidatedEmail } from "@/lib/emails"
 import { auth } from "@/auth"
 import { writeFileSync, existsSync, mkdirSync } from "fs"
 import { join } from "path"
@@ -92,6 +93,20 @@ export async function createPayment(memberId: string, formData: FormData) {
         recordedById: userId
       }
     })
+  }
+
+  // Enviar email de confirmación
+  try {
+    const member = await db.member.findUnique({
+      where: { id: memberId },
+      select: { id: true, firstName: true, lastName: true, email: true }
+    })
+    if (member && member.email) {
+      const periods = months.map(m => ({ month: m, year: periodYear, amount: amountPaidPerMonth }))
+      await sendPaymentValidatedEmail(member, periods)
+    }
+  } catch (emailErr) {
+    console.error("Error al enviar email de confirmación de pago:", emailErr)
   }
 
   const returnTo = formData.get("returnTo") as string | null

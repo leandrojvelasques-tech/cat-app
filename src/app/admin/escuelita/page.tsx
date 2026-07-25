@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
 import Link from "next/link"
-import { GraduationCap, Users, CalendarDays, Plus, ListChecks, History } from "lucide-react"
+import { GraduationCap, Users, CalendarDays, Plus, ListChecks, History, UserCheck } from "lucide-react"
+import { updateEscuelitaDocentes } from "@/app/actions/escuelita"
 
 export default async function EscuelitaDashboard() {
   const classes = await db.escuelitaClass.findMany({
@@ -16,6 +17,12 @@ export default async function EscuelitaDashboard() {
   const totalStudents = await db.escuelitaStudent.count()
 
   const lastClass = classes[0]
+
+  // Obtener profesores del mes configurados
+  const docentesSetting = await db.setting.findUnique({
+    where: { key: "escuelita_docentes_mes" }
+  })
+  const currentDocentes = docentesSetting?.value || "Profesores Rotativos de la Comisión"
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
@@ -56,61 +63,104 @@ export default async function EscuelitaDashboard() {
         </div>
       </div>
 
-      <section className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden backdrop-blur-md">
-        <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
-           <h2 className="font-semibold text-white/90 flex items-center gap-2"><ListChecks size={18} className="text-blue-500"/> Historial de Clases</h2>
-        </div>
-        <div className="overflow-x-auto">
-          {classes.length === 0 ? (
-            <div className="py-20 text-center flex flex-col items-center gap-4">
-               <CalendarDays size={32} className="text-zinc-700 opacity-20" />
-               <div className="text-sm font-medium text-zinc-600">No hay clases registradas.</div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Historial de Clases (Col span 2) */}
+        <div className="lg:col-span-2">
+          <section className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden backdrop-blur-md h-full">
+            <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+              <h2 className="font-semibold text-white/90 flex items-center gap-2"><ListChecks size={18} className="text-blue-500"/> Historial de Clases</h2>
             </div>
-          ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="text-left text-[10px] uppercase tracking-widest text-zinc-500 border-b border-white/5">
-                  <th className="px-6 py-4 font-bold">Fecha</th>
-                  <th className="px-6 py-4 font-bold">Profesores a Cargo</th>
-                  <th className="px-6 py-4 font-bold text-center">Asistentes</th>
-                  <th className="px-6 py-4 font-bold text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {classes.map(c => (
-                  <tr key={c.id} className="hover:bg-white/[0.02] transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex flex-col items-center justify-center border border-blue-500/20">
-                          <span className="text-[10px] uppercase font-bold text-blue-500">{new Date(c.date).toLocaleDateString('es-ES', { month: 'short' })}</span>
-                          <span className="text-sm font-black text-white">{new Date(c.date).getDate()}</span>
-                        </div>
-                        <div className="text-sm font-medium text-zinc-300">
-                          {new Date(c.date).toLocaleDateString('es-ES', { weekday: 'long' })}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm font-semibold text-white/90">{c.teachers}</span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="text-sm font-bold text-blue-400">{c._count.attendances}</span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                       <Link 
-                         href={`/admin/escuelita/clases/${c.id}`} 
-                         className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg transition-colors border border-white/10"
-                       >
-                         Ver Detalle
-                       </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+            <div className="overflow-x-auto">
+              {classes.length === 0 ? (
+                <div className="py-20 text-center flex flex-col items-center gap-4">
+                  <CalendarDays size={32} className="text-zinc-700 opacity-20" />
+                  <div className="text-sm font-medium text-zinc-600">No hay clases registradas.</div>
+                </div>
+              ) : (
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-[10px] uppercase tracking-widest text-zinc-500 border-b border-white/5">
+                      <th className="px-6 py-4 font-bold">Fecha</th>
+                      <th className="px-6 py-4 font-bold">Profesores a Cargo</th>
+                      <th className="px-6 py-4 font-bold text-center">Asistentes</th>
+                      <th className="px-6 py-4 font-bold text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {classes.map(c => (
+                      <tr key={c.id} className="hover:bg-white/[0.02] transition-colors group">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex flex-col items-center justify-center border border-blue-500/20">
+                              <span className="text-[10px] uppercase font-bold text-blue-500">{new Date(c.date).toLocaleDateString('es-ES', { month: 'short' })}</span>
+                              <span className="text-sm font-black text-white">{new Date(c.date).getDate()}</span>
+                            </div>
+                            <div className="text-sm font-medium text-zinc-300">
+                              {new Date(c.date).toLocaleDateString('es-ES', { weekday: 'long' })}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-sm font-semibold text-white/90">{c.teachers}</span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className="text-sm font-bold text-blue-400">{c._count.attendances}</span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <Link 
+                            href={`/admin/escuelita/clases/${c.id}`} 
+                            className="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg transition-colors border border-white/10"
+                          >
+                            Ver Detalle
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </section>
         </div>
-      </section>
+
+        {/* Configuración de Profesores del Mes (Col span 1) */}
+        <div>
+          <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md space-y-6">
+            <div>
+              <h2 className="text-base font-semibold text-white flex items-center gap-2">
+                <UserCheck className="text-blue-500" size={18} />
+                <span>Profesores del Mes</span>
+              </h2>
+              <p className="text-xs text-zinc-500 mt-1">
+                Especifique los docentes a cargo este mes para mostrar en la web pública.
+              </p>
+            </div>
+
+            <form action={updateEscuelitaDocentes} className="space-y-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Docentes a cargo</label>
+                <input 
+                  type="text"
+                  name="docentes_mes"
+                  defaultValue={currentDocentes}
+                  placeholder="Ej: Juan Pérez y María Gómez"
+                  required
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500/50 outline-none"
+                />
+              </div>
+
+              <button 
+                type="submit" 
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs transition-all cursor-pointer shadow-lg shadow-blue-900/20"
+              >
+                Guardar Cambios
+              </button>
+            </form>
+          </div>
+        </div>
+
+      </div>
     </div>
   )
 }

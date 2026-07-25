@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Plus } from "lucide-react"
-import { RegistrationModal } from "../RegistrationModal"
+import { RegistrationModal } from "../components/RegistrationModal"
 
 export function EventDetailsClient({ event }: { event: any }) {
   const [showModal, setShowModal] = useState(false)

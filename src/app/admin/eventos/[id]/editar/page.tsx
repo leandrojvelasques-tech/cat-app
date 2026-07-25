@@ -1,11 +1,16 @@
 import { db } from "@/lib/db"
 import { notFound } from "next/navigation"
-import { EventForm } from "../../EventForm"
+import { EventForm } from "../../components/EventForm"
 
 export default async function EditarEventoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const event = await db.event.findUnique({
-    where: { id }
+    where: { id },
+    include: {
+      classes: {
+        orderBy: { order: 'asc' }
+      }
+    }
   })
 
   if (!event) notFound()

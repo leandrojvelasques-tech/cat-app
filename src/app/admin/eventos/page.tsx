@@ -44,12 +44,25 @@ export default async function EventosPage() {
                 }`}>
                   {event.type === "MILONGA" ? <Music size={24} /> : <Users size={24} />}
                 </div>
-                <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border ${
-                  event.status === "OPEN" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-zinc-500/10 text-zinc-400 border-white/10"
-                }`}>
-                  {event.status === "OPEN" ? "ABIERTO" : "FINALIZADO"}
-                </span>
+                <div className="flex items-center gap-2">
+                  {event.isRecurring && (
+                    <span className="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 tracking-wider">
+                      🔄 RECURRENTE
+                    </span>
+                  )}
+                  <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border ${
+                    event.status === "OPEN" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-zinc-500/10 text-zinc-400 border-white/10"
+                  }`}>
+                    {event.status === "OPEN" ? "ABIERTO" : "FINALIZADO"}
+                  </span>
+                </div>
               </div>
+
+              {event.eventBanner && (
+                <div className="relative w-full aspect-[4/5] max-h-56 overflow-hidden rounded-2xl mb-4 border border-white/5 bg-zinc-800">
+                  <img src={event.eventBanner} alt={event.title} className="w-full h-full object-cover" />
+                </div>
+              )}
 
               <h3 className="text-xl font-semibold text-white/90 mb-1 group-hover:text-amber-500 transition-colors">
                 {event.title}
@@ -59,8 +72,8 @@ export default async function EventosPage() {
               <div className="space-y-3 mb-6">
                 <div className="flex items-center gap-2 text-zinc-400 text-sm font-medium">
                   <Calendar size={14} className="text-amber-500" />
-                  {new Date(event.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
-                  {event.endDate && ` - ${new Date(event.endDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}`}
+                  {new Date(event.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', timeZone: 'UTC' })}
+                  {event.endDate && ` - ${new Date(event.endDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', timeZone: 'UTC' })}`}
                 </div>
                 <div className="flex items-center gap-2 text-zinc-400 text-sm">
                    <Users size={14} className="text-zinc-600" />

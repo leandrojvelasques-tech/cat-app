@@ -6,7 +6,47 @@ import { calculateMemberStatus, CalculatedStatus } from "@/lib/member-utils"
 
 export default async function AdminDashboard() {
   const session = await auth()
-  
+  const isCollaborator = session?.user?.role === "COLLABORATOR"
+
+  if (isCollaborator) {
+    return (
+      <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight text-white/90">Panel de Colaborador</h1>
+          <p className="text-zinc-400 mt-1 uppercase text-[10px] tracking-[0.2em] font-black">Centro Amigos del Tango - Accesos Rápidos</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Link 
+            href="/admin/escuelita"
+            className="bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 hover:border-cat-gold/30 transition-all group flex flex-col justify-between min-h-[180px]"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-cat-gold flex items-center justify-center group-hover:scale-105 transition-transform">
+              <GraduationCap size={24} />
+            </div>
+            <div className="mt-8">
+              <h3 className="text-xl font-bold text-white group-hover:text-cat-gold transition-colors">Escuelita CAT</h3>
+              <p className="text-zinc-400 text-xs mt-1.5 font-light">Administre las clases de la escuela, registre alumnos y controle las asistencias diarias.</p>
+            </div>
+          </Link>
+
+          <Link 
+            href="/admin/cobrar"
+            className="bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 hover:border-cat-gold/30 transition-all group flex flex-col justify-between min-h-[180px]"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-cat-gold flex items-center justify-center group-hover:scale-105 transition-transform">
+              <CreditCard size={24} />
+            </div>
+            <div className="mt-8">
+              <h3 className="text-xl font-bold text-white group-hover:text-cat-gold transition-colors">Registrar Cobros</h3>
+              <p className="text-zinc-400 text-xs mt-1.5 font-light">Registre ingresos rápidos para las milongas, venta de entradas o buffet del día.</p>
+            </div>
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   // Real stats for the dashboard - New Unified Status Logic
   const now = new Date()
 

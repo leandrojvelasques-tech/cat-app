@@ -7,10 +7,9 @@ import { Users, CreditCard, LayoutDashboard, Settings, Archive, Calendar, Trophy
 export function AdminNav({ role }: { role?: string }) {
   const pathname = usePathname()
 
-  const links = [
+  const allLinks = [
     { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/admin/socios", icon: Users, label: "Directorio de Socios" },
-    { href: "/admin/estado-socios", icon: Users, label: "Estado de Socios" },
+    { href: "/admin/estado-socios", icon: Users, label: "Panel de Socios" },
     { href: "/admin/cuotas", icon: CreditCard, label: "Caja" },
     { href: "/admin/eventos", icon: Calendar, label: "Eventos" },
     { href: "/admin/escuelita", icon: GraduationCap, label: "Escuelita CAT" },
@@ -18,7 +17,12 @@ export function AdminNav({ role }: { role?: string }) {
     { href: "/admin/juegos", icon: Gamepad2, label: "Juegos" },
     // Usuarios now lives inside Ajustes (configuracion)
     ...(role === "ADMIN" || role === "SUPERADMIN" ? [{ href: "/admin/configuracion", icon: Settings, label: "Ajustes" }] : []),
+    { href: "/socios", icon: ShieldCheck, label: "Mi Ficha de Socio" }
   ]
+
+  const links = role === "COLLABORATOR"
+    ? allLinks.filter(l => ["/admin", "/admin/escuelita", "/socios"].includes(l.href))
+    : allLinks
 
   return (
     <nav className="flex flex-col gap-2">

@@ -105,3 +105,20 @@ export async function uploadClassPhoto(formData: FormData) {
 
   revalidatePath(`/admin/escuelita/clases/${classId}`)
 }
+
+export async function updateEscuelitaDocentes(formData: FormData) {
+  try {
+    const docentes = formData.get("docentes_mes") as string
+
+    await db.setting.upsert({
+      where: { key: "escuelita_docentes_mes" },
+      update: { value: docentes },
+      create: { key: "escuelita_docentes_mes", value: docentes }
+    })
+
+    revalidatePath("/admin/escuelita")
+    revalidatePath("/")
+  } catch (e: any) {
+    console.error("Error al actualizar docentes del mes de la escuelita:", e)
+  }
+}

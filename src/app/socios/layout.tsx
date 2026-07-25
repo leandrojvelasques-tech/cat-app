@@ -36,6 +36,15 @@ export default async function SociosLayout({ children }: { children: ReactNode }
           </nav>
 
           <div className="flex items-center gap-4">
+             {session?.user && ["ADMIN", "BOARD", "SUPERADMIN"].includes(session.user.role as string) && (
+               <Link 
+                 href="/admin" 
+                 className="text-xs bg-amber-600/10 text-amber-500 hover:bg-amber-600 hover:text-white px-3 py-1.5 rounded-lg border border-amber-500/20 font-black uppercase tracking-wider transition-all"
+               >
+                 Panel Admin
+               </Link>
+             )}
+
              <form action={async () => {
               "use server"
               await signOut({ redirectTo: "/login" })

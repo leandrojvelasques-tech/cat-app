@@ -33,7 +33,7 @@ export function EstadoSociosFilters() {
     })
   }
 
-  const currentSort = searchParams.get("sort") || ""
+  const currentSort = searchParams.get("sort") || "num_desc"
 
   return (
     <div className="space-y-6">
@@ -55,7 +55,8 @@ export function EstadoSociosFilters() {
             onChange={(e) => handleSort(e.target.value)}
             className="bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none appearance-none cursor-pointer hover:bg-white/10 transition-all min-w-[160px]"
           >
-            <option value="" className="bg-zinc-900">Ordenar por defecto</option>
+            <option value="num_desc" className="bg-zinc-900">N° Socio: Más nuevo arriba</option>
+            <option value="num_asc" className="bg-zinc-900">N° Socio: Más antiguo arriba</option>
             <option value="apellido_asc" className="bg-zinc-900">Apellido (A-Z)</option>
             <option value="apellido_desc" className="bg-zinc-900">Apellido (Z-A)</option>
             <option value="estado_asc" className="bg-zinc-900">Estado (Al Día primero)</option>

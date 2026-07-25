@@ -1,9 +1,10 @@
 import { db } from "@/lib/db"
-import { Shield, Mail, Calendar, Bell, Users, Save, ShieldCheck, Crown, User, Key, ShoppingBag } from "lucide-react"
+import { Shield, Mail, Calendar, Bell, Users, Save, ShieldCheck, Crown, User, Key, ShoppingBag, Pencil, Plus, Trash2, BadgeInfo } from "lucide-react"
 import { revalidatePath } from "next/cache"
 import Link from "next/link"
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
+import { addBoardMember, removeBoardMember } from "@/app/actions/comision"
 
 async function getSetting(key: string, defaultValue: string = "") {
   const setting = await db.setting.findUnique({ where: { key } })
@@ -99,7 +100,10 @@ export default async function SettingsPage() {
   
   const msgPagoCuota = await getSetting("msg_pago_confirmado_cuota", "¡Gracias por su pago! Su comprobante ha sido registrado. Estado de cuenta: {estado}.")
   const msgPagoEvento = await getSetting("msg_pago_confirmado_evento", "¡Gracias por acompañarnos! Confirmamos la recepción de su pago para el evento: {evento}.")
-  const msgBienvenida = await getSetting("msg_bienvenida", "¡Bienvenido/a {nombre} al Centro Amigos del Tango! 💃🕺\n\nEs un gran placer darte la bienvenida como socio/a de nuestra querida casa de tango.\nTu ficha ha sido procesada con éxito y ya formas parte de nuestra comunidad oficial.\n\n📌 Tu número de socio es: #{socio}\n\n💬 Te invitamos a participar de nuestras milongas, clases y seminarios.\n¡Nos vemos pronto en la pista!")
+  const msgBienvenida = await getSetting("msg_bienvenida", "¡Bienvenido/a {nombre} al Centro Amigos del Tango! 💃\n\n📌 Tu número de socio es: #{socio}\n\nUsuario de acceso: {username}\nClave temporal: {password}\n\n¡Nos vemos pronto en la pista!")
+  const msgSolicitudInscripcion = await getSetting("msg_solicitud_inscripcion", "¡Hola {nombre}!\n\nAgradecemos tu interés en formar parte del Centro Amigos del Tango.\n\nQueremos confirmarte que hemos recibido tu solicitud de inscripción y el comprobante de pago de tu primera cuota social.\n\nNuestra área de Tesorería verificará la información a la brevedad. Una vez aprobada tu alta, recibirás un nuevo correo electrónico con tu número de socio asignado y tus datos de acceso al Portal de Socios.\n\n¡Esperamos vernos pronto en la pista!")
+  const msgMora = await getSetting("msg_mora", "Lamentamos informarle que su cuenta registra una deuda de 3 o más períodos impagos y sus beneficios han quedado suspendidos.")
+  const msgBaja = await getSetting("msg_baja", "Por la presente se le notifica que ha sido dado de baja del padrón de socios.")
 
   const mesesDeudaMora = await getSetting("meses_deuda_mora", "1")
   const mesesSuspension = await getSetting("meses_suspension", "3")
@@ -112,6 +116,32 @@ export default async function SettingsPage() {
         select: { avatarUrl: true, firstName: true, lastName: true, memberNumber: true }
       }
     }
+  })
+
+  // 1. Integrantes actuales de la comisión directiva
+  const currentBoard = await db.member.findMany({
+    where: { isBoardMember: true },
+    orderBy: { lastName: "asc" }
+  })
+
+  // 2. Socios elegibles para formar parte (activos y que no estén ya en la CD)
+  const eligibleMembers = await db.member.findMany({
+    where: { 
+      isBoardMember: false,
+      status: "ACTIVE"
+    },
+    orderBy: { lastName: "asc" }
+  })
+
+  // 3. Obtener el historial completo de la CD
+  const boardHistory = await db.boardHistory.findMany({
+    include: {
+      member: {
+        select: { firstName: true, lastName: true, avatarUrl: true, memberNumber: true }
+      }
+    },
+    orderBy: { createdAt: "desc" },
+    take: 10
   })
 
   return (
@@ -247,6 +277,26 @@ export default async function SettingsPage() {
                   className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 focus:border-amber-500/50 outline-none text-sm"
                 />
               </div>
+              <div className="space-y-2">
+                <label className="text-xs text-zinc-500 uppercase tracking-wider">Solicitud de Inscripción Recibida</label>
+                <textarea 
+                  name="msg_solicitud_inscripcion"
+                  defaultValue={msgSolicitudInscripcion}
+                  rows={4}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 focus:border-amber-500/50 outline-none text-sm"
+                />
+                <p className="text-[9px] text-zinc-600 uppercase font-black italic">Variables: {'{nombre}'}</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-zinc-500 uppercase tracking-wider">Notificación de Baja de Socio</label>
+                <textarea 
+                  name="msg_baja"
+                  defaultValue={msgBaja}
+                  rows={4}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 focus:border-amber-500/50 outline-none text-sm"
+                />
+                <p className="text-[9px] text-zinc-600 uppercase font-black italic">Variables: {'{nombre}'}, {'{socio}'}, {'{fecha}'}</p>
+              </div>
             </div>
             
             <div className="space-y-4">
@@ -269,88 +319,308 @@ export default async function SettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs text-zinc-500 uppercase tracking-wider">Mensaje de Bienvenida</label>
+                <label className="text-xs text-zinc-500 uppercase tracking-wider">Notificación de Morosidad (3 Impagos)</label>
+                <textarea 
+                  name="msg_mora"
+                  defaultValue={msgMora}
+                  rows={4}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 focus:border-amber-500/50 outline-none text-sm"
+                />
+                <p className="text-[9px] text-zinc-600 uppercase font-black italic">Variables: {'{nombre}'}</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-zinc-500 uppercase tracking-wider">Mensaje de Bienvenida (Alta)</label>
                 <textarea 
                   name="msg_bienvenida"
                   defaultValue={msgBienvenida}
-                  rows={6}
+                  rows={5}
                   className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 focus:border-amber-500/50 outline-none text-sm"
                 />
-                <p className="text-[9px] text-zinc-600 uppercase font-black italic">Variables: {'{nombre}'}, {'{socio}'}</p>
+                <p className="text-[9px] text-zinc-600 uppercase font-black italic">Variables: {'{nombre}'}, {'{socio}'}, {'{username}'}, {'{password}'}</p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Comision Directiva — with avatars */}
-        <section className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md lg:col-span-2 space-y-6 text-zinc-400">
-           <div className="flex items-center justify-between border-b border-white/5 pb-4">
-             <div className="flex items-center gap-3">
-               <Users className="text-amber-500" size={20} />
-               <h2 className="text-lg font-medium text-white">Comisión Directiva (Accesos Admin)</h2>
-             </div>
-             <Link href="/admin/configuracion/usuarios/nuevo" className="text-xs bg-amber-600/10 text-amber-500 px-3 py-1 rounded-lg border border-amber-500/20 hover:bg-amber-600/20 transition-colors">
-               + Agregar Usuario
-             </Link>
-           </div>
-
-           <div className="space-y-2">
-             {admins.map(admin => {
-               // Show member avatar if linked member has one, otherwise show initials
-               const avatarUrl = admin.member?.avatarUrl
-               const initials = (admin.name || admin.email)[0].toUpperCase()
-               return (
-                 <div key={admin.id} className="flex items-center justify-between p-3 bg-black/20 rounded-xl border border-white/5">
-                   <div className="flex items-center gap-3">
-                     {/* Avatar: photo if available, else colored initials */}
-                     <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-white/10 bg-amber-500/20 flex items-center justify-center">
-                       {avatarUrl ? (
-                         <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
-                       ) : (
-                         <span className="text-amber-500 text-sm font-black">{initials}</span>
-                       )}
-                     </div>
-                     <div className="flex flex-col">
-                       <span className="text-sm text-zinc-300 font-bold">{admin.name || admin.email.split('@')[0]}</span>
-                       <span className="text-xs text-zinc-500">{admin.email}</span>
-                       {admin.member && (
-                         <span className="text-[9px] text-amber-500/60 font-black uppercase tracking-widest">
-                           Socio #{admin.member.memberNumber}
-                         </span>
-                       )}
-                     </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                     <div className="flex gap-1 items-center">
-                        <span className={`w-2 h-2 rounded-full ${admin.role === 'ADMIN' || admin.role === 'SUPERADMIN' ? 'bg-red-500' : 'bg-blue-500'}`}></span>
-                        <span className="text-[10px] text-zinc-500 uppercase">{admin.position || admin.role}</span>
-                     </div>
-                     <Link
-                       href={`/admin/usuarios`}
-                       className="text-zinc-600 hover:text-amber-400 text-[10px] font-black uppercase tracking-widest transition-colors"
-                     >
-                       Gestionar
-                     </Link>
-                  </div>
-                 </div>
-               )
-             })}
-           </div>
-        </section>
-
-        {/* Global Save */}
+        {/* Botón de Guardar Ajustes */}
         <div className="lg:col-span-2 flex justify-end pt-4">
           <button 
             type="submit" 
-            className="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-white px-8 py-3 rounded-2xl font-semibold transition-all shadow-lg shadow-amber-900/40"
+            className="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-white px-8 py-3 rounded-2xl font-semibold transition-all shadow-lg shadow-amber-900/40 cursor-pointer"
           >
-            <Save size={18} /> Guardar Todos los Cambios
+            <Save size={18} /> Guardar Todos los Ajustes
           </button>
         </div>
-
       </form>
 
-      {/* ===== MODULOS ADICIONALES ===== */}
+      {/* ===== SECCIÓN COMISIÓN DIRECTIVA (EMBEBIDA) ===== */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 border-t border-white/5 pt-8">
+        <div className="lg:col-span-3">
+          <h2 className="text-2xl font-semibold tracking-tight text-white/90 flex items-center gap-3">
+            <Crown className="text-amber-500" size={24} />
+            <span>Comisión Directiva</span>
+          </h2>
+          <p className="text-zinc-500 mt-1">Gestione los cargos institucionales vigentes y el historial de comisiones del centro.</p>
+        </div>
+
+        {/* Listado de Miembros Activos en la CD y Historial */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md">
+            <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
+              <Users className="text-amber-500" size={18} />
+              <span>Miembros Activos de la CD</span>
+            </h3>
+
+            {currentBoard.length === 0 ? (
+              <div className="text-center py-12 text-zinc-500 italic">
+                No hay miembros asignados a la comisión directiva actualmente.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {currentBoard.map((member) => (
+                  <div 
+                    key={member.id}
+                    className="bg-black/20 border border-white/5 rounded-2xl p-4 flex justify-between items-center gap-4 hover:border-amber-500/20 transition-all group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-white/5 rounded-full overflow-hidden shrink-0 border border-white/10 flex items-center justify-center">
+                        {member.avatarUrl ? (
+                          <img src={member.avatarUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-zinc-400 text-xs font-bold">{member.firstName[0]}{member.lastName[0]}</span>
+                        )}
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-bold text-zinc-200 truncate group-hover:text-amber-500 transition-colors">
+                          {member.lastName}, {member.firstName}
+                        </span>
+                        <span className="text-xs text-amber-500 font-medium mt-0.5">{member.position}</span>
+                        <span className="text-[9px] text-zinc-500 uppercase font-black tracking-widest mt-0.5">Socio #{member.memberNumber}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Link 
+                        href={`/admin/comision/${member.id}/editar`}
+                        className="p-2 bg-amber-600/10 text-amber-500 hover:bg-amber-600 hover:text-white rounded-xl border border-amber-500/10 transition-all"
+                        title="Editar miembro de la Comisión Directiva"
+                      >
+                        <Pencil size={16} />
+                      </Link>
+
+                      <form action={async () => {
+                        "use server"
+                        await removeBoardMember(member.id)
+                      }}>
+                        <button 
+                          type="submit"
+                          className="p-2 bg-red-600/10 text-red-500 hover:bg-red-600 hover:text-white rounded-xl border border-red-500/10 transition-all cursor-pointer"
+                          title="Remover de la Comisión Directiva"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Historial Reciente */}
+          <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md">
+            <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
+              <Calendar className="text-zinc-400" size={18} />
+              <span>Historial Reciente (Últimos Movimientos)</span>
+            </h3>
+
+            <div className="space-y-3">
+              {boardHistory.map((hist) => (
+                <div 
+                  key={hist.id} 
+                  className="bg-black/10 rounded-xl p-3 border border-white/5 flex justify-between items-center gap-4 text-xs text-zinc-400"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-white/5 bg-zinc-800 flex items-center justify-center text-[10px]">
+                      {hist.member.avatarUrl ? (
+                        <img src={hist.member.avatarUrl} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span>{hist.member.firstName[0]}{hist.member.lastName[0]}</span>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-bold text-zinc-300">{hist.member.lastName}, {hist.member.firstName} <span className="text-[10px] text-zinc-500 font-normal">#{hist.member.memberNumber}</span></p>
+                      <p className="text-zinc-500 font-medium">{hist.position} ({hist.periodStart} - {hist.periodEnd || "Presente"})</p>
+                    </div>
+                  </div>
+                  {hist.notes && (
+                    <span className="text-[10px] text-zinc-600 italic truncate max-w-[200px]" title={hist.notes}>
+                      {hist.notes}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Formulario para Agregar Miembro a la CD */}
+        <div className="space-y-6">
+          <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md">
+            <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
+              <Plus className="text-amber-500" size={18} />
+              <span>Asignar Integrante</span>
+            </h3>
+
+            <form action={addBoardMember} className="space-y-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-zinc-500 uppercase font-black tracking-wider">Socio Activo *</label>
+                <select 
+                  name="memberId"
+                  required
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-amber-500/50 outline-none appearance-none cursor-pointer"
+                >
+                  <option value="">Seleccione un socio...</option>
+                  {eligibleMembers.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.lastName}, {m.firstName} (#{m.memberNumber})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-zinc-500 uppercase font-black tracking-wider">Cargo / Función *</label>
+                <select 
+                  name="position"
+                  required
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-amber-500/50 outline-none appearance-none cursor-pointer"
+                >
+                  <option value="">Seleccione un cargo...</option>
+                  <option value="Presidente">Presidente</option>
+                  <option value="Vicepresidente">Vicepresidente</option>
+                  <option value="Vice Presidente">Vice Presidente</option>
+                  <option value="Secretario">Secretario</option>
+                  <option value="Secretaria">Secretaria</option>
+                  <option value="Tesorero">Tesorero</option>
+                  <option value="Primer Vocal">Primer Vocal</option>
+                  <option value="1er Vocal">1er Vocal</option>
+                  <option value="Segundo Vocal">Segundo Vocal</option>
+                  <option value="2do Vocal">2do Vocal</option>
+                  <option value="Tercer Vocal">Tercer Vocal</option>
+                  <option value="3er Vocal">3er Vocal</option>
+                  <option value="1er Vocal Suplente">1er Vocal Suplente</option>
+                  <option value="2do Vocal Suplente">2do Vocal Suplente</option>
+                  <option value="Vocal">Vocal</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-500 uppercase font-black tracking-wider">Año de Inicio *</label>
+                  <input 
+                    name="periodStart"
+                    required
+                    type="number"
+                    defaultValue={new Date().getFullYear()}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-amber-500/50 outline-none"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs text-zinc-500 uppercase font-black tracking-wider">Año de Fin</label>
+                  <input 
+                    name="periodEnd"
+                    type="number"
+                    placeholder="Opcional"
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-amber-500/50 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-zinc-500 uppercase font-black tracking-wider">Observaciones</label>
+                <textarea 
+                  name="notes" 
+                  rows={2}
+                  placeholder="Notas adicionales..."
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-amber-500/50 outline-none"
+                />
+              </div>
+
+              <button 
+                type="submit"
+                className="w-full bg-amber-500 hover:bg-amber-600 text-zinc-950 font-bold py-3 rounded-xl text-sm transition-all shadow-lg shadow-amber-500/10 mt-4 cursor-pointer"
+              >
+                Agregar miembro
+              </button>
+            </form>
+          </div>
+
+          <div className="bg-amber-600/10 border border-amber-500/20 rounded-3xl p-5 flex gap-3 text-xs text-zinc-400">
+            <BadgeInfo className="text-amber-500 shrink-0 mt-0.5" size={16} />
+            <div className="space-y-1">
+              <p className="font-bold text-white uppercase tracking-wider">Acceso al Panel</p>
+              <p>Al asignar un integrante a la Comisión Directiva, recuerde crearle una cuenta de usuario con rol **BOARD** o **ADMIN** para que pueda acceder y operar el Panel Administrativo.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== SECCIÓN USUARIOS DEL SISTEMA ===== */}
+      <section className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md space-y-6 text-zinc-400 border-t border-white/5 pt-8">
+         <div className="flex items-center justify-between border-b border-white/5 pb-4">
+           <div className="flex items-center gap-3">
+             <Users className="text-amber-500" size={20} />
+             <h2 className="text-lg font-medium text-white">Usuarios del Sistema</h2>
+           </div>
+           <Link href="/admin/configuracion/usuarios/nuevo" className="text-xs bg-amber-600/10 text-amber-500 px-3 py-1 rounded-lg border border-amber-500/20 hover:bg-amber-600/20 transition-colors">
+             + Agregar Usuario
+           </Link>
+         </div>
+
+         <div className="space-y-2">
+           {admins.map(admin => {
+             const avatarUrl = admin.member?.avatarUrl
+             const initials = (admin.name || admin.email)[0].toUpperCase()
+             return (
+               <div key={admin.id} className="flex items-center justify-between p-3 bg-black/20 rounded-xl border border-white/5">
+                 <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-white/10 bg-amber-500/20 flex items-center justify-center">
+                     {avatarUrl ? (
+                       <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                     ) : (
+                       <span className="text-amber-500 text-sm font-black">{initials}</span>
+                     )}
+                   </div>
+                   <div className="flex flex-col">
+                     <span className="text-sm text-zinc-300 font-bold">{admin.name || admin.email.split('@')[0]}</span>
+                     <span className="text-xs text-zinc-500">{admin.email}</span>
+                     {admin.member && (
+                       <span className="text-[9px] text-amber-500/60 font-black uppercase tracking-widest">
+                         Socio #{admin.member.memberNumber}
+                       </span>
+                     )}
+                   </div>
+                </div>
+                <div className="flex items-center gap-4">
+                   <div className="flex gap-1 items-center">
+                      <span className={`w-2 h-2 rounded-full ${admin.role === 'ADMIN' || admin.role === 'SUPERADMIN' ? 'bg-red-500' : 'bg-blue-500'}`}></span>
+                      <span className="text-[10px] text-zinc-500 uppercase">{admin.position || admin.role}</span>
+                   </div>
+                   <Link
+                     href={`/admin/usuarios/${admin.id}/editar`}
+                     className="text-zinc-600 hover:text-amber-400 text-[10px] font-black uppercase tracking-widest transition-colors"
+                   >
+                     Editar
+                   </Link>
+                </div>
+               </div>
+             )
+           })}
+         </div>
+      </section>
+
+      {/* ===== MÓDULOS DEL SISTEMA ===== */}
       <section className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md space-y-6">
         <div className="flex items-center gap-3 border-b border-white/5 pb-4">
           <ShoppingBag className="text-amber-500" size={20} />
@@ -360,7 +630,7 @@ export default async function SettingsPage() {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <Link
             href="/admin/buffet"
             className="flex items-center justify-between p-4 bg-black/20 hover:bg-white/5 border border-white/5 hover:border-amber-500/30 rounded-2xl transition-all group"
@@ -376,14 +646,14 @@ export default async function SettingsPage() {
         </div>
       </section>
 
-      {/* ===== USUARIOS DEL SISTEMA (moved here from /admin/usuarios) ===== */}
+      {/* ===== GESTIÓN DE USUARIOS (PERMISOS POR ROL) ===== */}
       <section className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md space-y-6">
         <div className="flex items-center justify-between border-b border-white/5 pb-4">
           <div className="flex items-center gap-3">
             <ShieldCheck className="text-amber-500" size={20} />
             <div>
-              <h2 className="text-lg font-medium text-white">Gestión de Usuarios del Sistema</h2>
-              <p className="text-xs text-zinc-500 mt-0.5">Usuarios con acceso al panel de administración</p>
+              <h2 className="text-lg font-medium text-white">Permisos de Usuario</h2>
+              <p className="text-xs text-zinc-500 mt-0.5">Niveles de acceso y funcionalidades por rol</p>
             </div>
           </div>
           <Link
@@ -394,7 +664,6 @@ export default async function SettingsPage() {
           </Link>
         </div>
 
-        {/* Permission cards per role */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {ROLE_PERMISSIONS.map((rp) => (
             <div

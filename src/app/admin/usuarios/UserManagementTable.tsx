@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Key, Mail, Trash2, Edit, Check, X, Shield, Users as UsersIcon } from "lucide-react"
 import { updateUserPassword, updateUserEmail, deleteUser } from "@/app/actions/users"
+import Link from "next/link"
 
 interface User {
   id: string
@@ -125,6 +126,12 @@ export function UserManagementTable({ users }: { users: User[] }) {
                     </div>
                   ) : (
                     <>
+                      <Link 
+                        href={`/admin/usuarios/${user.id}/editar`}
+                        className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/5 transition-all"
+                      >
+                         <Edit size={14} className="text-zinc-600" /> Editar
+                      </Link>
                       <button 
                         onClick={() => { setEditingId(user.id); setEditType('PASSWORD'); setNewValue(""); }}
                         className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/5 transition-all"

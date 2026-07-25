@@ -209,9 +209,11 @@ export async function updateMember(id: string, formData: FormData) {
 }
 import { auth } from "@/auth"
 
+import bcrypt from "bcrypt"
+
 export async function updateMemberProfile(memberId: string, formData: FormData) {
   const session = await auth()
-  if (!session || !session.user) throw new Error("No autorizado")
+  if (!session || !session.user || !session.user.id) throw new Error("No autorizado")
 
   // Verify the user owns this member record
   const member = await db.member.findUnique({
@@ -226,7 +228,9 @@ export async function updateMemberProfile(memberId: string, formData: FormData) 
   const email = formData.get("email") as string
   const phone = formData.get("phone") as string
   const avatarUrl = formData.get("avatarUrl") as string
+  const password = formData.get("password") as string
 
+  // Actualizar datos del socio
   await db.member.update({
     where: { id: memberId },
     data: {
@@ -235,6 +239,15 @@ export async function updateMemberProfile(memberId: string, formData: FormData) 
       avatarUrl: avatarUrl || null
     }
   })
+
+  // Si se ingresó una nueva contraseña, actualizarla en el modelo User
+  if (password && password.trim().length > 0) {
+    const passwordHash = await bcrypt.hash(password, 10)
+    await db.user.update({
+      where: { id: member.userId },
+      data: { passwordHash }
+    })
+  }
 
   revalidatePath("/socios")
   return { success: true }
