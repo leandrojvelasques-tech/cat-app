@@ -65,8 +65,8 @@ export default async function PortalSocioPage() {
   return (
     <div className="flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       
-      {/* 1. Header & Digital Member Card */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center bg-white/5 p-8 md:p-10 rounded-[48px] border border-white/10 shadow-3xl relative overflow-hidden backdrop-blur-xl">
+      {/* 1. Header */}
+      <div className="grid grid-cols-1 gap-10 items-center bg-white/5 p-8 md:p-10 rounded-[48px] border border-white/10 shadow-3xl relative overflow-hidden backdrop-blur-xl">
          <div className="absolute right-0 top-0 w-[400px] h-[400px] bg-amber-500/10 rounded-full blur-[120px] -mr-32 -mt-32" />
          
          <div className="relative z-10">
@@ -103,9 +103,10 @@ export default async function PortalSocioPage() {
               </div>
            </div>
          </div>
-
-         <DigitalMemberCard member={member} awards={[]} />
       </div>
+
+      {/* 2. Carnet Digital — bloque propio, full-width */}
+      <DigitalMemberCard member={member} awards={[]} />
 
       {/* 2. Prioridad 1: Agenda de Milongas y Eventos (Full Width) */}
       <div className="bg-white/5 border border-white/10 p-8 md:p-10 rounded-[48px] backdrop-blur-md shadow-2xl space-y-8">

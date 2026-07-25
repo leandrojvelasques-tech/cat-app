@@ -1,134 +1,217 @@
 "use client"
-import { Trophy, Medal, Star, Calendar, MapPin, User, Hash, CheckCircle2 } from "lucide-react"
+import { useState, useEffect } from "react"
+import { createPortal } from "react-dom"
+import { Trophy, Medal, Star, User, Maximize2, X } from "lucide-react"
 
 export function DigitalMemberCard({ member, awards }: { member: any, awards: any[] }) {
   const hasPodium = awards.some(a => a.place <= 3)
   const isChampion = awards.some(a => a.place === 1)
+  const [fullscreen, setFullscreen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  // Detecta si el dispositivo está en modo portrait (vertical) para rotar el carnet
+  const [isPortrait, setIsPortrait] = useState(false)
 
-  return (
-    <div className="relative w-full max-w-md mx-auto aspect-[1.6/1] group transition-all duration-700 hover:scale-[1.02] perspective-1000">
+  useEffect(() => {
+    setMounted(true)
+    const checkOrientation = () => {
+      setIsPortrait(window.matchMedia("(orientation: portrait)").matches)
+    }
+    checkOrientation()
+    window.addEventListener("orientationchange", checkOrientation)
+    window.addEventListener("resize", checkOrientation)
+    return () => {
+      window.removeEventListener("orientationchange", checkOrientation)
+      window.removeEventListener("resize", checkOrientation)
+    }
+  }, [])
+
+  // Bloquear scroll del body cuando está en fullscreen
+  useEffect(() => {
+    if (fullscreen) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = ""
+    }
+    return () => { document.body.style.overflow = "" }
+  }, [fullscreen])
+
+  const cardContent = (
+    <div className={`relative w-full bg-gradient-to-br border shadow-2xl rounded-[32px] overflow-hidden backdrop-blur-md flex flex-col justify-between ${
+      isChampion
+        ? "from-zinc-900 via-zinc-950 to-amber-900/40 border-amber-500/30"
+        : "from-zinc-900/95 to-zinc-950/98 border-white/10"
+    } ${fullscreen ? "h-full p-10 md:p-14" : "p-6 md:p-8 aspect-[1.8/1]"}`}>
+
       {/* Background Glow */}
-      <div className={`absolute inset-0 rounded-[32px] blur-2xl opacity-20 transition-all duration-700 bg-gradient-to-tr ${
+      <div className={`absolute inset-0 rounded-[32px] blur-3xl opacity-10 pointer-events-none bg-gradient-to-tr ${
         isChampion ? "from-amber-600 via-amber-400 to-yellow-200" : "from-amber-800 to-zinc-900"
       }`} />
-      
-      {/* Card Body */}
-      <div className={`relative h-full w-full bg-gradient-to-br border shadow-2xl rounded-[32px] overflow-hidden backdrop-blur-md p-8 flex flex-col justify-between ${
-        isChampion 
-          ? "from-zinc-900 via-zinc-950 to-amber-900/40 border-amber-500/30" 
-          : "from-zinc-900/95 to-zinc-950/98 border-white/10"
-      }`}>
-        
-        {/* Top Header */}
-        <div className="flex justify-between items-start">
-          <div className="flex flex-col gap-1">
-             <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center text-white font-black text-lg shadow-lg">C</div>
-                <h2 className="text-[12px] font-black uppercase tracking-[0.2em] text-white/50 italic">Centro Amigos del Tango</h2>
-             </div>
-             <p className="text-[10px] text-zinc-600 font-bold ml-10">FUNDADA EN 1991</p>
-          </div>
-          
-          {isChampion && (
-            <div className="flex flex-col items-end">
-               <div className="bg-amber-500 text-zinc-950 text-[9px] font-black px-3 py-1 rounded-full flex items-center gap-1 shadow-lg shadow-amber-500/20 animate-pulse">
-                 <Trophy size={10} /> CAMPEÓN CAT
-               </div>
-            </div>
-          )}
-          
-          {member.isBoardMember && !isChampion && (
-            <div className="flex flex-col items-end">
-               <div className="bg-white/10 text-white text-[9px] font-black px-3 py-1 rounded-full flex items-center gap-1 border border-white/20">
-                 <Star size={10} className="text-amber-500" /> {member.position?.toUpperCase() || "COMISIÓN"}
-               </div>
-            </div>
-          )}
-        </div>
 
-        {/* Center Content */}
-        <div className="flex gap-6 items-end">
-           <div className="relative group">
-              <div className="w-24 h-24 bg-gradient-to-br from-white/10 to-white/5 rounded-2xl flex items-center justify-center text-zinc-700 text-2xl font-black border border-white/10 shadow-xl overflow-hidden">
-                {member.avatarUrl ? (
-                   <img src={member.avatarUrl} className="w-full h-full object-cover" alt="Socio" />
-                ) : (
-                   <User size={40} className="opacity-20" />
-                )}
-              </div>
-              {hasPodium && (
-                <div className="absolute -right-3 -top-3 w-10 h-10 bg-amber-500 rounded-full border-4 border-zinc-950 flex items-center justify-center shadow-xl">
-                   <Medal size={20} className="text-zinc-950" />
-                </div>
-              )}
-           </div>
-
-           <div className="flex-1 pb-1">
-              <h3 className="text-2xl font-black text-white tracking-tighter uppercase leading-none mb-2">
-                {member.lastName}, {member.firstName}
-              </h3>
-              <div className="flex gap-4">
-                 <div className="flex flex-col">
-                    <span className="text-[8px] uppercase font-black tracking-widest text-zinc-600">Nro Socio</span>
-                    <span className="text-sm font-bold text-amber-500">#{member.memberNumber}</span>
-                 </div>
-                 <div className="flex flex-col">
-                    <span className="text-[8px] uppercase font-black tracking-widest text-zinc-600">DNI</span>
-                    <span className="text-sm font-bold text-white/80">{member.dni}</span>
-                 </div>
-                 <div className="flex flex-col">
-                    <span className="text-[8px] uppercase font-black tracking-widest text-zinc-600">Categoría</span>
-                    <span className="text-sm font-bold text-white/80">{member.type}</span>
-                 </div>
-              </div>
-           </div>
-        </div>
-
-        {/* Footer Overlay Text / Watermark */}
-        <div className="absolute -bottom-4 -left-4 text-white opacity-[0.03] text-7xl font-black italic select-none pointer-events-none tracking-tight">
-          VIENTOS DE TANGO
-        </div>
-
-        {/* Bottom Bar */}
-        <div className="flex justify-between items-center border-t border-white/5 pt-4">
-           <div className="flex gap-3">
-              <div className="flex flex-col">
-                 <span className="text-[7px] uppercase font-black tracking-widest text-zinc-600">Socio Desde</span>
-                 <span className="text-[9px] font-bold text-zinc-300">{new Date(member.joinDate).getFullYear()}</span>
-              </div>
-              <div className="flex flex-col">
-                 <span className="text-[7px] uppercase font-black tracking-widest text-zinc-600">Validez</span>
-                 <span className="text-[9px] font-bold text-emerald-400">AL DIA</span>
-              </div>
-              
-              {/* Historical Context Badge */}
-              {member.boardHistory?.some((h: any) => h.position.includes("Presidente")) && (
-                <div className="flex flex-col border-l border-white/10 pl-3">
-                   <span className="text-[7px] uppercase font-black tracking-widest text-amber-500/50">Legado</span>
-                   <span className="text-[9px] font-bold text-amber-500 uppercase">Ex-Presidente</span>
-                </div>
-              )}
-           </div>
-           
-           {/* Mini Medal Shelf */}
-           <div className="flex gap-1.5">
-              {awards.map((award, i) => (
-                <div 
-                  key={i} 
-                  title={`${award.category} ${award.championship.year}`} 
-                  className={`w-6 h-6 rounded-lg flex items-center justify-center border shadow-lg group-hover:scale-110 transition-transform ${
-                    award.place === 1 ? "bg-amber-500/20 border-amber-500/30 text-amber-500" :
-                    award.place === 2 ? "bg-zinc-300/20 border-zinc-300/30 text-zinc-300" :
-                    "bg-orange-800/20 border-orange-800/30 text-orange-800"
-                  }`}
-                >
-                   <Medal size={14} />
-                </div>
-              ))}
-           </div>
-        </div>
-
+      {/* Watermark */}
+      <div className="absolute -bottom-4 -left-4 text-white opacity-[0.03] text-7xl font-black italic select-none pointer-events-none tracking-tight">
+        VIENTOS DE TANGO
       </div>
+
+      {/* Top Header */}
+      <div className="flex justify-between items-start relative z-10">
+        <div className="flex flex-col gap-1">
+           <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center text-white font-black text-lg shadow-lg">C</div>
+              <h2 className="text-[12px] font-black uppercase tracking-[0.2em] text-white/50 italic">Centro Amigos del Tango</h2>
+           </div>
+           <p className="text-[10px] text-zinc-600 font-bold ml-10">FUNDADA EN 1991</p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {isChampion && (
+            <div className="bg-amber-500 text-zinc-950 text-[9px] font-black px-3 py-1 rounded-full flex items-center gap-1 shadow-lg shadow-amber-500/20 animate-pulse">
+              <Trophy size={10} /> CAMPEÓN CAT
+            </div>
+          )}
+          {member.isBoardMember && !isChampion && (
+            <div className="bg-white/10 text-white text-[9px] font-black px-3 py-1 rounded-full flex items-center gap-1 border border-white/20">
+              <Star size={10} className="text-amber-500" /> {member.position?.toUpperCase() || "COMISIÓN"}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Center Content */}
+      <div className={`flex items-end gap-6 relative z-10 ${fullscreen ? "gap-10" : ""}`}>
+         <div className="relative shrink-0">
+            <div className={`bg-gradient-to-br from-white/10 to-white/5 rounded-2xl flex items-center justify-center text-zinc-700 font-black border border-white/10 shadow-xl overflow-hidden ${
+              fullscreen ? "w-32 h-32" : "w-20 h-20 md:w-24 md:h-24"
+            }`}>
+              {member.avatarUrl ? (
+                 <img src={member.avatarUrl} className="w-full h-full object-cover" alt="Socio" />
+              ) : (
+                 <User size={fullscreen ? 52 : 36} className="opacity-20" />
+              )}
+            </div>
+            {hasPodium && (
+              <div className="absolute -right-3 -top-3 w-10 h-10 bg-amber-500 rounded-full border-4 border-zinc-950 flex items-center justify-center shadow-xl">
+                 <Medal size={20} className="text-zinc-950" />
+              </div>
+            )}
+         </div>
+
+         <div className="flex-1 pb-1">
+            <h3 className={`font-black text-white tracking-tighter uppercase leading-none mb-3 ${fullscreen ? "text-4xl md:text-5xl" : "text-xl md:text-2xl"}`}>
+              {member.lastName}, {member.firstName}
+            </h3>
+            <div className="flex gap-5 flex-wrap">
+               <div className="flex flex-col">
+                  <span className="text-[8px] uppercase font-black tracking-widest text-zinc-600">Nro Socio</span>
+                  <span className={`font-bold text-amber-500 ${fullscreen ? "text-2xl" : "text-sm"}`}>#{member.memberNumber}</span>
+               </div>
+               <div className="flex flex-col">
+                  <span className="text-[8px] uppercase font-black tracking-widest text-zinc-600">DNI</span>
+                  <span className={`font-bold text-white/80 ${fullscreen ? "text-xl" : "text-sm"}`}>{member.dni}</span>
+               </div>
+               <div className="flex flex-col">
+                  <span className="text-[8px] uppercase font-black tracking-widest text-zinc-600">Categoría</span>
+                  <span className={`font-bold text-white/80 ${fullscreen ? "text-xl" : "text-sm"}`}>{member.type}</span>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      {/* Bottom Bar */}
+      <div className="flex justify-between items-center border-t border-white/5 pt-4 relative z-10">
+         <div className="flex gap-4">
+            <div className="flex flex-col">
+               <span className="text-[7px] uppercase font-black tracking-widest text-zinc-600">Socio Desde</span>
+               <span className={`font-bold text-zinc-300 ${fullscreen ? "text-base" : "text-[9px]"}`}>{new Date(member.joinDate).getFullYear()}</span>
+            </div>
+            <div className="flex flex-col">
+               <span className="text-[7px] uppercase font-black tracking-widest text-zinc-600">Validez</span>
+               <span className={`font-bold text-emerald-400 ${fullscreen ? "text-base" : "text-[9px]"}`}>AL DIA</span>
+            </div>
+            {member.boardHistory?.some((h: any) => h.position.includes("Presidente")) && (
+              <div className="flex flex-col border-l border-white/10 pl-3">
+                 <span className="text-[7px] uppercase font-black tracking-widest text-amber-500/50">Legado</span>
+                 <span className="text-[9px] font-bold text-amber-500 uppercase">Ex-Presidente</span>
+              </div>
+            )}
+         </div>
+
+         {/* Medallas */}
+         <div className="flex gap-1.5">
+            {awards.map((award, i) => (
+              <div
+                key={i}
+                title={`${award.category} ${award.championship.year}`}
+                className={`w-6 h-6 rounded-lg flex items-center justify-center border shadow-lg ${
+                  award.place === 1 ? "bg-amber-500/20 border-amber-500/30 text-amber-500" :
+                  award.place === 2 ? "bg-zinc-300/20 border-zinc-300/30 text-zinc-300" :
+                  "bg-orange-800/20 border-orange-800/30 text-orange-800"
+                }`}
+              >
+                 <Medal size={14} />
+              </div>
+            ))}
+         </div>
+      </div>
+    </div>
+  )
+
+  const fullscreenOverlay = (
+    <div className="fixed inset-0 z-[9999] bg-zinc-950 flex flex-col">
+      {/* Botón cerrar */}
+      <button
+        onClick={() => setFullscreen(false)}
+        className="absolute top-4 right-4 z-10 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all border border-white/10"
+      >
+        <X size={22} />
+      </button>
+
+      {/* Carnet centrado — en portrait (vertical) rota 90° para mostrarse horizontal */}
+      <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
+        <div
+          style={isPortrait ? {
+            transform: "rotate(90deg)",
+            width: "85vh",
+            maxWidth: "none",
+            transformOrigin: "center center",
+          } : {
+            width: "100%",
+            maxWidth: "860px",
+          }}
+          className="transition-all duration-300"
+        >
+          {cardContent}
+        </div>
+      </div>
+
+      <p className="text-center text-zinc-600 text-[10px] font-black uppercase tracking-widest pb-4">
+        Toque la X para cerrar
+      </p>
+    </div>
+  )
+
+  return (
+    <div className="relative group">
+      {/* Glow exterior */}
+      <div className={`absolute inset-0 rounded-[32px] blur-2xl opacity-0 group-hover:opacity-20 transition-all duration-700 bg-gradient-to-tr ${
+        isChampion ? "from-amber-600 via-amber-400 to-yellow-200" : "from-amber-800 to-zinc-900"
+      }`} />
+
+      {/* Card normal */}
+      <div className="relative">
+        {cardContent}
+      </div>
+
+      {/* Botón Presentar Carnet */}
+      <button
+        onClick={() => setFullscreen(true)}
+        className="mt-4 w-full flex items-center justify-center gap-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/40 text-amber-400 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95"
+      >
+        <Maximize2 size={16} />
+        Presentar Carnet en Fullscreen
+      </button>
+
+      {/* Portal fullscreen — escapa de cualquier stacking context */}
+      {mounted && fullscreen && createPortal(fullscreenOverlay, document.body)}
     </div>
   )
 }
