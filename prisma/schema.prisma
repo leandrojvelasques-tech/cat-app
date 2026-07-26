@@ -162,6 +162,7 @@ model Event {
   organizer    String  @default("Centro Amigos del Tango")
   contactPhone String? // WhatsApp / Telefono de contacto
   contactEmail String? // Email de contacto
+  notificationEmails String? // Correos adicionales para notificaciones de este evento
 
   // Pricing - Milonga
   priceSocioMilonga        Float?

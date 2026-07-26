@@ -5,6 +5,7 @@ import Link from "next/link"
 import { RegistrationModal } from "../components/RegistrationModal"
 import { EventDetailsClient } from "./EventDetailsClient"
 import { DeleteEventButton } from "../components/DeleteEventButton"
+import { ApproveRegistrationButton } from "../components/ApproveRegistrationButton"
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -24,8 +25,22 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
   if (!event) notFound()
 
+  const pendingApprovalsCount = event.registrations.filter(r => r.paymentStatus !== "PAID" || !!r.paymentProof).length
+
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+      {pendingApprovalsCount > 0 && (
+        <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="w-3 h-3 rounded-full bg-amber-500 animate-ping shrink-0" />
+            <div>
+              <h4 className="text-xs font-black uppercase text-amber-400 tracking-wider">Se requiere aprobación</h4>
+              <p className="text-xs text-zinc-300">Hay <strong>{pendingApprovalsCount}</strong> inscripción(es) o comprobante(s) pendiente(s) de aprobación para este evento.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {event.eventBanner && (
         <div className="relative w-full h-[300px] md:h-[400px] rounded-3xl overflow-hidden border border-white/10 shadow-2xl mb-4 group">
           <img 
@@ -189,6 +204,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                       <th className="px-6 py-4 font-bold">Asistente</th>
                       <th className="px-6 py-4 font-bold">Tipo</th>
                       <th className="px-6 py-4 font-bold">Pago</th>
+                      <th className="px-6 py-4 font-bold text-center">Acción / Comprobante</th>
                       <th className="px-6 py-4 font-bold text-right">Hora</th>
                     </tr>
                   </thead>
@@ -219,6 +235,15 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                               </div>
                               <span className="text-[9px] text-zinc-600 uppercase font-medium">{reg.paymentMethod || "Efectivo"}</span>
                            </div>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <ApproveRegistrationButton
+                            registrationId={reg.id}
+                            eventId={event.id}
+                            amount={reg.amountPaid}
+                            paymentProof={reg.paymentProof}
+                            currentStatus={reg.paymentStatus}
+                          />
                         </td>
                         <td className="px-6 py-4 text-right">
                            <span className="text-[10px] text-zinc-500 font-bold">{new Date(reg.createdAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>

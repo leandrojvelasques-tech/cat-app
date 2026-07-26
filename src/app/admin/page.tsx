@@ -156,6 +156,19 @@ export default async function AdminDashboard() {
   })
   const maxEscuelita = Math.max(...recentEscuelitaClasses.map(c => c._count.attendances), 1, 10)
 
+  // 6. Pending Event Approvals
+  const pendingEventRegistrations = await db.eventRegistration.findMany({
+    where: {
+      OR: [
+        { paymentStatus: "PENDING" },
+        { paymentProof: { not: null } }
+      ]
+    },
+    include: { event: true },
+    orderBy: { createdAt: 'desc' },
+    take: 5
+  })
+
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       <div className="flex justify-between items-end">
@@ -168,6 +181,42 @@ export default async function AdminDashboard() {
            <p className="text-emerald-500 font-mono text-sm">{new Date().toLocaleString()}</p>
         </div>
       </div>
+
+      {/* Alert Banner: Event Registrations Requiring Approval */}
+      {pendingEventRegistrations.length > 0 && (
+        <div className="bg-amber-500/10 border border-amber-500/30 p-6 rounded-3xl backdrop-blur-md space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="w-3 h-3 rounded-full bg-amber-500 animate-ping shrink-0" />
+              <h3 className="text-sm font-black text-amber-400 uppercase tracking-wider">
+                Se requiere aprobación — Eventos ({pendingEventRegistrations.length} pendiente(s))
+              </h3>
+            </div>
+            <Link href="/admin/eventos" className="text-xs font-bold text-amber-400 hover:underline">
+              Ver todos los eventos →
+            </Link>
+          </div>
+          <p className="text-xs text-zinc-300">
+            Se registraron inscripciones con comprobante de pago o pendientes de confirmación en los eventos. Revisá y aprobá los pagos desde el panel:
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+            {pendingEventRegistrations.map(reg => (
+              <div key={reg.id} className="bg-black/40 border border-white/5 p-3 rounded-2xl flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-white">{reg.firstName} {reg.lastName} ({reg.registrationType})</p>
+                  <p className="text-[10px] text-amber-500 font-medium truncate">Evento: {reg.event.title}</p>
+                </div>
+                <Link
+                  href={`/admin/eventos/${reg.eventId}`}
+                  className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-zinc-950 text-[10px] font-black uppercase rounded-lg transition-all"
+                >
+                  Aprobar
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Main Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

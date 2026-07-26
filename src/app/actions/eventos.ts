@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
+import { sendEventRegistrationAlertToBoard } from "@/lib/emails"
 
 async function parseBannerField(formData: FormData): Promise<string | null> {
   const fileOrString = formData.get("eventBanner")
@@ -60,6 +61,7 @@ export async function createEvent(prevState: any, formData: FormData) {
     const organizer = (formData.get("organizer") as string) || "Centro Amigos del Tango"
     const contactPhone = (formData.get("contactPhone") as string) || null
     const contactEmail = (formData.get("contactEmail") as string) || null
+    const notificationEmails = (formData.get("notificationEmails") as string) || null
 
     const parseNum = (val: any) => (val !== null && val !== "" && !isNaN(parseFloat(val)) ? parseFloat(val) : null)
 
@@ -111,6 +113,7 @@ export async function createEvent(prevState: any, formData: FormData) {
         organizer,
         contactPhone,
         contactEmail,
+        notificationEmails,
         priceSocioMilonga,
         priceNonSocioMilonga,
         comboTitle,
@@ -166,6 +169,7 @@ export async function updateEvent(id: string, prevState: any, formData: FormData
     const organizer = (formData.get("organizer") as string) || "Centro Amigos del Tango"
     const contactPhone = (formData.get("contactPhone") as string) || null
     const contactEmail = (formData.get("contactEmail") as string) || null
+    const notificationEmails = (formData.get("notificationEmails") as string) || null
 
     const parseNum = (val: any) => (val !== null && val !== "" && !isNaN(parseFloat(val)) ? parseFloat(val) : null)
 
@@ -216,6 +220,7 @@ export async function updateEvent(id: string, prevState: any, formData: FormData
       organizer,
       contactPhone,
       contactEmail,
+      notificationEmails,
       priceSocioMilonga,
       priceNonSocioMilonga,
       comboTitle,
@@ -328,6 +333,23 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
         paymentStatus: paymentProof ? "PAID" : existing.paymentStatus
       }
     })
+
+    // Disparar alertas por correo a la directiva y mails adicionales
+    sendEventRegistrationAlertToBoard(event, {
+      firstName: member.firstName,
+      lastName: member.lastName,
+      dni: member.dni,
+      email: member.email,
+      phone: member.phone,
+      registrationType,
+      amountPaid,
+      paymentMethod,
+      paymentProof: paymentProof || existing.paymentProof
+    }).catch(err => console.error("Error sending event registration alert email:", err))
+
+    revalidatePath("/admin")
+    revalidatePath("/admin/eventos")
+    revalidatePath(`/admin/eventos/${eventId}`)
     revalidatePath("/socios")
     revalidatePath(`/eventos/${eventId}`)
     return { success: true, message: "Inscripción actualizada correctamente" }
@@ -350,6 +372,22 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
     }
   })
 
+  // Disparar alertas por correo a la directiva y mails adicionales
+  sendEventRegistrationAlertToBoard(event, {
+    firstName: member.firstName,
+    lastName: member.lastName,
+    dni: member.dni,
+    email: member.email,
+    phone: member.phone,
+    registrationType,
+    amountPaid,
+    paymentMethod,
+    paymentProof
+  }).catch(err => console.error("Error sending event registration alert email:", err))
+
+  revalidatePath("/admin")
+  revalidatePath("/admin/eventos")
+  revalidatePath(`/admin/eventos/${eventId}`)
   revalidatePath("/socios")
   revalidatePath(`/eventos/${eventId}`)
   return { success: true, message: "¡Reserva realizada con éxito con Tarifa Socio!" }

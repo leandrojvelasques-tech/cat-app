@@ -174,6 +174,78 @@ export async function sendNewEnrollmentAlertToBoard(request: { firstName: string
   })
 }
 
+// 2b. Notificación a la Comisión Directiva y Mails Adicionales por Inscripción a Evento / Comprobante de Pago
+export async function sendEventRegistrationAlertToBoard(
+  event: { id: string; title: string; notificationEmails?: string | null },
+  registration: { 
+    firstName: string
+    lastName: string
+    dni?: string | null
+    email?: string | null
+    phone?: string | null
+    registrationType: string
+    amountPaid: number
+    paymentMethod?: string | null
+    paymentProof?: string | null
+  }
+) {
+  const adminEmailSetting = await db.setting.findUnique({ where: { key: "email_admin" } })
+  const defaultAdminEmail = adminEmailSetting?.value || "centroamigosdeltango@gmail.com"
+
+  // Recopilar correos adicionales del evento
+  const additionalEmailsRaw = event.notificationEmails || ""
+  const additionalEmails = additionalEmailsRaw
+    .split(/[,;\n]/)
+    .map(e => e.trim().toLowerCase())
+    .filter(e => e.length > 0 && e.includes("@"))
+
+  // Combinar y eliminar duplicados
+  const recipients = Array.from(new Set([defaultAdminEmail.toLowerCase(), ...additionalEmails]))
+
+  const hasProof = !!registration.paymentProof
+  const subject = hasProof
+    ? `Nuevo comprobante enviado para evento: "${event.title}" — CAT`
+    : `Nueva inscripción a evento: "${event.title}" — CAT`
+
+  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
+  const adminEventUrl = `${baseUrl}/admin/eventos/${event.id}`
+
+  const content = `
+    <h2 style="color: #A6702E; margin-top: 0;">${hasProof ? "Comprobante de Pago de Evento Recibido" : "Nueva Inscripción a Evento"}</h2>
+    <p>Se ha registrado una nueva ${hasProof ? "entrega de comprobante" : "reserva/inscripción"} para el evento <strong>${event.title}</strong>:</p>
+    
+    <div style="background-color: #f4f4f5; padding: 16px; border-radius: 12px; margin: 16px 0; border: 1px solid #e4e4e7;">
+      <p style="margin: 4px 0;"><strong>Asistente:</strong> ${registration.firstName} ${registration.lastName}</p>
+      ${registration.dni ? `<p style="margin: 4px 0;"><strong>DNI:</strong> ${registration.dni}</p>` : ""}
+      ${registration.email ? `<p style="margin: 4px 0;"><strong>Email:</strong> ${registration.email}</p>` : ""}
+      ${registration.phone ? `<p style="margin: 4px 0;"><strong>Teléfono:</strong> ${registration.phone}</p>` : ""}
+      <p style="margin: 4px 0;"><strong>Opción:</strong> ${registration.registrationType}</p>
+      <p style="margin: 4px 0;"><strong>Monto:</strong> $${registration.amountPaid.toLocaleString("es-AR")}</p>
+      <p style="margin: 4px 0;"><strong>Modalidad Pago:</strong> ${registration.paymentMethod || "Efectivo"}</p>
+      <p style="margin: 4px 0;"><strong>Estado:</strong> ${hasProof ? "<span style='color: #d97706; font-weight: bold;'>⚠️ Se requiere aprobación (Comprobante adjunto)</span>" : "Registrado"}</p>
+    </div>
+
+    <p>Por favor, ingresá al Panel de Administración de este evento para validar la reserva o aprobar el comprobante.</p>
+    <div style="margin-top: 24px; text-align: center;">
+      <a href="${adminEventUrl}" style="background-color: #A6702E; color: white; padding: 12px 24px; text-decoration: none; border-radius: 10px; font-weight: bold; display: inline-block;">Ver Detalle del Evento en Admin</a>
+    </div>
+  `
+
+  console.log(`[EVENT ALERTS] Enviando notificación de evento "${event.title}" a ${recipients.length} destinatario(s): ${recipients.join(", ")}`)
+
+  // Enviar correo a cada destinatario
+  for (const toEmail of recipients) {
+    await sendEmail({
+      to: toEmail,
+      subject,
+      html: buildEmailLayout(content),
+      type: "EVENT_INFO",
+    }).catch(err => console.error(`Error enviando notificación de evento a ${toEmail}:`, err))
+  }
+
+  return true
+}
+
 // 3. Confirmación de Alta de Socio (Bienvenida + credenciales)
 export async function sendEnrollmentApprovedEmail(
   member: { id: string; firstName: string; lastName: string; email: string | null; memberNumber: string },

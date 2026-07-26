@@ -2,7 +2,7 @@
 
 import { useState, useActionState, useEffect } from "react"
 import { createEvent, updateEvent } from "@/app/actions/eventos"
-import { Calendar, Music, MapPin, DollarSign, ArrowLeft, Save, Globe, Lock, Plus, User, Headphones, BookOpen, Trash2, Clock, Link as LinkIcon, Repeat } from "lucide-react"
+import { Calendar, Music, MapPin, DollarSign, ArrowLeft, Save, Globe, Lock, Plus, User, Headphones, BookOpen, Trash2, Clock, Link as LinkIcon, Repeat, Mail } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { DAYS_OF_WEEK } from "@/lib/event-utils"
@@ -280,8 +280,27 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs text-zinc-500 uppercase tracking-wider">Contacto Email</label>
+                <label className="text-xs text-zinc-500 uppercase tracking-wider">Contacto Email Público</label>
                 <input name="contactEmail" defaultValue={initialData?.contactEmail || "contacto@centroamigosdeltango.com"} placeholder="ej: info@centroamigosdeltango.com" className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-amber-500/50 outline-none" />
+              </div>
+
+              {/* Mails Adicionales de Notificación */}
+              <div className="md:col-span-2 space-y-2 bg-amber-500/5 border border-amber-500/20 p-4 rounded-2xl">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                    <Mail size={16} /> Mails Adicionales para Recibir Alertas de Inscripción / Comprobantes
+                  </label>
+                  <span className="text-[10px] text-zinc-400">Separados por comas</span>
+                </div>
+                <input 
+                  name="notificationEmails" 
+                  defaultValue={initialData?.notificationEmails || ""} 
+                  placeholder="ej: presidente@gmail.com, tesorero@hotmail.com, colaborador@tango.org" 
+                  className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-xs text-white focus:border-amber-500/50 outline-none font-mono" 
+                />
+                <p className="text-[10px] text-zinc-400 italic">
+                  💡 Por defecto siempre le llega la notificación al mail oficial del Centro Amigos del Tango. Sumá acá otros mails (de la comisión directiva o particulares) que también deban enterarse cada vez que alguien se inscriba o envíe comprobante de pago para este evento.
+                </p>
               </div>
 
               <div className="space-y-2">

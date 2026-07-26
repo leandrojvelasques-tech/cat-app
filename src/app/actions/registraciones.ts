@@ -2,6 +2,7 @@
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
+import { sendEventRegistrationAlertToBoard } from "@/lib/emails"
 
 export async function registerAttendee(formData: FormData) {
   try {
@@ -52,6 +53,23 @@ export async function registerAttendee(formData: FormData) {
       },
     })
 
+    const event = await db.event.findUnique({ where: { id: eventId } })
+    if (event) {
+      sendEventRegistrationAlertToBoard(event, {
+        firstName,
+        lastName,
+        dni,
+        email,
+        phone,
+        registrationType,
+        amountPaid,
+        paymentMethod,
+        paymentProof: paymentProofUrl
+      }).catch(err => console.error("Error sending event registration alert email:", err))
+    }
+
+    revalidatePath("/admin")
+    revalidatePath("/admin/eventos")
     revalidatePath(`/admin/eventos/${eventId}`)
     return { success: true }
   } catch (error: any) {
