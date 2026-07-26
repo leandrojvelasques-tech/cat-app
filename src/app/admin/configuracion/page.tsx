@@ -6,6 +6,7 @@ import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { addBoardMember, removeBoardMember } from "@/app/actions/comision"
 import { getFeeHistory, FeePeriod } from "@/lib/fee-utils"
+import { getAuditLogs, recordAuditLog } from "@/lib/audit-utils"
 
 async function getSetting(key: string, defaultValue: string = "") {
   const setting = await db.setting.findUnique({ where: { key } })
@@ -15,7 +16,8 @@ async function getSetting(key: string, defaultValue: string = "") {
 async function updateSetting(formData: FormData) {
   "use server"
   const session = await auth()
-  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "SUPERADMIN")) {
+  const allowedRoles = ["ADMIN", "SUPERADMIN", "BOARD", "PRESIDENT"]
+  if (!session || !allowedRoles.includes(session.user.role)) {
     throw new Error("No autorizado")
   }
   const entries = Array.from(formData.entries())
@@ -29,13 +31,21 @@ async function updateSetting(formData: FormData) {
       })
     }
   }
+
+  await recordAuditLog(
+    session.user,
+    "Actualización de Parámetros y Plantillas de Email",
+    "Se guardaron ajustes generales del sistema"
+  )
+
   revalidatePath("/admin/configuracion")
 }
 
 async function addFeePeriod(formData: FormData) {
   "use server"
   const session = await auth()
-  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "SUPERADMIN")) {
+  const allowedRoles = ["ADMIN", "SUPERADMIN", "BOARD", "PRESIDENT"]
+  if (!session || !allowedRoles.includes(session.user.role)) {
     throw new Error("No autorizado")
   }
   const yearFrom = parseInt(formData.get("yearFrom") as string, 10)
@@ -73,16 +83,24 @@ async function addFeePeriod(formData: FormData) {
     create: { key: "cuota_mensual", value: String(amount) }
   })
 
+  await recordAuditLog(
+    session.user,
+    `Nuevo Tramo de Cuota Social: $${amount.toLocaleString('es-AR')}`,
+    `Vigencia desde ${monthFrom}/${yearFrom}${description ? ` (${description})` : ''}`
+  )
+
   revalidatePath("/admin/configuracion")
 }
 
 async function deleteFeePeriod(id: string) {
   "use server"
   const session = await auth()
-  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "SUPERADMIN")) {
+  const allowedRoles = ["ADMIN", "SUPERADMIN", "BOARD", "PRESIDENT"]
+  if (!session || !allowedRoles.includes(session.user.role)) {
     throw new Error("No autorizado")
   }
   const currentHistory = await getFeeHistory()
+  const periodToDelete = currentHistory.find(p => p.id === id)
   const updatedHistory = currentHistory.filter(p => p.id !== id)
   
   await db.setting.upsert({
@@ -90,6 +108,12 @@ async function deleteFeePeriod(id: string) {
     update: { value: JSON.stringify(updatedHistory) },
     create: { key: "historial_cuotas", value: JSON.stringify(updatedHistory) }
   })
+
+  await recordAuditLog(
+    session.user,
+    `Eliminación de Tramo de Cuota Social`,
+    periodToDelete ? `Eliminado tramo de $${periodToDelete.amount}` : "Eliminado tramo"
+  )
 
   revalidatePath("/admin/configuracion")
 }
@@ -147,7 +171,8 @@ const ROLE_PERMISSIONS = [
 
 export default async function SettingsPage() {
   const session = await auth()
-  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "SUPERADMIN")) {
+  const allowedRoles = ["ADMIN", "SUPERADMIN", "BOARD", "PRESIDENT"]
+  if (!session || !allowedRoles.includes(session.user.role)) {
     redirect("/admin")
   }
 
@@ -158,6 +183,7 @@ export default async function SettingsPage() {
   const recordatorioDia = await getSetting("recordatorio_dia", "5")
   const emailAdmin = await getSetting("email_admin", "centroamigosdeltango@gmail.com")
   const feeHistory = await getFeeHistory()
+  const auditLogs = await getAuditLogs()
   
   const msgRecordatorio = await getSetting("msg_recordatorio", "Estimado socio, le recordamos que su cuota del mes está próxima a vencer. ¡Gracias por su colaboración!")
   const msgVencida = await getSetting("msg_vencida", "Estimado socio, su cuota registra una demora. Le agradeceríamos regularizar su situación para seguir apoyando al Centro.")
@@ -825,30 +851,42 @@ export default async function SettingsPage() {
          </div>
       </section>
 
-      {/* ===== MÓDULOS DEL SISTEMA ===== */}
+      {/* ===== HISTORIAL DE AUDITORÍA DE CAMBIOS ===== */}
       <section className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md space-y-6">
         <div className="flex items-center gap-3 border-b border-white/5 pb-4">
-          <ShoppingBag className="text-amber-500" size={20} />
+          <ShieldCheck className="text-amber-500" size={20} />
           <div>
-            <h2 className="text-lg font-medium text-white">Módulos del Sistema</h2>
-            <p className="text-xs text-zinc-500 mt-0.5">Gestión de datos para funciones satélites</p>
+            <h2 className="text-lg font-medium text-white">Historial de Auditoría de Cambios</h2>
+            <p className="text-xs text-zinc-500 mt-0.5">Registro de modificaciones realizadas por integrantes de la comisión</p>
           </div>
         </div>
         
-        <div className="grid grid-cols-1 gap-4">
-          <Link
-            href="/admin/buffet"
-            className="flex items-center justify-between p-4 bg-black/20 hover:bg-white/5 border border-white/5 hover:border-amber-500/30 rounded-2xl transition-all group"
-          >
-            <div>
-              <p className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">Catálogo Buffet</p>
-              <p className="text-xs text-zinc-500 mt-1">Administra los productos, precios y categorías disponibles en los eventos.</p>
-            </div>
-            <div className="p-2 bg-amber-500/10 text-amber-500 rounded-xl group-hover:scale-110 transition-transform">
-              <ShoppingBag size={18} />
-            </div>
-          </Link>
-        </div>
+        {auditLogs.length === 0 ? (
+          <p className="text-xs text-zinc-500 italic text-center py-6">No hay registros de auditoría almacenados aún.</p>
+        ) : (
+          <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+            {auditLogs.map((log) => (
+              <div key={log.id} className="bg-black/30 border border-white/5 rounded-2xl p-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 text-xs">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs shrink-0">
+                    {log.userName[0]?.toUpperCase() || "U"}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-zinc-200">{log.userName}</span>
+                      <span className="text-[9px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full font-mono uppercase">{log.userRole}</span>
+                    </div>
+                    <p className="text-zinc-400 mt-0.5 font-medium">{log.action}</p>
+                    {log.details && <p className="text-zinc-500 text-[11px] italic">{log.details}</p>}
+                  </div>
+                </div>
+                <span className="text-[10px] text-zinc-500 shrink-0 font-mono">
+                  {new Date(log.timestamp).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ===== GESTIÓN DE USUARIOS (PERMISOS POR ROL) ===== */}

@@ -16,7 +16,7 @@ export function AdminNav({ role }: { role?: string }) {
     { href: "/admin/vientos-de-tango", icon: Trophy, label: "Vientos de Tango" },
     { href: "/admin/juegos", icon: Gamepad2, label: "Juegos" },
     // Usuarios now lives inside Ajustes (configuracion)
-    ...(role === "ADMIN" || role === "SUPERADMIN" ? [{ href: "/admin/configuracion", icon: Settings, label: "Ajustes" }] : []),
+    ...(role === "ADMIN" || role === "SUPERADMIN" || role === "BOARD" || role === "PRESIDENT" ? [{ href: "/admin/configuracion", icon: Settings, label: "Ajustes" }] : []),
     { href: "/socios", icon: ShieldCheck, label: "Mi Ficha de Socio" }
   ]
 
