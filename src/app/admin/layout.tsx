@@ -13,6 +13,10 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     redirect("/login")
   }
 
+  if (session.user.mustChangePassword) {
+    redirect("/cambiar-clave")
+  }
+
   const user = {
     email: session.user.email,
     role: session.user.role

@@ -1,10 +1,11 @@
 import { db } from "@/lib/db"
-import { Shield, Mail, Calendar, Bell, Users, Save, ShieldCheck, Crown, User, Key, ShoppingBag, Pencil, Plus, Trash2, BadgeInfo } from "lucide-react"
+import { Shield, Mail, Calendar, Bell, Users, Save, ShieldCheck, Crown, User, Key, ShoppingBag, Pencil, Plus, Trash2, BadgeInfo, TrendingUp } from "lucide-react"
 import { revalidatePath } from "next/cache"
 import Link from "next/link"
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { addBoardMember, removeBoardMember } from "@/app/actions/comision"
+import { getFeeHistory, FeePeriod } from "@/lib/fee-utils"
 
 async function getSetting(key: string, defaultValue: string = "") {
   const setting = await db.setting.findUnique({ where: { key } })
@@ -28,6 +29,68 @@ async function updateSetting(formData: FormData) {
       })
     }
   }
+  revalidatePath("/admin/configuracion")
+}
+
+async function addFeePeriod(formData: FormData) {
+  "use server"
+  const session = await auth()
+  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "SUPERADMIN")) {
+    throw new Error("No autorizado")
+  }
+  const yearFrom = parseInt(formData.get("yearFrom") as string, 10)
+  const monthFrom = parseInt(formData.get("monthFrom") as string, 10)
+  const yearToRaw = formData.get("yearTo") as string
+  const monthToRaw = formData.get("monthTo") as string
+  const amount = parseFloat(formData.get("amount") as string)
+  const description = formData.get("description") as string || ""
+
+  const yearTo = yearToRaw ? parseInt(yearToRaw, 10) : null
+  const monthTo = monthToRaw ? parseInt(monthToRaw, 10) : null
+
+  const currentHistory = await getFeeHistory()
+  const newPeriod: FeePeriod = {
+    id: `period-${Date.now()}`,
+    yearFrom,
+    monthFrom,
+    yearTo,
+    monthTo,
+    amount,
+    description
+  }
+
+  const updatedHistory = [...currentHistory, newPeriod]
+  await db.setting.upsert({
+    where: { key: "historial_cuotas" },
+    update: { value: JSON.stringify(updatedHistory) },
+    create: { key: "historial_cuotas", value: JSON.stringify(updatedHistory) }
+  })
+
+  // Update cuota_mensual setting to latest amount
+  await db.setting.upsert({
+    where: { key: "cuota_mensual" },
+    update: { value: String(amount) },
+    create: { key: "cuota_mensual", value: String(amount) }
+  })
+
+  revalidatePath("/admin/configuracion")
+}
+
+async function deleteFeePeriod(id: string) {
+  "use server"
+  const session = await auth()
+  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "SUPERADMIN")) {
+    throw new Error("No autorizado")
+  }
+  const currentHistory = await getFeeHistory()
+  const updatedHistory = currentHistory.filter(p => p.id !== id)
+  
+  await db.setting.upsert({
+    where: { key: "historial_cuotas" },
+    update: { value: JSON.stringify(updatedHistory) },
+    create: { key: "historial_cuotas", value: JSON.stringify(updatedHistory) }
+  })
+
   revalidatePath("/admin/configuracion")
 }
 
@@ -94,6 +157,7 @@ export default async function SettingsPage() {
   const envioDia = await getSetting("envio_dia", "1")
   const recordatorioDia = await getSetting("recordatorio_dia", "5")
   const emailAdmin = await getSetting("email_admin", "centroamigosdeltango@gmail.com")
+  const feeHistory = await getFeeHistory()
   
   const msgRecordatorio = await getSetting("msg_recordatorio", "Estimado socio, le recordamos que su cuota del mes está próxima a vencer. ¡Gracias por su colaboración!")
   const msgVencida = await getSetting("msg_vencida", "Estimado socio, su cuota registra una demora. Le agradeceríamos regularizar su situación para seguir apoyando al Centro.")
@@ -211,6 +275,147 @@ export default async function SettingsPage() {
                 defaultValue={recordatorioDia}
                 className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-white focus:border-amber-500/50 outline-none"
               />
+            </div>
+          </div>
+        </section>
+
+        {/* Historial de Cuotas por Período */}
+        <section className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md space-y-6 lg:col-span-2">
+          <div className="flex items-center justify-between border-b border-white/5 pb-4">
+            <div className="flex items-center gap-3">
+              <TrendingUp className="text-amber-500" size={20} />
+              <div>
+                <h2 className="text-lg font-medium text-white">Historial de Valores de Cuota Social</h2>
+                <p className="text-xs text-zinc-400 mt-0.5">Registre variaciones de tarifa y montos vigentes por período.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Tabla de Períodos Vigentes */}
+            <div className="lg:col-span-2 space-y-3">
+              <h3 className="text-xs font-black uppercase tracking-wider text-zinc-400">Tramos Tarifarios Registrados</h3>
+              <div className="space-y-2">
+                {feeHistory.map((period) => {
+                  const isCurrent = !period.yearTo
+                  const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+                  const fromStr = `${monthNames[period.monthFrom - 1]} ${period.yearFrom}`
+                  const toStr = period.yearTo && period.monthTo ? `${monthNames[period.monthTo - 1]} ${period.yearTo}` : "En adelante"
+
+                  return (
+                    <div 
+                      key={period.id}
+                      className="bg-black/30 border border-white/10 rounded-2xl p-4 flex items-center justify-between gap-4"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`p-3 rounded-xl border ${isCurrent ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-zinc-800 border-white/5 text-zinc-400'}`}>
+                          <TrendingUp size={18} />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-white font-bold text-base">${period.amount.toLocaleString('es-AR')}</span>
+                            <span className="text-xs text-zinc-400 font-medium">(Pareja 50%: ${(period.amount / 2).toLocaleString('es-AR')})</span>
+                            {isCurrent && (
+                              <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
+                                Vigente
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-zinc-400 mt-1">
+                            Vigencia: <strong className="text-zinc-200">{fromStr}</strong> a <strong className="text-zinc-200">{toStr}</strong>
+                            {period.description && <span className="ml-2 italic text-zinc-500">({period.description})</span>}
+                          </p>
+                        </div>
+                      </div>
+
+                      <form action={async () => {
+                        "use server"
+                        await deleteFeePeriod(period.id)
+                      }}>
+                        <button
+                          type="submit"
+                          className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all cursor-pointer"
+                          title="Eliminar tramo tarifario"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </form>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Formulario para Agregar Nuevo Aumento/Período */}
+            <div className="bg-black/20 border border-white/10 rounded-2xl p-4 space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-wider text-amber-500 flex items-center gap-1.5">
+                <Plus size={14} /> Registrar Nuevo Aumento / Período
+              </h3>
+              
+              <form action={addFeePeriod} className="space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] text-zinc-400 uppercase font-bold">Mes Inicio *</label>
+                    <select name="monthFrom" defaultValue="7" required className="w-full bg-zinc-900 border border-white/10 rounded-xl px-2 py-1.5 text-xs text-white">
+                      <option value="1">Enero</option>
+                      <option value="2">Febrero</option>
+                      <option value="3">Marzo</option>
+                      <option value="4">Abril</option>
+                      <option value="5">Mayo</option>
+                      <option value="6">Junio</option>
+                      <option value="7">Julio</option>
+                      <option value="8">Agosto</option>
+                      <option value="9">Septiembre</option>
+                      <option value="10">Octubre</option>
+                      <option value="11">Noviembre</option>
+                      <option value="12">Diciembre</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-zinc-400 uppercase font-bold">Año Inicio *</label>
+                    <input name="yearFrom" type="number" defaultValue={2026} required className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] text-zinc-400 uppercase font-bold">Mes Fin (Opcional)</label>
+                    <select name="monthTo" className="w-full bg-zinc-900 border border-white/10 rounded-xl px-2 py-1.5 text-xs text-white">
+                      <option value="">Hasta nuevo aviso</option>
+                      <option value="1">Enero</option>
+                      <option value="2">Febrero</option>
+                      <option value="3">Marzo</option>
+                      <option value="4">Abril</option>
+                      <option value="5">Mayo</option>
+                      <option value="6">Junio</option>
+                      <option value="7">Julio</option>
+                      <option value="8">Agosto</option>
+                      <option value="9">Septiembre</option>
+                      <option value="10">Octubre</option>
+                      <option value="11">Noviembre</option>
+                      <option value="12">Diciembre</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-zinc-400 uppercase font-bold">Año Fin (Opcional)</label>
+                    <input name="yearTo" type="number" placeholder="Ej: 2026" className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-zinc-400 uppercase font-bold">Monto Cuota Base ($) *</label>
+                  <input name="amount" type="number" step="500" placeholder="Ej: 7000" defaultValue={7000} required className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white font-bold" />
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-zinc-400 uppercase font-bold">Descripción / Nota</label>
+                  <input name="description" type="text" placeholder="Ej: Aumento Julio" className="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white" />
+                </div>
+
+                <button type="submit" className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded-xl text-xs transition-all cursor-pointer shadow-lg shadow-amber-900/20">
+                  + Guardar Tramo Tarifario
+                </button>
+              </form>
             </div>
           </div>
         </section>

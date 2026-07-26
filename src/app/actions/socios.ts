@@ -31,13 +31,28 @@ export async function createMember(formData: FormData) {
     ? (Number(lastMember.memberNumber) + 1).toString()
     : "1000"
 
+  // DNI & Email Uniqueness Validation
+  if (dni && dni.trim().length > 0) {
+    const existingDni = await db.member.findFirst({ where: { dni: dni.trim() } })
+    if (existingDni) {
+      throw new Error("Ya existe un socio registrado con este DNI.")
+    }
+  }
+
+  if (email && email.trim().length > 0) {
+    const existingEmail = await db.member.findFirst({ where: { email: email.trim().toLowerCase() } })
+    if (existingEmail) {
+      throw new Error("Ya existe un socio registrado con este correo electrónico.")
+    }
+  }
+
   await db.member.create({
     data: {
       memberNumber: nextMemberNumber,
       firstName,
       lastName,
-      dni,
-      email: email || null,
+      dni: dni ? dni.trim() : "",
+      email: email ? email.trim().toLowerCase() : null,
       phone: phone || null,
       city: city || null,
       address: address || null,
@@ -183,13 +198,32 @@ export async function updateMember(id: string, formData: FormData) {
   const birthDate = birthDateStr ? new Date(birthDateStr) : null
   const joinDate = joinDateStr ? new Date(joinDateStr) : new Date()
 
+  // DNI & Email Uniqueness Validation
+  if (dni && dni.trim().length > 0) {
+    const existingDni = await db.member.findFirst({
+      where: { dni: dni.trim(), NOT: { id } }
+    })
+    if (existingDni) {
+      throw new Error("Ya existe otro socio registrado con este DNI.")
+    }
+  }
+
+  if (email && email.trim().length > 0) {
+    const existingEmail = await db.member.findFirst({
+      where: { email: email.trim().toLowerCase(), NOT: { id } }
+    })
+    if (existingEmail) {
+      throw new Error("Ya existe otro socio registrado con este correo electrónico.")
+    }
+  }
+
   await db.member.update({
     where: { id },
     data: {
       firstName,
       lastName,
-      dni,
-      email: email || null,
+      dni: dni ? dni.trim() : "",
+      email: email ? email.trim().toLowerCase() : null,
       phone: phone || null,
       city: city || null,
       address: address || null,

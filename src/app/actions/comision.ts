@@ -238,7 +238,8 @@ export async function createAndLinkBoardUser(formData: FormData) {
         passwordHash,
         role: "BOARD",
         position: member.position,
-        isBoardMember: true
+        isBoardMember: true,
+        mustChangePassword: true
       }
     })
 

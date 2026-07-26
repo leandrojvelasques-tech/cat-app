@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
+import { getFeeHistory, getFeeAmountForPeriod } from "@/lib/fee-utils"
 
 export async function getActiveEvents() {
   const [events, settings] = await Promise.all([
@@ -94,9 +95,7 @@ export async function getMemberDebt(memberId: string) {
   const debtMonths = []
   let totalDebt = 0
 
-  // Standard fee - should ideally fetch from settings but for simplicity use a common value or fetch once
-  const cuotaSetting = await db.setting.findUnique({ where: { key: 'cuota_mensual' } })
-  const cuotaMensual = parseFloat(cuotaSetting?.value || "6000")
+  const feeHistory = await getFeeHistory()
 
   // Iterate from track date to now
   let y = trackYear
@@ -104,9 +103,10 @@ export async function getMemberDebt(memberId: string) {
 
   while (y < currentYear || (y === currentYear && m <= currentMonth)) {
     const paidRecord = member.fees.find(f => f.periodYear === y && f.periodMonth === m)
-    
+    const expectedFeeForMonth = getFeeAmountForPeriod(y, m, member.isFamilyDiscount, feeHistory)
+
     if (!paidRecord || (paidRecord.paymentStatus !== 'PAID')) {
-      const amountDue = paidRecord ? (paidRecord.amountDue - paidRecord.amountPaid) : cuotaMensual
+      const amountDue = paidRecord ? (paidRecord.amountDue - paidRecord.amountPaid) : expectedFeeForMonth
       if (amountDue > 0) {
         debtMonths.push({
           year: y,

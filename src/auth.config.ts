@@ -30,6 +30,7 @@ export default {
               id: user.id,
               email: user.email,
               role: user.role,
+              mustChangePassword: user.mustChangePassword,
             }
           }
         } else {

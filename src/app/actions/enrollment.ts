@@ -21,44 +21,37 @@ export async function submitEnrollmentRequest(formData: FormData) {
       return { success: false, error: "Todos los campos obligatorios (*) y el comprobante de pago son necesarios." }
     }
 
-    // 1. Verificar si ya existe un socio con este DNI
-    const existingMember = await db.member.findUnique({
-      where: { dni }
-    })
-    if (existingMember) {
-      return { success: false, error: "Ya existe un socio registrado en el padrón con este DNI." }
-    }
-
-    // 2. Verificar si ya existe una solicitud pendiente para este DNI
-    const existingRequest = await db.enrollmentRequest.findFirst({
-      where: {
-        dni,
-        status: "PENDING"
-      }
-    })
-    if (existingRequest) {
-      return { success: false, error: "Ya tenés una solicitud de inscripción pendiente en proceso. Te notificaremos por email." }
-    }
+    // Para demos y pruebas, permitimos registrar múltiples solicitudes incluso con el mismo DNI/email.
+    // La verificación de DNI único se mantiene al momento de aprobar el alta en el panel de administración.
 
     // 3. Procesar carga de comprobante de pago
-    const uploadDir = join(process.cwd(), "public", "uploads")
-    if (!existsSync(uploadDir)) {
-      mkdirSync(uploadDir, { recursive: true })
-    }
-
+    let paymentProofUrl = ""
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-    
-    // Nombre de archivo único
+    const mimeType = file.type || "image/png"
     const fileExtension = file.name.split('.').pop() || 'png'
     const uniqueName = `recibo-alta-${dni}-${Date.now()}.${fileExtension}`
-    const filepath = join(uploadDir, uniqueName)
-    
-    // Guardar en disco local
-    writeFileSync(filepath, buffer)
-    const paymentProofUrl = `/uploads/${uniqueName}`
 
-    // 4. Crear solicitud en la base de datos
+    try {
+      const uploadDir = join(process.cwd(), "public", "uploads")
+      if (!existsSync(uploadDir)) {
+        mkdirSync(uploadDir, { recursive: true })
+      }
+      const filepath = join(uploadDir, uniqueName)
+      writeFileSync(filepath, buffer)
+      paymentProofUrl = `/uploads/${uniqueName}`
+    } catch (fsErr) {
+      console.warn("No se pudo guardar en disco local (entorno Serverless/Vercel). Usando Data URI Base64 fallback.")
+      paymentProofUrl = `data:${mimeType};base64,${buffer.toString("base64")}`
+    }
+
+    // 4. Validar fecha de nacimiento
+    const birthDate = new Date(birthDateStr)
+    if (isNaN(birthDate.getTime())) {
+      return { success: false, error: "La fecha de nacimiento no es válida." }
+    }
+
+    // 5. Crear solicitud en la base de datos
     const request = await db.enrollmentRequest.create({
       data: {
         firstName,
@@ -66,7 +59,7 @@ export async function submitEnrollmentRequest(formData: FormData) {
         email,
         phone,
         dni,
-        birthDate: new Date(birthDateStr),
+        birthDate,
         address,
         comment: comment || null,
         paymentProofUrl,
@@ -74,7 +67,7 @@ export async function submitEnrollmentRequest(formData: FormData) {
       }
     })
 
-    // 5. Enviar notificaciones por correo de forma asíncrona (sin bloquear respuesta)
+    // 6. Enviar notificaciones por correo de forma asíncrona (sin bloquear respuesta)
     // Confirmación al solicitante
     sendEnrollmentSubmittedEmail({
       firstName,
@@ -93,7 +86,7 @@ export async function submitEnrollmentRequest(formData: FormData) {
 
   } catch (e: any) {
     console.error("Error al procesar solicitud de inscripción:", e)
-    return { success: false, error: "Ocurrió un error inesperado al procesar la inscripción. Por favor intentá de nuevo." }
+    return { success: false, error: e?.message || "Ocurrió un error inesperado al procesar la inscripción. Por favor intentá de nuevo." }
   }
 }
 
@@ -117,6 +110,14 @@ export async function approveEnrollmentRequest(requestId: string) {
     })
     if (existingDni) {
       return { success: false, error: "Ya existe un socio registrado en el padrón con el DNI de esta solicitud." }
+    }
+
+    // 1b. Verificar si ya existe un socio con este Email
+    const existingMemberEmail = await db.member.findFirst({
+      where: { email: request.email }
+    })
+    if (existingMemberEmail) {
+      return { success: false, error: "Ya existe un socio registrado en el padrón con el correo electrónico de esta solicitud." }
     }
 
     // 2. Verificar si ya existe un usuario con este correo para evitar colisión de unique constraint
@@ -148,7 +149,8 @@ export async function approveEnrollmentRequest(requestId: string) {
           data: {
             role: "MEMBER",
             name: `${request.firstName} ${request.lastName}`,
-            passwordHash
+            passwordHash,
+            mustChangePassword: true
           }
         })
       } else {
@@ -158,7 +160,8 @@ export async function approveEnrollmentRequest(requestId: string) {
             name: `${request.firstName} ${request.lastName}`,
             passwordHash,
             role: "MEMBER",
-            isBoardMember: false
+            isBoardMember: false,
+            mustChangePassword: true
           }
         })
       }

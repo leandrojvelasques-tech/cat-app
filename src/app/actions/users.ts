@@ -66,7 +66,10 @@ export async function resetMemberPassword(memberId: string, newPassword: string)
 
   await db.user.update({
     where: { id: user.id },
-    data: { passwordHash }
+    data: {
+      passwordHash,
+      mustChangePassword: true
+    }
   })
 
   revalidatePath(`/admin/socios/${memberId}`)

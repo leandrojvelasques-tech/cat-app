@@ -8,13 +8,14 @@ datasource db {
 }
 
 model User {
-  id            String  @id @default(uuid())
-  email         String  @unique
-  name          String?
-  passwordHash  String
-  role          String  @default("MEMBER") // ADMIN, BOARD, MEMBER
-  position      String? // Presidente, Tesorero, etc.
+  id                 String    @id @default(uuid())
+  email              String    @unique
+  name               String?
+  passwordHash       String
+  role               String    @default("MEMBER") // ADMIN, BOARD, MEMBER
+  position           String? // Presidente, Tesorero, etc.
   isBoardMember      Boolean   @default(false)
+  mustChangePassword Boolean   @default(false)
   resetToken         String?   @unique
   resetTokenExpires  DateTime?
   member             Member?
@@ -477,7 +478,7 @@ model EnrollmentRequest {
   lastName        String
   email           String
   phone           String
-  dni             String   @unique
+  dni             String
   birthDate       DateTime
   address         String
   comment         String?

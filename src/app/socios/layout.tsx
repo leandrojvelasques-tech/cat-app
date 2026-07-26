@@ -11,6 +11,10 @@ export default async function SociosLayout({ children }: { children: ReactNode }
     redirect("/login")
   }
 
+  if (session.user.mustChangePassword) {
+    redirect("/cambiar-clave")
+  }
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white flex flex-col font-sans">
       {/* Navbar Premium para Socios */}
