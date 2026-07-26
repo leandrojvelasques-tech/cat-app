@@ -47,7 +47,8 @@ export default async function EventosPage() {
         ) : (
           events.map(event => {
             const dateStr = new Date(event.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', timeZone: 'UTC' })
-            const publicUrl = `https://centroamigosdeltango.com/eventos/${event.id}`
+            const eventSlug = event.slug || event.id
+            const publicUrl = `https://centroamigosdeltango.com/eventos/${eventSlug}`
             const waShareText = `💃 *${event.title}* - Centro Amigos del Tango\n🗓️ Fecha: ${dateStr}\n📍 Lugar: ${event.location || 'Sede CAT'}\n\n👉 ¡Inscríbete y reserva tu entrada aquí!\n${publicUrl}`
             const waShareUrl = `https://wa.me/?text=${encodeURIComponent(waShareText)}`
 

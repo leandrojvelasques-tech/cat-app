@@ -7,8 +7,13 @@ import { auth } from "@/auth"
 export default async function PublicEventLandingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const session = await auth()
-  const event = await db.event.findUnique({
-    where: { id },
+  const event = await db.event.findFirst({
+    where: {
+      OR: [
+        { slug: id },
+        { id: id }
+      ]
+    },
     include: {
       classes: {
         orderBy: { order: 'asc' }

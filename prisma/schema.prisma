@@ -136,6 +136,7 @@ model Teacher {
 
 model Event {
   id          String    @id @default(uuid())
+  slug        String?   @unique
   title       String
   description String?
   startDate   DateTime
