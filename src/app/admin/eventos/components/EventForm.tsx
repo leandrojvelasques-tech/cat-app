@@ -2,7 +2,7 @@
 
 import { useState, useActionState, useEffect } from "react"
 import { createEvent, updateEvent } from "@/app/actions/eventos"
-import { Calendar, Music, MapPin, DollarSign, ArrowLeft, Save, Globe, Lock, Plus, User, Headphones, BookOpen, Trash2, Clock, Link as LinkIcon, Repeat, Mail } from "lucide-react"
+import { Calendar, Music, MapPin, DollarSign, ArrowLeft, Save, Globe, Lock, Plus, User, Headphones, BookOpen, Trash2, Clock, Link as LinkIcon, Repeat, Mail, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { DAYS_OF_WEEK } from "@/lib/event-utils"
@@ -23,6 +23,8 @@ interface EventFormProps {
 
 export function EventForm({ initialData, isEditing = false }: EventFormProps) {
   const [isPublic, setIsPublic] = useState(initialData?.isPublic ?? true)
+  const [isFree, setIsFree] = useState(initialData?.isFree ?? false)
+  const [sendAttendeeConfirmation, setSendAttendeeConfirmation] = useState(initialData?.sendAttendeeConfirmation ?? true)
   const [hasMilonga, setHasMilonga] = useState(initialData?.hasMilonga ?? true)
   const [hasClasses, setHasClasses] = useState(initialData?.hasClasses ?? false)
   const [isRecurring, setIsRecurring] = useState(initialData?.isRecurring ?? false)
@@ -151,18 +153,46 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
           
           {/* Main Info */}
           <section className="bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-md space-y-6">
-            <div className="flex items-center justify-between border-b border-white/5 pb-4">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-4">
                <div className="flex items-center gap-3">
                  <Calendar className="text-amber-500" size={20} />
                  <h2 className="text-lg font-medium">Información General</h2>
                </div>
                
-               <div className="flex items-center gap-2 bg-black/40 p-1 rounded-xl border border-white/5">
-                  <button type="button" onClick={() => setIsPublic(true)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isPublic ? "bg-amber-600 text-white shadow-lg shadow-amber-900/40" : "text-zinc-500 hover:text-zinc-300"}`}><Globe size={14} /> WEB PÚBLICA</button>
-                  <button type="button" onClick={() => setIsPublic(false)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${!isPublic ? "bg-zinc-700 text-white" : "text-zinc-500 hover:text-zinc-300"}`}><Lock size={14} /> INTERNO</button>
-                  <input type="hidden" name="isPublic" value={isPublic ? "on" : "off"} />
+               <div className="flex flex-wrap items-center gap-2">
+                 <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
+                   <button type="button" onClick={() => setIsFree(!isFree)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isFree ? "bg-emerald-600 text-white shadow-lg shadow-emerald-950/40" : "text-zinc-400 hover:text-white"}`}>
+                     <Sparkles size={13} /> {isFree ? "100% GRATUITO ($0)" : "EVENTO CON COSTO"}
+                   </button>
+                   <input type="hidden" name="isFree" value={isFree ? "on" : "off"} />
+                 </div>
+
+                 <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
+                    <button type="button" onClick={() => setIsPublic(true)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isPublic ? "bg-amber-600 text-white shadow-lg shadow-amber-900/40" : "text-zinc-500 hover:text-zinc-300"}`}><Globe size={14} /> WEB PÚBLICA</button>
+                    <button type="button" onClick={() => setIsPublic(false)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${!isPublic ? "bg-zinc-700 text-white" : "text-zinc-500 hover:text-zinc-300"}`}><Lock size={14} /> INTERNO</button>
+                    <input type="hidden" name="isPublic" value={isPublic ? "on" : "off"} />
+                 </div>
                </div>
             </div>
+
+            {isFree && (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl flex items-center justify-between text-xs text-emerald-300">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={16} className="text-emerald-400 shrink-0" />
+                  <span><strong>Evento Gratuito Activado:</strong> Las inscripciones serán confirmadas instantáneamente sin requerir comprobante ni cobro.</span>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer shrink-0 ml-4 font-bold text-[11px]">
+                  <input
+                    type="checkbox"
+                    checked={sendAttendeeConfirmation}
+                    onChange={(e) => setSendAttendeeConfirmation(e.target.checked)}
+                    className="accent-emerald-500 w-4 h-4"
+                  />
+                  <span>Enviar email de confirmación automática</span>
+                  <input type="hidden" name="sendAttendeeConfirmation" value={sendAttendeeConfirmation ? "on" : "off"} />
+                </label>
+              </div>
+            )}
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2 space-y-2">

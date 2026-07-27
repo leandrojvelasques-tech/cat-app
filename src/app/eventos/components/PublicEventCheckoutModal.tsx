@@ -19,6 +19,7 @@ interface EventData {
   priceNonSocioCombo?: number | null
   priceSocioClassLoose?: number | null
   priceNonSocioClassLoose?: number | null
+  isFree?: boolean
 }
 
 interface PublicEventCheckoutModalProps {
@@ -27,15 +28,15 @@ interface PublicEventCheckoutModalProps {
 
 export function PublicEventCheckoutModal({ event }: PublicEventCheckoutModalProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [step, setStep] = useState<1 | 2>(1)
+  const [step, setStep] = useState<1 | 2>(event.isFree ? 2 : 1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   // Non-member Prices with fallbacks
-  const milongaPrice = event.priceNonSocioMilonga || 0
-  const comboPrice = event.priceNonSocioCombo || 50000
-  const looseClassPrice = event.priceNonSocioClassLoose || 17000
+  const milongaPrice = event.isFree ? 0 : (event.priceNonSocioMilonga || 0)
+  const comboPrice = event.isFree ? 0 : (event.priceNonSocioCombo || 50000)
+  const looseClassPrice = event.isFree ? 0 : (event.priceNonSocioClassLoose || 17000)
 
   // Selection states
   const [includeMilonga, setIncludeMilonga] = useState(event.hasMilonga ?? true)
@@ -54,6 +55,7 @@ export function PublicEventCheckoutModal({ event }: PublicEventCheckoutModalProp
 
   // Calculate Total
   const calculateTotal = () => {
+    if (event.isFree) return 0
     let total = 0
     if (includeMilonga && event.hasMilonga) total += milongaPrice
     if (includeCombo && event.hasClasses) total += comboPrice
@@ -99,7 +101,7 @@ export function PublicEventCheckoutModal({ event }: PublicEventCheckoutModalProp
     setErrorMessage(null)
     setSuccessMessage(null)
 
-    if (totalPrice === 0 && (event.hasMilonga || event.hasClasses)) {
+    if (!event.isFree && totalPrice === 0 && (event.hasMilonga || event.hasClasses)) {
       setErrorMessage("Por favor seleccioná al menos una opción para inscribirte.")
       setIsSubmitting(false)
       return

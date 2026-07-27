@@ -553,3 +553,110 @@ export async function sendPasswordResetEmail(
     type: "PASSWORD_RESET",
   })
 }
+
+// 10. Acuse de recibo de comprobante/inscripción enviada al cliente (Pendiente de Verificación por Tesorería)
+export async function sendAttendeePendingProofEmail(registration: {
+  firstName: string
+  email: string
+  eventTitle: string
+  registrationType: string
+  amountPaid: number
+}) {
+  const subject = `Recibimos tu solicitud de inscripción — ${registration.eventTitle}`
+  const contentHtml = `
+    <h2 style="color: #A6702E; margin-top: 0;">¡Hola ${registration.firstName}!</h2>
+    <p>Confirmamos que hemos recibido tu solicitud de inscripción y el comprobante de pago para el evento <strong>${registration.eventTitle}</strong>.</p>
+    
+    <div style="background-color: #fafafa; border: 1px solid #e4e4e7; border-left: 4px solid #F2A81D; padding: 16px 20px; border-radius: 12px; margin: 20px 0;">
+      <p style="margin: 4px 0;"><strong>Evento:</strong> ${registration.eventTitle}</p>
+      <p style="margin: 4px 0;"><strong>Opción:</strong> ${registration.registrationType}</p>
+      <p style="margin: 4px 0;"><strong>Monto Registrado:</strong> $${registration.amountPaid.toLocaleString("es-AR")}</p>
+      <p style="margin: 4px 0; color: #d97706; font-weight: bold;"><strong>Estado:</strong> En proceso de verificación por Tesorería</p>
+    </div>
+
+    <p>Nuestra área de Tesorería verificará la información a la brevedad. Una vez aprobada tu transferencia, recibirás un nuevo correo electrónico con la confirmación definitiva de tu lugar.</p>
+    <p>¡Gracias por acompañarnos!</p>
+  `
+
+  return sendEmail({
+    to: registration.email,
+    subject,
+    html: buildEmailLayout(contentHtml),
+    type: "EVENT_INFO",
+  })
+}
+
+// 11. Confirmación de Inscripción Aprobada (Enviado al cliente cuando la directiva aprueba el pago en el admin)
+export async function sendAttendeeRegistrationApprovedEmail(registration: {
+  firstName: string
+  email: string
+  eventTitle: string
+  registrationType: string
+  amountPaid: number
+  eventDate?: Date | string | null
+  location?: string | null
+}) {
+  const subject = `¡Inscripción Confirmada! — ${registration.eventTitle}`
+  const dateStr = registration.eventDate ? new Date(registration.eventDate).toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" }) : ""
+
+  const contentHtml = `
+    <h2 style="color: #10b981; margin-top: 0;">¡Tu pago ha sido verificado! 🎉</h2>
+    <p>Estimado/a <strong>${registration.firstName}</strong>,</p>
+    <p>Nos alegra informarte que hemos acreditado tu pago y tu inscripción para el evento <strong>${registration.eventTitle}</strong> ha sido <strong>APROBADA EXITOSAMENTE</strong>.</p>
+    
+    <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; border-left: 4px solid #10b981; padding: 16px 20px; border-radius: 12px; margin: 20px 0;">
+      <p style="margin: 4px 0;"><strong>Evento:</strong> ${registration.eventTitle}</p>
+      ${dateStr ? `<p style="margin: 4px 0;"><strong>Fecha:</strong> ${dateStr}</p>` : ""}
+      ${registration.location ? `<p style="margin: 4px 0;"><strong>Lugar:</strong> ${registration.location}</p>` : ""}
+      <p style="margin: 4px 0;"><strong>Entrada/Opción:</strong> ${registration.registrationType}</p>
+      <p style="margin: 4px 0;"><strong>Monto Acreditado:</strong> $${registration.amountPaid.toLocaleString("es-AR")}</p>
+      <p style="margin: 4px 0; color: #047857; font-weight: bold;"><strong>Estado:</strong> COMPROBANTE APROBADO ✓</p>
+    </div>
+
+    <p>Te esperamos en la pista para disfrutar de este gran evento. Guardá este correo como comprobante de tu entrada.</p>
+  `
+
+  return sendEmail({
+    to: registration.email,
+    subject,
+    html: buildEmailLayout(contentHtml),
+    type: "EVENT_INFO",
+  })
+}
+
+// 12. Confirmación de Inscripción a Evento Gratuito ($0)
+export async function sendAttendeeFreeEventConfirmationEmail(registration: {
+  firstName: string
+  email: string
+  eventTitle: string
+  registrationType: string
+  eventDate?: Date | string | null
+  location?: string | null
+}) {
+  const subject = `Inscripción Confirmada al Evento Gratuito — ${registration.eventTitle}`
+  const dateStr = registration.eventDate ? new Date(registration.eventDate).toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" }) : ""
+
+  const contentHtml = `
+    <h2 style="color: #A6702E; margin-top: 0;">¡Tu lugar está reservado! 💃</h2>
+    <p>Hola <strong>${registration.firstName}</strong>,</p>
+    <p>Confirmamos tu inscripción al evento gratuito <strong>${registration.eventTitle}</strong> del Centro Amigos del Tango.</p>
+    
+    <div style="background-color: #fafafa; border: 1px solid #e4e4e7; border-left: 4px solid #F2A81D; padding: 16px 20px; border-radius: 12px; margin: 20px 0;">
+      <p style="margin: 4px 0;"><strong>Evento:</strong> ${registration.eventTitle}</p>
+      ${dateStr ? `<p style="margin: 4px 0;"><strong>Fecha:</strong> ${dateStr}</p>` : ""}
+      ${registration.location ? `<p style="margin: 4px 0;"><strong>Lugar:</strong> ${registration.location}</p>` : ""}
+      <p style="margin: 4px 0;"><strong>Opción:</strong> ${registration.registrationType}</p>
+      <p style="margin: 4px 0; color: #047857; font-weight: bold;"><strong>Costo:</strong> Gratuito ($0)</p>
+    </div>
+
+    <p>Tu inscripción ya ha sido registrada en nuestro sistema y podés presentarte directamente en el evento.</p>
+    <p>¡Te esperamos!</p>
+  `
+
+  return sendEmail({
+    to: registration.email,
+    subject,
+    html: buildEmailLayout(contentHtml),
+    type: "EVENT_INFO",
+  })
+}

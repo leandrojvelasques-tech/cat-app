@@ -183,6 +183,8 @@ model Event {
 
   status      String  @default("OPEN") // OPEN, CLOSED, ARCHIVED
   isPublic    Boolean @default(true) // For website visibility
+  isFree      Boolean @default(false) // Evento 100% gratuito
+  sendAttendeeConfirmation Boolean @default(true) // Enviar email confirmatorio automatico al asistente
   eventBanner String? // URL/Path to designed banner image
 
   teachers      Teacher[]           @relation("EventTeachers")

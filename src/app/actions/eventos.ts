@@ -45,6 +45,8 @@ export async function createEvent(prevState: any, formData: FormData) {
     const location = (formData.get("location") as string) || "Sede Central CAT"
     const type = (formData.get("type") as string) || "MILONGA"
     const isPublic = formData.get("isPublic") === "on" || formData.get("isPublic") === "true"
+    const isFree = formData.get("isFree") === "on" || formData.get("isFree") === "true"
+    const sendAttendeeConfirmation = formData.get("sendAttendeeConfirmation") === "on" || formData.get("sendAttendeeConfirmation") === "true" || formData.get("sendAttendeeConfirmation") === null
 
     const hasMilonga = formData.get("hasMilonga") === "true" || formData.get("hasMilonga") === "on"
     const hasClasses = formData.get("hasClasses") === "true" || formData.get("hasClasses") === "on"
@@ -65,14 +67,14 @@ export async function createEvent(prevState: any, formData: FormData) {
 
     const parseNum = (val: any) => (val !== null && val !== "" && !isNaN(parseFloat(val)) ? parseFloat(val) : null)
 
-    const priceSocioMilonga = parseNum(formData.get("priceSocioMilonga"))
-    const priceNonSocioMilonga = parseNum(formData.get("priceNonSocioMilonga"))
+    const priceSocioMilonga = isFree ? 0 : parseNum(formData.get("priceSocioMilonga"))
+    const priceNonSocioMilonga = isFree ? 0 : parseNum(formData.get("priceNonSocioMilonga"))
 
     const comboTitle = (formData.get("comboTitle") as string) || "Combo Clases"
-    const priceSocioCombo = parseNum(formData.get("priceSocioCombo"))
-    const priceNonSocioCombo = parseNum(formData.get("priceNonSocioCombo"))
-    const priceSocioClassLoose = parseNum(formData.get("priceSocioClassLoose"))
-    const priceNonSocioClassLoose = parseNum(formData.get("priceNonSocioClassLoose"))
+    const priceSocioCombo = isFree ? 0 : parseNum(formData.get("priceSocioCombo"))
+    const priceNonSocioCombo = isFree ? 0 : parseNum(formData.get("priceNonSocioCombo"))
+    const priceSocioClassLoose = isFree ? 0 : parseNum(formData.get("priceSocioClassLoose"))
+    const priceNonSocioClassLoose = isFree ? 0 : parseNum(formData.get("priceNonSocioClassLoose"))
 
     const eventBanner = await parseBannerField(formData)
 
@@ -99,6 +101,8 @@ export async function createEvent(prevState: any, formData: FormData) {
         location,
         type,
         isPublic,
+        isFree,
+        sendAttendeeConfirmation,
         hasMilonga,
         hasClasses,
         isRecurring,
@@ -153,6 +157,8 @@ export async function updateEvent(id: string, prevState: any, formData: FormData
     const location = (formData.get("location") as string) || "Sede Central CAT"
     const type = (formData.get("type") as string) || "MILONGA"
     const isPublic = formData.get("isPublic") === "on" || formData.get("isPublic") === "true"
+    const isFree = formData.get("isFree") === "on" || formData.get("isFree") === "true"
+    const sendAttendeeConfirmation = formData.get("sendAttendeeConfirmation") === "on" || formData.get("sendAttendeeConfirmation") === "true" || formData.get("sendAttendeeConfirmation") === null
 
     const hasMilonga = formData.get("hasMilonga") === "true" || formData.get("hasMilonga") === "on"
     const hasClasses = formData.get("hasClasses") === "true" || formData.get("hasClasses") === "on"
@@ -173,14 +179,14 @@ export async function updateEvent(id: string, prevState: any, formData: FormData
 
     const parseNum = (val: any) => (val !== null && val !== "" && !isNaN(parseFloat(val)) ? parseFloat(val) : null)
 
-    const priceSocioMilonga = parseNum(formData.get("priceSocioMilonga"))
-    const priceNonSocioMilonga = parseNum(formData.get("priceNonSocioMilonga"))
+    const priceSocioMilonga = isFree ? 0 : parseNum(formData.get("priceSocioMilonga"))
+    const priceNonSocioMilonga = isFree ? 0 : parseNum(formData.get("priceNonSocioMilonga"))
 
     const comboTitle = (formData.get("comboTitle") as string) || "Combo Clases"
-    const priceSocioCombo = parseNum(formData.get("priceSocioCombo"))
-    const priceNonSocioCombo = parseNum(formData.get("priceNonSocioCombo"))
-    const priceSocioClassLoose = parseNum(formData.get("priceSocioClassLoose"))
-    const priceNonSocioClassLoose = parseNum(formData.get("priceNonSocioClassLoose"))
+    const priceSocioCombo = isFree ? 0 : parseNum(formData.get("priceSocioCombo"))
+    const priceNonSocioCombo = isFree ? 0 : parseNum(formData.get("priceNonSocioCombo"))
+    const priceSocioClassLoose = isFree ? 0 : parseNum(formData.get("priceSocioClassLoose"))
+    const priceNonSocioClassLoose = isFree ? 0 : parseNum(formData.get("priceNonSocioClassLoose"))
 
     const eventBanner = await parseBannerField(formData)
 
@@ -206,6 +212,8 @@ export async function updateEvent(id: string, prevState: any, formData: FormData
       location,
       type,
       isPublic,
+      isFree,
+      sendAttendeeConfirmation,
       hasMilonga,
       hasClasses,
       isRecurring,

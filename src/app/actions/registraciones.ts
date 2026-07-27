@@ -2,7 +2,12 @@
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
-import { sendEventRegistrationAlertToBoard } from "@/lib/emails"
+import { 
+  sendEventRegistrationAlertToBoard,
+  sendAttendeePendingProofEmail,
+  sendAttendeeRegistrationApprovedEmail,
+  sendAttendeeFreeEventConfirmationEmail
+} from "@/lib/emails"
 import { validateAndSanitizeFile } from "@/lib/security-utils"
 
 export async function registerAttendee(formData: FormData) {
@@ -90,7 +95,7 @@ export async function registerPublicAttendee(formData: FormData) {
     const email = (formData.get("email") as string || "").trim().toLowerCase()
     const phone = (formData.get("phone") as string || "").trim()
     const registrationType = (formData.get("registrationType") as string || "ENTRADA_GENERAL").trim()
-    const amountPaid = parseFloat(formData.get("amountPaid") as string) || 0
+    let amountPaid = parseFloat(formData.get("amountPaid") as string) || 0
     const paymentMethod = (formData.get("paymentMethod") as string || "CASH").trim()
     const file = formData.get("paymentProof") as File | null
 
@@ -103,6 +108,61 @@ export async function registerPublicAttendee(formData: FormData) {
       return { success: false, error: "El evento no existe o ya no está disponible." }
     }
 
+    // 1. Manejo de Eventos 100% Gratuitos ($0)
+    if (event.isFree) {
+      amountPaid = 0
+      const registration = await db.eventRegistration.create({
+        data: {
+          eventId: event.id,
+          firstName,
+          lastName,
+          dni,
+          email,
+          phone,
+          registrationType,
+          amountPaid: 0,
+          paymentStatus: "PAID", // Aprobado instantáneo
+          paymentMethod: "FREE",
+          source: "WEB"
+        }
+      })
+
+      // Email de confirmación automática al asistente si está habilitado
+      if (event.sendAttendeeConfirmation !== false) {
+        sendAttendeeFreeEventConfirmationEmail({
+          firstName,
+          email,
+          eventTitle: event.title,
+          registrationType,
+          eventDate: event.startDate,
+          location: event.location
+        }).catch(err => console.error("Error enviando email de confirmacion de evento gratuito:", err))
+      }
+
+      // Notificación a la directiva
+      sendEventRegistrationAlertToBoard(event, {
+        firstName,
+        lastName,
+        dni,
+        email,
+        phone,
+        registrationType,
+        amountPaid: 0,
+        paymentMethod: "GRATUITO"
+      }).catch(err => console.error("Error notificando a la directiva sobre evento gratuito:", err))
+
+      revalidatePath("/admin")
+      revalidatePath("/admin/eventos")
+      revalidatePath(`/admin/eventos/${eventId}`)
+      revalidatePath(`/eventos/${eventId}`)
+
+      return {
+        success: true,
+        message: "¡Inscripción confirmada! Te hemos enviado la confirmación a tu correo electrónico."
+      }
+    }
+
+    // 2. Manejo de Eventos con Costo (Pago)
     let paymentProofUrl = null
     if (file && file.size > 0) {
       const arrayBuffer = await file.arrayBuffer()
@@ -117,7 +177,7 @@ export async function registerPublicAttendee(formData: FormData) {
       paymentProofUrl = `data:${validation.mimeType};base64,${buffer.toString("base64")}`
     }
 
-    const paymentStatus = paymentProofUrl ? "PAID" : (paymentMethod === "TRANSFER" ? "PENDING" : "PENDING")
+    const paymentStatus = paymentProofUrl ? "PENDING" : (paymentMethod === "TRANSFER" ? "PENDING" : "PENDING")
 
     const registration = await db.eventRegistration.create({
       data: {
@@ -135,6 +195,15 @@ export async function registerPublicAttendee(formData: FormData) {
         source: "WEB"
       }
     })
+
+    // Enviar acuse de recibo al cliente avisando que su comprobante está en verificación
+    sendAttendeePendingProofEmail({
+      firstName,
+      email,
+      eventTitle: event.title,
+      registrationType,
+      amountPaid
+    }).catch(err => console.error("Error al enviar acuse de recibo de comprobante al cliente:", err))
 
     // Disparar alertas por email a la directiva y mails adicionales
     sendEventRegistrationAlertToBoard(event, {
@@ -156,9 +225,7 @@ export async function registerPublicAttendee(formData: FormData) {
 
     return { 
       success: true, 
-      message: paymentProofUrl 
-        ? "¡Inscripción y comprobante recibidos con éxito! Estaremos verificando tu pago." 
-        : "¡Inscripción registrada con éxito! Te esperamos en el evento." 
+      message: "¡Recibimos tu comprobante! Tu pago está en proceso de verificación por Tesorería. Te enviaremos un correo apenas sea aprobado." 
     }
   } catch (err: any) {
     console.error("Error en registerPublicAttendee:", err)
@@ -172,12 +239,28 @@ export async function deleteRegistration(regId: string, eventId: string) {
 }
 
 export async function updatePaymentStatus(regId: string, eventId: string, status: string, amount: number) {
-  await db.eventRegistration.update({
+  const updatedReg = await db.eventRegistration.update({
     where: { id: regId },
-    data: { paymentStatus: status, amountPaid: amount }
+    data: { paymentStatus: status, amountPaid: amount },
+    include: { event: true }
   })
+
+  // Si el estado pasa a "PAID", enviar correo de confirmación de aprobación al asistente
+  if (status === "PAID" && updatedReg.email) {
+    sendAttendeeRegistrationApprovedEmail({
+      firstName: updatedReg.firstName,
+      email: updatedReg.email,
+      eventTitle: updatedReg.event.title,
+      registrationType: updatedReg.registrationType,
+      amountPaid: amount,
+      eventDate: updatedReg.event.startDate,
+      location: updatedReg.event.location
+    }).catch(err => console.error("Error enviando email de aprobacion de inscripcion al asistente:", err))
+  }
+
   revalidatePath(`/admin/eventos/${eventId}`)
   revalidatePath("/admin/eventos")
   revalidatePath("/admin")
 }
+
 

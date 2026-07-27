@@ -1,11 +1,20 @@
 import { db } from "@/lib/db"
-import { Calendar, Plus, Users, Music, ShoppingBag, Share2, Tag } from "lucide-react"
+import { Calendar, Plus, Users, Music, ShoppingBag, Share2, Tag, ShieldAlert, ArrowRight, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
 
 export default async function EventosPage() {
   const events = await db.event.findMany({
     orderBy: { startDate: "desc" },
     include: { _count: { select: { registrations: true } } }
+  })
+
+  // Consultar inscripciones / comprobantes pendientes de aprobación
+  const pendingRegistrations = await db.eventRegistration.findMany({
+    where: {
+      paymentStatus: "PENDING"
+    },
+    include: { event: true },
+    orderBy: { createdAt: "desc" }
   })
 
   return (
@@ -34,6 +43,51 @@ export default async function EventosPage() {
           </Link>
         </div>
       </div>
+
+      {/* Banner Destacado: Se requiere aprobación */}
+      {pendingRegistrations.length > 0 && (
+        <div className="bg-gradient-to-r from-amber-950/70 via-zinc-900 to-amber-950/70 border border-amber-500/30 p-6 rounded-3xl backdrop-blur-xl shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-in zoom-in-95 duration-300">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-amber-500/20 text-amber-400 rounded-2xl border border-amber-500/30 shrink-0">
+              <ShieldAlert size={26} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500 text-zinc-950">
+                  Se requiere aprobación
+                </span>
+                <span className="text-xs font-bold text-amber-400">
+                  {pendingRegistrations.length} {pendingRegistrations.length === 1 ? "comprobante pendiente" : "comprobantes pendientes"}
+                </span>
+              </div>
+              <h3 className="text-lg font-bold text-white mt-1">
+                Hay inscripciones o comprobantes aguardando validación de Tesorería
+              </h3>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Revise los comprobantes adjuntos y apruebe el acceso a los eventos correspondientes.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 shrink-0 w-full md:w-auto">
+            {Array.from(new Set(pendingRegistrations.map(r => r.eventId))).map(eventId => {
+              const regCount = pendingRegistrations.filter(r => r.eventId === eventId).length
+              const eventTitle = pendingRegistrations.find(r => r.eventId === eventId)?.event.title
+              return (
+                <Link
+                  key={eventId}
+                  href={`/admin/eventos/${eventId}`}
+                  className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-extrabold px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg hover:scale-[1.02] active:scale-95"
+                >
+                  <span className="truncate max-w-[160px]">{eventTitle}</span>
+                  <span className="bg-zinc-950/20 text-zinc-950 px-2 py-0.5 rounded-md font-black">{regCount}</span>
+                  <ArrowRight size={14} />
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {events.length === 0 ? (
