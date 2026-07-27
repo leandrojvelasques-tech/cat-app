@@ -59,6 +59,9 @@ export default function CobrarWizard() {
   const [paymentMethod, setPaymentMethod] = useState("EFECTIVO")
   const [notes, setNotes] = useState("")
   const [paymentProof, setPaymentProof] = useState<File | null>(null)
+  // Default to today formatted as YYYY-MM-DD for the date input
+  const todayStr = new Date().toISOString().split('T')[0]
+  const [realPaymentDate, setRealPaymentDate] = useState(todayStr)
   const [loading, setLoading] = useState(false)
   const [isEventMemberSearchOpen, setIsEventMemberSearchOpen] = useState(false)
   const [eventMemberQuery, setEventMemberQuery] = useState("")
@@ -135,6 +138,7 @@ export default function CobrarWizard() {
           paymentMethod,
           notes,
           amountPaid: selectedMonths.reduce((acc, curr) => acc + curr.amount, 0),
+          realPaymentDate,
         }))
         if (paymentProof) formData.append("paymentProof", paymentProof)
         
@@ -152,6 +156,7 @@ export default function CobrarWizard() {
         formData.append("amountPaid", eventFormData.amountPaid.toString())
         formData.append("paymentStatus", "PAID")
         formData.append("paymentMethod", paymentMethod)
+        formData.append("realPaymentDate", realPaymentDate)
         if (paymentProof) formData.append("paymentProof", paymentProof)
         
         await registerAttendee(formData)
@@ -634,6 +639,24 @@ export default function CobrarWizard() {
                           onChange={(e) => setPaymentProof(e.target.files?.[0] || null)}
                           className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-500/10 file:text-amber-500 hover:file:bg-amber-500/20"
                         />
+                    </div>
+
+                    {/* Fecha Real de Pago */}
+                    <div className="space-y-3 pt-4 border-t border-white/5">
+                       <div className="flex items-center gap-2 ml-1">
+                          <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Fecha Real de Pago</label>
+                          <span className="text-[9px] font-bold text-amber-600/80 bg-amber-600/10 border border-amber-600/20 px-2 py-0.5 rounded-full uppercase tracking-widest">Requerido</span>
+                       </div>
+                       <p className="text-[10px] text-zinc-600 ml-1 leading-relaxed">
+                          Fecha en que el socio realizó el pago. Puede diferir de la fecha de registro en el sistema.
+                       </p>
+                       <input
+                         type="date"
+                         value={realPaymentDate}
+                         max={new Date().toISOString().split('T')[0]}
+                         onChange={(e) => setRealPaymentDate(e.target.value)}
+                         className="w-full bg-black/40 border border-amber-500/30 rounded-xl px-4 py-3 text-white focus:border-amber-500/70 outline-none transition-colors font-mono"
+                       />
                     </div>
                  </div>
               </div>

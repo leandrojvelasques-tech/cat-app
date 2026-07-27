@@ -151,6 +151,8 @@ export async function processMemberPayment(memberId: string, formData: FormData)
 
   // Logic to create multiple MembershipFee records
   for (const item of payload.selectedMonths) {
+    // Parse the real payment date if provided; fallback to registration date (now)
+    const realPaymentDate = payload.realPaymentDate ? new Date(payload.realPaymentDate) : null
     // Check if partial fee exists to update, else create
     await db.membershipFee.upsert({
       where: {
@@ -165,6 +167,7 @@ export async function processMemberPayment(memberId: string, formData: FormData)
         paymentStatus: 'PAID', // Assuming selecting it pays it fully for now
         paymentMethod: payload.paymentMethod,
         paymentDate: new Date(),
+        realPaymentDate,
         notes: finalNotes,
         recordedById: userId
       },
@@ -177,6 +180,7 @@ export async function processMemberPayment(memberId: string, formData: FormData)
         paymentStatus: 'PAID',
         paymentMethod: payload.paymentMethod,
         paymentDate: new Date(),
+        realPaymentDate,
         notes: finalNotes,
         recordedById: userId
       }

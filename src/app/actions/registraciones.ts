@@ -28,6 +28,10 @@ export async function registerAttendee(formData: FormData) {
     const paymentMethod = formData.get("paymentMethod") as string
     const source = (formData.get("source") as string) || "MANAGEMENT"
     const file = formData.get("paymentProof") as File | null
+    const realPaymentDateStr = formData.get("realPaymentDate") as string | null
+
+    // Parse real payment date if provided by staff; null means "use createdAt as reference"
+    const realPaymentDate = realPaymentDateStr ? new Date(realPaymentDateStr) : null
 
     let paymentProofUrl = null
     if (file && file.size > 0) {
@@ -58,6 +62,7 @@ export async function registerAttendee(formData: FormData) {
         source,
         paymentProof: paymentProofUrl,
         recordedById: userId,
+        realPaymentDate,
       },
     })
 

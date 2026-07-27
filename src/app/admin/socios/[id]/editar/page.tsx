@@ -12,29 +12,36 @@ export default async function EditarSocioPage(props: any) {
   
   if (!id) return notFound()
 
-  const member = await db.member.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      memberNumber: true,
-      firstName: true,
-      lastName: true,
-      dni: true,
-      email: true,
-      phone: true,
-      joinDate: true,
-      birthDate: true,
-      type: true,
-      status: true,
-      city: true,
-      notes: true,
-      wantsMailing: true,
-      avatarUrl: true,
-      userId: true, // Needed to check if portal account exists
-    }
-  })
+  let member
+  try {
+    member = await db.member.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        memberNumber: true,
+        firstName: true,
+        lastName: true,
+        dni: true,
+        email: true,
+        phone: true,
+        joinDate: true,
+        birthDate: true,
+        type: true,
+        status: true,
+        city: true,
+        notes: true,
+        wantsMailing: true,
+        avatarUrl: true,
+        userId: true,
+      }
+    })
+  } catch (error) {
+    console.error("Error fetching member for edit:", error)
+    return notFound()
+  }
 
   if (!member) return notFound()
+
 
   const updateMemberWithId = updateMember.bind(null, id)
 

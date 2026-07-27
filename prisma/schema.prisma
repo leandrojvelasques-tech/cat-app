@@ -95,7 +95,8 @@ model MembershipFee {
   periodMonth   Int
   amountDue     Float
   amountPaid    Float
-  paymentDate   DateTime
+  paymentDate   DateTime  // Fecha de REGISTRO en el sistema
+  realPaymentDate DateTime? // Fecha REAL en que ocurrió el pago (null = igual a paymentDate)
   paymentMethod String?
   paymentStatus String // PAID, PARTIAL
   notes         String?
@@ -235,6 +236,7 @@ model EventRegistration {
   paymentStatus    String  @default("PENDING") // PENDING, PAID
   paymentMethod    String? // CASH, TRANSFER, etc
   paymentProof     String? // URL/Path to image
+  realPaymentDate  DateTime? // Fecha REAL en que ocurrió el pago (null = usa createdAt)
 
   // Source tracking
   source       String  @default("MANAGEMENT") // WEB, MANAGEMENT

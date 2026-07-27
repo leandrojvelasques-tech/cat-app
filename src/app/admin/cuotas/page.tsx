@@ -91,7 +91,8 @@ export default async function CobranzasPage({
       id: f.id,
       paymentId: f.id,
       type: 'CUOTA',
-      date: f.paymentDate,
+      date: f.paymentDate,            // Fecha de registro
+      realDate: f.realPaymentDate ?? f.paymentDate,  // Fecha real de pago
       amount: f.amountPaid,
       method: f.paymentMethod || 'EFECTIVO',
       reason: `Cuota Social - ${format(new Date(f.periodYear, f.periodMonth - 1, 1), 'MMMM yyyy', { locale: es })}`,
@@ -105,7 +106,8 @@ export default async function CobranzasPage({
       id: r.id,
       paymentId: r.id,
       type: 'EVENTO',
-      date: r.createdAt,
+      date: r.createdAt,              // Fecha de registro
+      realDate: r.realPaymentDate ?? r.createdAt,    // Fecha real de pago
       amount: r.amountPaid,
       method: r.paymentMethod || 'EFECTIVO',
       reason: `Entrada: ${r.event.title} (${r.registrationType})`,
@@ -115,7 +117,7 @@ export default async function CobranzasPage({
       recordedBy: r.recordedBy?.name || 'Sistema',
       fullData: r
     }))
-  ].sort((a, b) => b.date.getTime() - a.date.getTime())
+  ].sort((a, b) => b.realDate.getTime() - a.realDate.getTime())
 
   const totalCollected = unifiedHistory.reduce((acc, curr) => acc + curr.amount, 0)
   const feeCount = fees.length
@@ -205,7 +207,8 @@ export default async function CobranzasPage({
           <table className="w-full text-left">
             <thead>
               <tr className="bg-white/[0.02] border-b border-white/10">
-                <th className="py-6 pl-10 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Fecha / Hora</th>
+                <th className="py-6 pl-10 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Fecha de Pago</th>
+                <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Fecha de Registro</th>
                 <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Pagador</th>
                 <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Categoría</th>
                 <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Concepto</th>
@@ -216,10 +219,18 @@ export default async function CobranzasPage({
             <tbody className="divide-y divide-white/5">
               {unifiedHistory.map((item: any) => (
                 <tr key={item.id} className="hover:bg-white/[0.03] transition-colors group">
+                  {/* Fecha Real de Pago */}
                   <td className="py-5 pl-10">
                     <div className="flex flex-col">
-                      <span className="text-white font-bold text-sm">{format(item.date, "dd/MM/yyyy", { locale: es })}</span>
-                      <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{format(item.date, "HH:mm")} hs</span>
+                      <span className="text-white font-bold text-sm">{format(item.realDate, "dd/MM/yyyy", { locale: es })}</span>
+                      <span className="text-[9px] text-amber-600/70 font-bold uppercase tracking-widest mt-0.5">Fecha de Pago</span>
+                    </div>
+                  </td>
+                  {/* Fecha de Registro en el sistema */}
+                  <td className="py-5">
+                    <div className="flex flex-col">
+                      <span className="text-zinc-400 font-medium text-sm">{format(item.date, "dd/MM/yyyy", { locale: es })}</span>
+                      <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest mt-0.5">{format(item.date, "HH:mm")} hs</span>
                     </div>
                   </td>
                   <td className="py-5">
@@ -259,7 +270,7 @@ export default async function CobranzasPage({
               ))}
               {unifiedHistory.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-32 text-center text-zinc-600 italic">
+                <td colSpan={7} className="py-32 text-center text-zinc-600 italic">
                     <Info size={40} className="mx-auto mb-4 opacity-10" />
                     <p className="uppercase font-black tracking-widest text-xs">No se encontraron movimientos</p>
                   </td>
