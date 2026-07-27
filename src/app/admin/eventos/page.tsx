@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
-import { Calendar, Plus, Users, Music, ShoppingBag, Share2, Tag, ShieldAlert, ArrowRight, CheckCircle2 } from "lucide-react"
+import { Calendar, Plus, Users, Music, ShoppingBag, Share2, Tag, ShieldAlert, ArrowRight, CheckCircle2, Sparkles } from "lucide-react"
 import Link from "next/link"
+import { EventPreviewModal } from "./components/EventPreviewModal"
 
 export default async function EventosPage() {
   const events = await db.event.findMany({
@@ -116,7 +117,12 @@ export default async function EventosPage() {
                     }`}>
                       {event.type === "MILONGA" ? <Music size={24} /> : <Users size={24} />}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5 justify-end">
+                      {event.isFree && (
+                        <span className="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 tracking-wider">
+                          🎁 SIN CARGO
+                        </span>
+                      )}
                       {event.isRecurring && (
                         <span className="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 tracking-wider">
                           🔄 RECURRENTE
@@ -163,15 +169,25 @@ export default async function EventosPage() {
                 </div>
 
                 <div className="space-y-2 pt-2 border-t border-white/5">
-                  <a 
-                    href={waShareUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-2.5 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 border border-emerald-500/20 rounded-xl text-xs font-bold transition-all"
-                  >
-                    <Share2 size={14} />
-                    Compartir en WhatsApp
-                  </a>
+                  <div className="grid grid-cols-2 gap-2">
+                    <a 
+                      href={waShareUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 py-2.5 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 border border-emerald-500/20 rounded-xl text-xs font-bold transition-all"
+                    >
+                      <Share2 size={14} />
+                      WhatsApp
+                    </a>
+
+                    <EventPreviewModal
+                      eventId={event.id}
+                      eventSlug={event.slug}
+                      eventTitle={event.title}
+                      isFree={event.isFree}
+                      buttonText="Previsualizar"
+                    />
+                  </div>
 
                   <Link 
                     href={`/admin/eventos/${event.id}`}

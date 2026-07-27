@@ -169,10 +169,12 @@ model Event {
   priceNonSocioMilonga     Float?
 
   // Pricing - Venta Anticipada (Early Bird)
-  hasEarlyBird           Boolean   @default(false)
-  earlyBirdDeadline      DateTime?
-  priceSocioEarlyBird    Float?
-  priceNonSocioEarlyBird Float?
+  hasEarlyBird                Boolean   @default(false)
+  earlyBirdDeadline           DateTime?
+  priceSocioEarlyBird         Float?
+  priceNonSocioEarlyBird      Float?
+  priceSocioComboEarlyBird    Float?
+  priceNonSocioComboEarlyBird Float?
 
   // Pricing - Capacitaciones / Clases
   comboTitle              String?  @default("Combo Clases")

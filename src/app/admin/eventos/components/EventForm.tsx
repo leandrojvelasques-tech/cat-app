@@ -2,7 +2,7 @@
 
 import { useState, useActionState, useEffect } from "react"
 import { createEvent, updateEvent } from "@/app/actions/eventos"
-import { Calendar, Music, MapPin, DollarSign, ArrowLeft, Save, Globe, Lock, Plus, User, Headphones, BookOpen, Trash2, Clock, Link as LinkIcon, Repeat, Mail, Sparkles } from "lucide-react"
+import { Calendar, Music, MapPin, DollarSign, ArrowLeft, Save, Globe, Lock, Plus, User, Headphones, BookOpen, Trash2, Clock, Link as LinkIcon, Repeat, Mail, Sparkles, Tag } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { DAYS_OF_WEEK } from "@/lib/event-utils"
@@ -24,6 +24,7 @@ interface EventFormProps {
 export function EventForm({ initialData, isEditing = false }: EventFormProps) {
   const [isPublic, setIsPublic] = useState(initialData?.isPublic ?? true)
   const [isFree, setIsFree] = useState(initialData?.isFree ?? false)
+  const [hasEarlyBird, setHasEarlyBird] = useState(initialData?.hasEarlyBird ?? false)
   const [sendAttendeeConfirmation, setSendAttendeeConfirmation] = useState(initialData?.sendAttendeeConfirmation ?? true)
   const [hasMilonga, setHasMilonga] = useState(initialData?.hasMilonga ?? true)
   const [hasClasses, setHasClasses] = useState(initialData?.hasClasses ?? false)
@@ -629,11 +630,105 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
               <DollarSign size={20} className="text-emerald-500"/> Tarifario Configurable
             </h2>
 
+            {/* Venta Anticipada (Early Bird) */}
+            <div className="space-y-4 bg-amber-500/5 border border-amber-500/20 p-4 rounded-2xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Tag size={16} className="text-amber-400" />
+                  <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">Venta Anticipada</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setHasEarlyBird(!hasEarlyBird)}
+                  className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase transition-all ${
+                    hasEarlyBird ? "bg-amber-500 text-zinc-950 shadow-md" : "bg-white/5 text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  {hasEarlyBird ? "HABILITADA" : "DESHABILITADA"}
+                </button>
+                <input type="hidden" name="hasEarlyBird" value={hasEarlyBird ? "on" : "off"} />
+              </div>
+
+              {hasEarlyBird && (
+                <div className="space-y-3 pt-2 border-t border-amber-500/20 animate-in fade-in duration-200">
+                  <div className="space-y-1">
+                    <label className="text-[9px] text-amber-400/90 font-bold uppercase">Fecha y Hora Límite Venta Anticipada *</label>
+                    <input
+                      name="earlyBirdDeadline"
+                      type="datetime-local"
+                      defaultValue={formatDateTimeForInput(initialData?.earlyBirdDeadline)}
+                      required={hasEarlyBird}
+                      className="w-full bg-black/60 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-400"
+                    />
+                    <p className="text-[9px] text-zinc-400 italic">
+                      💡 Luego de esta fecha/hora, el sistema cambiará automáticamente a las tarifas normales.
+                    </p>
+                  </div>
+
+                  {hasMilonga && (
+                    <div className="space-y-2 pt-2 border-t border-amber-500/10">
+                      <span className="text-[10px] font-bold text-red-400 uppercase">Tarifa Anticipada Milonga</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[9px] text-zinc-400 font-bold uppercase">Socio ($)</label>
+                          <input
+                            name="priceSocioEarlyBird"
+                            type="number"
+                            defaultValue={initialData?.priceSocioEarlyBird}
+                            placeholder="ej: 2500"
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-400"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[9px] text-zinc-400 font-bold uppercase">No Socio ($)</label>
+                          <input
+                            name="priceNonSocioEarlyBird"
+                            type="number"
+                            defaultValue={initialData?.priceNonSocioEarlyBird}
+                            placeholder="ej: 5000"
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-400"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {hasClasses && (
+                    <div className="space-y-2 pt-2 border-t border-amber-500/10">
+                      <span className="text-[10px] font-bold text-cyan-400 uppercase">Tarifa Anticipada Combo Clases</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[9px] text-zinc-400 font-bold uppercase">Socio ($)</label>
+                          <input
+                            name="priceSocioComboEarlyBird"
+                            type="number"
+                            defaultValue={initialData?.priceSocioComboEarlyBird}
+                            placeholder="ej: 28000"
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-400"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[9px] text-zinc-400 font-bold uppercase">No Socio ($)</label>
+                          <input
+                            name="priceNonSocioComboEarlyBird"
+                            type="number"
+                            defaultValue={initialData?.priceNonSocioComboEarlyBird}
+                            placeholder="ej: 42000"
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-400"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Milonga Pricing */}
             {hasMilonga && (
               <div className="space-y-3 bg-red-500/5 border border-red-500/10 p-4 rounded-2xl">
                  <p className="text-[10px] font-black text-red-400 uppercase tracking-widest flex items-center gap-1">
-                   <Music size={12} /> Entrada Milonga
+                   <Music size={12} /> Entrada Milonga (Normal)
                  </p>
                  <div className="space-y-1">
                     <label className="text-[9px] text-zinc-400 uppercase font-bold ml-1">Precio Socio ($)</label>
@@ -650,7 +745,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
             {hasClasses && (
               <div className="space-y-4 bg-cyan-500/5 border border-cyan-500/10 p-4 rounded-2xl">
                  <p className="text-[10px] font-black text-cyan-400 uppercase tracking-widest flex items-center gap-1">
-                   <BookOpen size={12} /> Capacitaciones / Clases
+                   <BookOpen size={12} /> Capacitaciones / Clases (Normal)
                  </p>
                  
                  {/* Combo */}

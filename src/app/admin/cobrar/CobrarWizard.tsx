@@ -1,6 +1,7 @@
 "use client"
 import { useState, useEffect } from "react"
 import { Users, Music, Search, ArrowRight, ArrowLeft, CreditCard, ChevronRight, CheckCircle2, Ticket, FileText, Upload, GraduationCap } from "lucide-react"
+import { getEffectiveEventPrices } from "@/lib/event-utils"
 
 const TangoShoe = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
   <svg 
@@ -78,8 +79,9 @@ export default function CobrarWizard() {
 
   const calculateEventPrice = (qty: number, member: any) => {
     if (!selectedEvent) return 0
+    const prices = getEffectiveEventPrices(selectedEvent)
     const isMember = !!member && member.status === 'ACTIVE'
-    const unitPrice = isMember ? selectedEvent.priceSocioMilonga : selectedEvent.priceNonSocioMilonga
+    const unitPrice = isMember ? prices.milongaSocio : prices.milongaNonSocio
     return unitPrice * qty
   }
 

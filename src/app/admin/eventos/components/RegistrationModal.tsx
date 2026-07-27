@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { registerAttendee } from "@/app/actions/registraciones"
-import { Search, User, CreditCard, Save, X, Trash2, CheckCircle2, AlertCircle, Plus } from "lucide-react"
+import { Search, User, CreditCard, Save, X, Trash2, CheckCircle2, AlertCircle, Plus, Tag } from "lucide-react"
+import { getEffectiveEventPrices } from "@/lib/event-utils"
 
 interface Member {
   id: string
@@ -21,6 +22,14 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
   const [loading, setLoading] = useState(false)
   const [confirmedDuplicate, setConfirmedDuplicate] = useState(false)
   
+  const prices = getEffectiveEventPrices(event)
+
+  const getPriceForType = (type: string, isSocio: boolean) => {
+    if (type === "COMBO_CLASES") return isSocio ? prices.comboSocio : prices.comboNonSocio
+    if (type === "CLASE_SUELTA") return isSocio ? prices.classLooseSocio : prices.classLooseNonSocio
+    return isSocio ? prices.milongaSocio : prices.milongaNonSocio
+  }
+
   // Manual form state
   const [formData, setFormData] = useState({
     firstName: "",
@@ -29,7 +38,7 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
     email: "",
     phone: "",
     registrationType: 'MILONGA',
-    amountPaid: event.priceNonSocioMilonga || 0,
+    amountPaid: prices.milongaNonSocio,
     paymentMethod: "CASH",
     paymentStatus: "PAID"
   })
@@ -56,6 +65,8 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
 
   const selectMember = (m: Member) => {
     setSelectedMember(m)
+    const isSocio = m.status === 'ACTIVE'
+    const price = getPriceForType(formData.registrationType, isSocio)
     setFormData({
       ...formData,
       firstName: m.firstName,
@@ -63,7 +74,7 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
       dni: m.dni,
       email: m.email || "",
       phone: m.phone || "",
-      amountPaid: m.status === 'ACTIVE' ? (event.priceSocioMilonga || 0) : (event.priceNonSocioMilonga || 0)
+      amountPaid: price
     })
     setSearchTerm("")
     setSearchResults([])
@@ -72,7 +83,7 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
 
   const handleTypeChange = (type: string) => {
     const isSocio = selectedMember?.status === 'ACTIVE'
-    const price = isSocio ? (event.priceSocioMilonga || 0) : (event.priceNonSocioMilonga || 0)
+    const price = getPriceForType(type, isSocio)
     setFormData(prev => ({ ...prev, registrationType: type, amountPaid: price }))
   }
 

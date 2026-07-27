@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Calendar, X, Ticket, CheckCircle2, Upload, Loader2, DollarSign, ShieldCheck, CreditCard, BookOpen, Music } from "lucide-react"
+import { Calendar, X, Ticket, CheckCircle2, Upload, Loader2, DollarSign, ShieldCheck, CreditCard, BookOpen, Music, Tag } from "lucide-react"
 import { registerSocioForEvent } from "@/app/actions/eventos"
 import { AvatarFormInput } from "@/components/AvatarFormInput"
+import { getEffectiveEventPrices } from "@/lib/event-utils"
 import Link from "next/link"
 
 interface EventData {
@@ -21,6 +22,13 @@ interface EventData {
   priceNonSocioCombo?: number | null
   priceSocioClassLoose?: number | null
   priceNonSocioClassLoose?: number | null
+  hasEarlyBird?: boolean
+  earlyBirdDeadline?: Date | string | null
+  priceSocioEarlyBird?: number | null
+  priceNonSocioEarlyBird?: number | null
+  priceSocioComboEarlyBird?: number | null
+  priceNonSocioComboEarlyBird?: number | null
+  isFree?: boolean
 }
 
 interface MemberData {
@@ -57,16 +65,17 @@ export function SocioEventRegisterModal({ event, member, registration }: SocioEv
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   const isRegistered = !!registration
+  const prices = getEffectiveEventPrices(event)
 
   // Calculate current price based on selected registration type
   const getCurrentPrice = () => {
     if (registrationType === "COMBO_CLASES") {
-      return event.priceSocioCombo || 33000
+      return prices.comboSocio
     }
     if (registrationType === "CLASE_SUELTA") {
-      return event.priceSocioClassLoose || 11000
+      return prices.classLooseSocio
     }
-    return event.priceSocioMilonga || 0
+    return prices.milongaSocio
   }
 
   const currentPrice = getCurrentPrice()

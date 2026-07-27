@@ -1,9 +1,10 @@
 import { db } from "@/lib/db"
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { Calendar, MapPin, Music, ChevronLeft, User, DollarSign, Headphones, Clock, Sparkles, BookOpen, ExternalLink, MessageSquare, Mail, Phone } from "lucide-react"
+import { Calendar, MapPin, Music, ChevronLeft, User, DollarSign, Headphones, Clock, Sparkles, BookOpen, ExternalLink, MessageSquare, Mail, Phone, Tag } from "lucide-react"
 import { auth } from "@/auth"
 import { PublicEventCheckoutModal } from "../components/PublicEventCheckoutModal"
+import { getEffectiveEventPrices } from "@/lib/event-utils"
 
 export default async function PublicEventLandingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -26,6 +27,8 @@ export default async function PublicEventLandingPage({ params }: { params: Promi
     notFound()
   }
 
+  const prices = getEffectiveEventPrices(event)
+
   const day = new Date(event.startDate).getUTCDate()
   const month = new Date(event.startDate).toLocaleString("es-ES", { month: "long", timeZone: "UTC" }).toUpperCase()
   const year = new Date(event.startDate).getUTCFullYear()
@@ -34,11 +37,11 @@ export default async function PublicEventLandingPage({ params }: { params: Promi
     ? new Date(event.milongaStart).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
     : null
 
-  // Robust pricing fallbacks matching flyer defaults if null
-  const comboNonSocioPrice = event.priceNonSocioCombo ?? 50000
-  const comboSocioPrice = event.priceSocioCombo ?? 33000
-  const looseNonSocioPrice = event.priceNonSocioClassLoose ?? 17000
-  const looseSocioPrice = event.priceSocioClassLoose ?? 11000
+  // Robust pricing from getEffectiveEventPrices
+  const comboNonSocioPrice = prices.comboNonSocio
+  const comboSocioPrice = prices.comboSocio
+  const looseNonSocioPrice = prices.classLooseNonSocio
+  const looseSocioPrice = prices.classLooseSocio
 
   const whatsappPhone = event.contactPhone || "2975295100"
   const cleanPhone = whatsappPhone.replace(/\D/g, "")
@@ -144,10 +147,20 @@ export default async function PublicEventLandingPage({ params }: { params: Promi
           {/* Right Column: Information */}
           <div className="lg:col-span-3 space-y-8 bg-white/[0.02] border border-white/5 p-8 md:p-10 rounded-3xl backdrop-blur-xl">
             <div className="space-y-4">
-              <div className="flex items-center gap-2.5">
-                <span className="px-3 py-1 text-[10px] font-extrabold rounded-full border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 tracking-wider">
-                  PRÓXIMO EVENTO
-                </span>
+              <div className="flex flex-wrap items-center gap-2.5">
+                {event.isFree ? (
+                  <span className="px-3 py-1 text-[10px] font-extrabold rounded-full border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 tracking-wider">
+                    🎁 EVENTO SIN CARGO ($0)
+                  </span>
+                ) : prices.isEarlyBirdActive ? (
+                  <span className="px-3 py-1 text-[10px] font-extrabold rounded-full border bg-amber-500/10 text-amber-400 border-amber-500/20 tracking-wider flex items-center gap-1">
+                    <Tag size={12} /> VENTA ANTICIPADA
+                  </span>
+                ) : (
+                  <span className="px-3 py-1 text-[10px] font-extrabold rounded-full border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 tracking-wider">
+                    PRÓXIMO EVENTO
+                  </span>
+                )}
                 <span className="text-amber-500 text-xs font-black uppercase tracking-widest flex items-center gap-1">
                   <Sparkles size={12} /> {day} de {month}, {year}
                 </span>
@@ -160,6 +173,22 @@ export default async function PublicEventLandingPage({ params }: { params: Promi
                 <span className="flex items-center gap-2"><MapPin size={14} className="text-zinc-500" /> {event.location || "Sede Central CAT"}</span>
               </div>
             </div>
+
+            {prices.isEarlyBirdActive && (
+              <div className="bg-gradient-to-r from-amber-950/60 via-zinc-900 to-amber-950/60 border border-amber-500/30 p-5 rounded-2xl flex items-center justify-between gap-4 animate-in zoom-in-95 duration-300">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-amber-500/20 text-amber-400 rounded-xl border border-amber-500/30 shrink-0">
+                    <Tag size={20} />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black uppercase text-amber-300 tracking-wider">¡Venta Anticipada con Descuento!</h4>
+                    <p className="text-xs text-zinc-300 mt-0.5">
+                      Tarifa preferencial válida hasta el <strong>{prices.earlyBirdDeadlineFormatted}</strong>. Luego aplicarán valores normales.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <hr className="border-white/5" />
 
@@ -289,17 +318,34 @@ export default async function PublicEventLandingPage({ params }: { params: Promi
 
                   {/* Pricing Milonga Card */}
                   <div className="p-6 bg-red-950/20 border border-red-500/20 rounded-2xl space-y-3">
-                    <h4 className="text-xs font-bold text-red-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <DollarSign size={14} /> Valor Milonga
-                    </h4>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold text-red-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <DollarSign size={14} /> Valor Milonga
+                      </h4>
+                      {prices.isEarlyBirdActive && (
+                        <span className="text-[9px] font-black text-amber-400 uppercase bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                          Anticipada
+                        </span>
+                      )}
+                    </div>
                     <div className="space-y-2 text-sm text-zinc-300 font-light">
                       <div className="flex justify-between items-center">
                         <span className="text-zinc-400">Socio CAT:</span>
-                        <span className="font-bold text-amber-400 text-base">${(event.priceSocioMilonga || 0).toLocaleString()}</span>
+                        <span className="font-bold text-amber-400 text-base">
+                          ${prices.milongaSocio.toLocaleString()}
+                          {prices.isEarlyBirdActive && event.priceSocioEarlyBird !== null && (
+                            <span className="text-xs text-zinc-500 line-through ml-1.5 font-normal">${(event.priceSocioMilonga || 0).toLocaleString()}</span>
+                          )}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-zinc-400">No Socio:</span>
-                        <span className="font-bold text-white text-base">${(event.priceNonSocioMilonga || 0).toLocaleString()}</span>
+                        <span className="font-bold text-white text-base">
+                          ${prices.milongaNonSocio.toLocaleString()}
+                          {prices.isEarlyBirdActive && event.priceNonSocioEarlyBird !== null && (
+                            <span className="text-xs text-zinc-500 line-through ml-1.5 font-normal">${(event.priceNonSocioMilonga || 0).toLocaleString()}</span>
+                          )}
+                        </span>
                       </div>
                     </div>
                   </div>

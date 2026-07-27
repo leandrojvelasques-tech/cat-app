@@ -1,11 +1,13 @@
 import { db } from "@/lib/db"
 import { notFound } from "next/navigation"
-import { Calendar, MapPin, Music, Users, Headphones, User, ArrowLeft, Plus, DollarSign, Clock, LayoutDashboard, Copy, Trash2, CheckCircle2, XCircle, Edit, ShoppingBag, Wallet, BookOpen, ExternalLink } from "lucide-react"
+import { Calendar, MapPin, Music, Users, Headphones, User, ArrowLeft, Plus, DollarSign, Clock, LayoutDashboard, Copy, Trash2, CheckCircle2, XCircle, Edit, ShoppingBag, Wallet, BookOpen, ExternalLink, Tag, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { RegistrationModal } from "../components/RegistrationModal"
 import { EventDetailsClient } from "./EventDetailsClient"
 import { DeleteEventButton } from "../components/DeleteEventButton"
 import { ApproveRegistrationButton } from "../components/ApproveRegistrationButton"
+import { EventPreviewModal } from "../components/EventPreviewModal"
+import { getEffectiveEventPrices } from "@/lib/event-utils"
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -25,6 +27,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
   if (!event) notFound()
 
+  const prices = getEffectiveEventPrices(event)
   const pendingApprovalsCount = event.registrations.filter(r => r.paymentStatus !== "PAID" || !!r.paymentProof).length
 
   return (
@@ -51,7 +54,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
           <div className="absolute bottom-10 left-10 right-10 flex flex-col md:flex-row justify-between items-end gap-6">
             <div>
-              <div className="flex items-center gap-3 mb-2">
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                {event.isFree && (
+                  <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 tracking-wider">
+                    🎁 EVENTO SIN CARGO
+                  </span>
+                )}
                 <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-full border ${
                   event.status === "OPEN" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-zinc-500/10 text-zinc-400 border-white/10"
                 }`}>
@@ -66,7 +74,14 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               </p>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+               <EventPreviewModal
+                  eventId={event.id}
+                  eventSlug={event.slug}
+                  eventTitle={event.title}
+                  isFree={event.isFree}
+                  buttonClassName="flex items-center gap-2 bg-amber-500/20 hover:bg-amber-500/30 backdrop-blur-md text-amber-300 px-4 py-2.5 rounded-xl font-bold transition-all text-sm border border-amber-500/30"
+               />
                <Link 
                   href={`/admin/eventos/${event.id}/editar`}
                   className="flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white px-4 py-2.5 rounded-xl font-medium transition-all text-sm border border-white/10"
@@ -104,6 +119,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             <div>
               <div className="flex items-center gap-3">
                  <h1 className="text-3xl font-semibold tracking-tight text-white/90">{event.title}</h1>
+                 {event.isFree && (
+                   <span className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 tracking-wider">
+                     🎁 EVENTO SIN CARGO
+                   </span>
+                 )}
                  <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-full border ${
                     event.status === "OPEN" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-zinc-500/10 text-zinc-400 border-white/10"
                   }`}>
@@ -117,7 +137,14 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+             <EventPreviewModal
+                eventId={event.id}
+                eventSlug={event.slug}
+                eventTitle={event.title}
+                isFree={event.isFree}
+                buttonClassName="flex items-center gap-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 px-4 py-2.5 rounded-xl font-bold transition-all text-sm border border-amber-500/30"
+             />
              <Link 
                 href={`/admin/eventos/${event.id}/editar`}
                 className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-zinc-300 px-4 py-2.5 rounded-xl font-medium transition-all text-sm border border-white/5"
@@ -305,17 +332,48 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
            <section className="bg-gradient-to-br from-zinc-900 to-black border border-white/10 rounded-3xl p-6 backdrop-blur-md">
               <h2 className="font-semibold text-emerald-500 text-sm uppercase tracking-widest border-b border-white/5 pb-3 flex items-center gap-2"><DollarSign size={14}/> Tarifario Configurado</h2>
+               
+               {event.hasEarlyBird && (
+                 <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl space-y-1">
+                   <div className="flex items-center justify-between">
+                     <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                       <Tag size={12} /> Venta Anticipada
+                     </span>
+                     <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${
+                       prices.isEarlyBirdActive ? "bg-amber-500 text-zinc-950" : "bg-zinc-800 text-zinc-400"
+                     }`}>
+                       {prices.isEarlyBirdActive ? "ACTIVA AHORA" : "EXPIRADA / DESACTIVADA"}
+                     </span>
+                   </div>
+                   {prices.earlyBirdDeadlineFormatted && (
+                     <p className="text-[10px] text-zinc-400">
+                       Válida hasta: <strong className="text-amber-300">{prices.earlyBirdDeadlineFormatted}</strong>
+                     </p>
+                   )}
+                 </div>
+               )}
+
                <div className="mt-4 space-y-4 text-xs">
                   {event.hasMilonga && (
                     <div className="space-y-2 border-b border-white/5 pb-3">
                       <p className="text-[10px] font-bold text-red-400 uppercase">Milonga</p>
                       <div className="flex justify-between items-center">
                         <span className="text-zinc-500">Socio:</span>
-                        <span className="text-white font-bold">${(event.priceSocioMilonga || 0).toLocaleString()}</span>
+                        <span className="text-white font-bold">
+                          ${prices.milongaSocio.toLocaleString()}
+                          {prices.isEarlyBirdActive && event.priceSocioEarlyBird !== null && (
+                            <span className="text-[10px] text-zinc-500 line-through ml-1.5">${(event.priceSocioMilonga || 0).toLocaleString()}</span>
+                          )}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-zinc-500">No Socio:</span>
-                        <span className="text-white font-bold">${(event.priceNonSocioMilonga || 0).toLocaleString()}</span>
+                        <span className="text-white font-bold">
+                          ${prices.milongaNonSocio.toLocaleString()}
+                          {prices.isEarlyBirdActive && event.priceNonSocioEarlyBird !== null && (
+                            <span className="text-[10px] text-zinc-500 line-through ml-1.5">${(event.priceNonSocioMilonga || 0).toLocaleString()}</span>
+                          )}
+                        </span>
                       </div>
                     </div>
                   )}
@@ -325,19 +383,29 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                       <p className="text-[10px] font-bold text-cyan-400 uppercase">Capacitación ({event.comboTitle || "Combo"})</p>
                       <div className="flex justify-between items-center">
                         <span className="text-zinc-500">Combo Socio:</span>
-                        <span className="text-amber-400 font-bold">${(event.priceSocioCombo || 0).toLocaleString()}</span>
+                        <span className="text-amber-400 font-bold">
+                          ${prices.comboSocio.toLocaleString()}
+                          {prices.isEarlyBirdActive && event.priceSocioComboEarlyBird !== null && (
+                            <span className="text-[10px] text-zinc-500 line-through ml-1.5">${(event.priceSocioCombo || 0).toLocaleString()}</span>
+                          )}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-zinc-500">Combo No Socio:</span>
-                        <span className="text-white font-bold">${(event.priceNonSocioCombo || 0).toLocaleString()}</span>
+                        <span className="text-white font-bold">
+                          ${prices.comboNonSocio.toLocaleString()}
+                          {prices.isEarlyBirdActive && event.priceNonSocioComboEarlyBird !== null && (
+                            <span className="text-[10px] text-zinc-500 line-through ml-1.5">${(event.priceNonSocioCombo || 0).toLocaleString()}</span>
+                          )}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-zinc-500">Clase Suelta Socio:</span>
-                        <span className="text-amber-400 font-bold">${(event.priceSocioClassLoose || 0).toLocaleString()}</span>
+                        <span className="text-amber-400 font-bold">${prices.classLooseSocio.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-zinc-500">Clase Suelta No Socio:</span>
-                        <span className="text-white font-bold">${(event.priceNonSocioClassLoose || 0).toLocaleString()}</span>
+                        <span className="text-white font-bold">${prices.classLooseNonSocio.toLocaleString()}</span>
                       </div>
                     </div>
                   )}

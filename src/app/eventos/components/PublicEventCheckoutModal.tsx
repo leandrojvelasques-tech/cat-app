@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Calendar, X, Ticket, CheckCircle2, Upload, Loader2, DollarSign, ShieldAlert, CreditCard, BookOpen, Music, ShoppingCart, User, Mail, Phone, Lock } from "lucide-react"
+import { Calendar, X, Ticket, CheckCircle2, Upload, Loader2, DollarSign, ShieldAlert, CreditCard, BookOpen, Music, ShoppingCart, User, Mail, Phone, Lock, Tag } from "lucide-react"
 import { registerPublicAttendee } from "@/app/actions/registraciones"
+import { getEffectiveEventPrices } from "@/lib/event-utils"
 
 interface EventData {
   id: string
@@ -19,6 +20,12 @@ interface EventData {
   priceNonSocioCombo?: number | null
   priceSocioClassLoose?: number | null
   priceNonSocioClassLoose?: number | null
+  hasEarlyBird?: boolean
+  earlyBirdDeadline?: Date | string | null
+  priceSocioEarlyBird?: number | null
+  priceNonSocioEarlyBird?: number | null
+  priceSocioComboEarlyBird?: number | null
+  priceNonSocioComboEarlyBird?: number | null
   isFree?: boolean
 }
 
@@ -33,10 +40,12 @@ export function PublicEventCheckoutModal({ event }: PublicEventCheckoutModalProp
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-  // Non-member Prices with fallbacks
-  const milongaPrice = event.isFree ? 0 : (event.priceNonSocioMilonga || 0)
-  const comboPrice = event.isFree ? 0 : (event.priceNonSocioCombo || 50000)
-  const looseClassPrice = event.isFree ? 0 : (event.priceNonSocioClassLoose || 17000)
+  const prices = getEffectiveEventPrices(event)
+
+  // Non-member Prices from getEffectiveEventPrices
+  const milongaPrice = prices.milongaNonSocio
+  const comboPrice = prices.comboNonSocio
+  const looseClassPrice = prices.classLooseNonSocio
 
   // Selection states
   const [includeMilonga, setIncludeMilonga] = useState(event.hasMilonga ?? true)
@@ -209,6 +218,15 @@ export function PublicEventCheckoutModal({ event }: PublicEventCheckoutModalProp
                     {step === 1 ? (
                       /* Paso 1: Carrito de Selección de Opciones */
                       <div className="space-y-6">
+                        {prices.isEarlyBirdActive && (
+                          <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-2xl flex items-center justify-between text-xs text-amber-300">
+                            <div className="flex items-center gap-2 font-bold">
+                              <Tag size={15} className="text-amber-400 shrink-0" />
+                              <span>Tarifas de Venta Anticipada con Descuento aplicadas.</span>
+                            </div>
+                          </div>
+                        )}
+
                         <div>
                           <h4 className="text-xs font-black uppercase text-zinc-400 tracking-wider mb-3">
                             1. Seleccioná lo que deseas contratar / asistir

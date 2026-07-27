@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { sendEventRegistrationAlertToBoard } from "@/lib/emails"
+import { getEffectiveEventPrices } from "@/lib/event-utils"
 
 async function parseBannerField(formData: FormData): Promise<string | null> {
   const fileOrString = formData.get("eventBanner")
@@ -67,6 +68,15 @@ export async function createEvent(prevState: any, formData: FormData) {
 
     const parseNum = (val: any) => (val !== null && val !== "" && !isNaN(parseFloat(val)) ? parseFloat(val) : null)
 
+    const hasEarlyBird = formData.get("hasEarlyBird") === "true" || formData.get("hasEarlyBird") === "on"
+    const earlyBirdDeadlineStr = formData.get("earlyBirdDeadline") as string
+    const earlyBirdDeadline = earlyBirdDeadlineStr ? new Date(earlyBirdDeadlineStr) : null
+
+    const priceSocioEarlyBird = isFree ? 0 : parseNum(formData.get("priceSocioEarlyBird"))
+    const priceNonSocioEarlyBird = isFree ? 0 : parseNum(formData.get("priceNonSocioEarlyBird"))
+    const priceSocioComboEarlyBird = isFree ? 0 : parseNum(formData.get("priceSocioComboEarlyBird"))
+    const priceNonSocioComboEarlyBird = isFree ? 0 : parseNum(formData.get("priceNonSocioComboEarlyBird"))
+
     const priceSocioMilonga = isFree ? 0 : parseNum(formData.get("priceSocioMilonga"))
     const priceNonSocioMilonga = isFree ? 0 : parseNum(formData.get("priceNonSocioMilonga"))
 
@@ -118,6 +128,12 @@ export async function createEvent(prevState: any, formData: FormData) {
         contactPhone,
         contactEmail,
         notificationEmails,
+        hasEarlyBird,
+        earlyBirdDeadline,
+        priceSocioEarlyBird,
+        priceNonSocioEarlyBird,
+        priceSocioComboEarlyBird,
+        priceNonSocioComboEarlyBird,
         priceSocioMilonga,
         priceNonSocioMilonga,
         comboTitle,
@@ -179,6 +195,15 @@ export async function updateEvent(id: string, prevState: any, formData: FormData
 
     const parseNum = (val: any) => (val !== null && val !== "" && !isNaN(parseFloat(val)) ? parseFloat(val) : null)
 
+    const hasEarlyBird = formData.get("hasEarlyBird") === "true" || formData.get("hasEarlyBird") === "on"
+    const earlyBirdDeadlineStr = formData.get("earlyBirdDeadline") as string
+    const earlyBirdDeadline = earlyBirdDeadlineStr ? new Date(earlyBirdDeadlineStr) : null
+
+    const priceSocioEarlyBird = isFree ? 0 : parseNum(formData.get("priceSocioEarlyBird"))
+    const priceNonSocioEarlyBird = isFree ? 0 : parseNum(formData.get("priceNonSocioEarlyBird"))
+    const priceSocioComboEarlyBird = isFree ? 0 : parseNum(formData.get("priceSocioComboEarlyBird"))
+    const priceNonSocioComboEarlyBird = isFree ? 0 : parseNum(formData.get("priceNonSocioComboEarlyBird"))
+
     const priceSocioMilonga = isFree ? 0 : parseNum(formData.get("priceSocioMilonga"))
     const priceNonSocioMilonga = isFree ? 0 : parseNum(formData.get("priceNonSocioMilonga"))
 
@@ -229,6 +254,12 @@ export async function updateEvent(id: string, prevState: any, formData: FormData
       contactPhone,
       contactEmail,
       notificationEmails,
+      hasEarlyBird,
+      earlyBirdDeadline,
+      priceSocioEarlyBird,
+      priceNonSocioEarlyBird,
+      priceSocioComboEarlyBird,
+      priceNonSocioComboEarlyBird,
       priceSocioMilonga,
       priceNonSocioMilonga,
       comboTitle,
@@ -314,11 +345,12 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
   const paymentMethod = (formData.get("paymentMethod") as string) || "CASH"
   const paymentProof = (formData.get("avatarUrl") as string) || (formData.get("paymentProof") as string) || null
 
-  let amountPaid = event.priceSocioMilonga || 0
+  const prices = getEffectiveEventPrices(event)
+  let amountPaid = prices.milongaSocio
   if (registrationType === "COMBO_CLASES") {
-    amountPaid = event.priceSocioCombo || amountPaid
+    amountPaid = prices.comboSocio
   } else if (registrationType === "CLASE_SUELTA") {
-    amountPaid = event.priceSocioClassLoose || amountPaid
+    amountPaid = prices.classLooseSocio
   }
 
   const existing = await db.eventRegistration.findFirst({
