@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { Calendar, MapPin, Music, ChevronLeft, User, DollarSign, Headphones, Clock, Sparkles, BookOpen, ExternalLink, MessageSquare, Mail, Phone } from "lucide-react"
 import { auth } from "@/auth"
+import { PublicEventCheckoutModal } from "../components/PublicEventCheckoutModal"
 
 export default async function PublicEventLandingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -310,27 +311,23 @@ export default async function PublicEventLandingPage({ params }: { params: Promi
 
             {/* Booking CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
+              <PublicEventCheckoutModal event={event} />
+
               {session?.user ? (
                 <Link 
                   href="/socios" 
-                  className="bg-gradient-to-tr from-amber-500 to-amber-700 hover:brightness-110 text-zinc-950 font-extrabold px-8 py-4 rounded-2xl shadow-lg shadow-amber-500/20 text-center text-xs tracking-widest uppercase transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
+                  className="bg-gradient-to-tr from-amber-500 to-amber-700 hover:brightness-110 text-zinc-950 font-extrabold px-6 py-4 rounded-2xl shadow-lg shadow-amber-500/20 text-center text-xs tracking-widest uppercase transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shrink-0"
                 >
-                  <Sparkles size={16} /> Reservar con Tarifa Preferencial Socio
+                  <Sparkles size={16} /> Reservar con Descuento Socio CAT
                 </Link>
               ) : (
                 <Link 
-                  href="/login" 
-                  className="bg-gradient-to-tr from-amber-500 to-amber-700 hover:brightness-110 text-zinc-950 font-extrabold px-8 py-4 rounded-2xl shadow-lg shadow-amber-500/20 text-center text-xs tracking-widest uppercase transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                  href={`/login?callbackUrl=${encodeURIComponent(`/eventos/${event.id}`)}`}
+                  className="bg-white/10 hover:bg-white/20 text-amber-300 font-extrabold px-6 py-4 rounded-2xl border border-amber-500/30 text-center text-xs tracking-widest uppercase transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shrink-0"
                 >
-                  Ingresar como Socio para Reservar
+                  <Sparkles size={16} className="text-amber-400" /> Soy Socio CAT (Aplicar Descuento)
                 </Link>
               )}
-              <Link 
-                href="/" 
-                className="bg-white/5 hover:bg-white/10 text-zinc-300 px-8 py-4 rounded-2xl text-center text-xs font-bold border border-white/5 transition-all hover:text-white"
-              >
-                Volver al Inicio
-              </Link>
             </div>
 
           </div>

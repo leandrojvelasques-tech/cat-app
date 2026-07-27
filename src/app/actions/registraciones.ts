@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { sendEventRegistrationAlertToBoard } from "@/lib/emails"
+import { validateAndSanitizeFile } from "@/lib/security-utils"
 
 export async function registerAttendee(formData: FormData) {
   try {
@@ -25,13 +26,15 @@ export async function registerAttendee(formData: FormData) {
 
     let paymentProofUrl = null
     if (file && file.size > 0) {
-      if (file.size > 1024 * 1024 * 5) { // Increased to 5MB to be safer
-        return { error: "El archivo es demasiado grande. Máximo 5MB." }
+      const arrayBuffer = await file.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+      
+      const validation = await validateAndSanitizeFile(buffer, file.type)
+      if (!validation.isValid) {
+        return { error: validation.error || "El archivo adjunto no es válido por seguridad." }
       }
       
-      const bytes = await file.arrayBuffer()
-      const buffer = Buffer.from(bytes)
-      paymentProofUrl = `data:${file.type};base64,${buffer.toString("base64")}`
+      paymentProofUrl = `data:${validation.mimeType};base64,${buffer.toString("base64")}`
     }
 
     await db.eventRegistration.create({
@@ -78,6 +81,91 @@ export async function registerAttendee(formData: FormData) {
   }
 }
 
+export async function registerPublicAttendee(formData: FormData) {
+  try {
+    const eventId = (formData.get("eventId") as string || "").trim()
+    const firstName = (formData.get("firstName") as string || "").trim()
+    const lastName = (formData.get("lastName") as string || "").trim()
+    const dni = (formData.get("dni") as string || "").trim()
+    const email = (formData.get("email") as string || "").trim().toLowerCase()
+    const phone = (formData.get("phone") as string || "").trim()
+    const registrationType = (formData.get("registrationType") as string || "ENTRADA_GENERAL").trim()
+    const amountPaid = parseFloat(formData.get("amountPaid") as string) || 0
+    const paymentMethod = (formData.get("paymentMethod") as string || "CASH").trim()
+    const file = formData.get("paymentProof") as File | null
+
+    if (!eventId || !firstName || !lastName || !dni || !email || !phone) {
+      return { success: false, error: "Por favor completá todos los campos obligatorios (*)." }
+    }
+
+    const event = await db.event.findUnique({ where: { id: eventId } })
+    if (!event || !event.isPublic) {
+      return { success: false, error: "El evento no existe o ya no está disponible." }
+    }
+
+    let paymentProofUrl = null
+    if (file && file.size > 0) {
+      const arrayBuffer = await file.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+
+      // Validación defensiva por Magic Bytes binarios (seguridad anti-malware)
+      const validation = await validateAndSanitizeFile(buffer, file.type)
+      if (!validation.isValid) {
+        return { success: false, error: validation.error || "Formato de comprobante no permitido por seguridad." }
+      }
+
+      paymentProofUrl = `data:${validation.mimeType};base64,${buffer.toString("base64")}`
+    }
+
+    const paymentStatus = paymentProofUrl ? "PAID" : (paymentMethod === "TRANSFER" ? "PENDING" : "PENDING")
+
+    const registration = await db.eventRegistration.create({
+      data: {
+        eventId: event.id,
+        firstName,
+        lastName,
+        dni,
+        email,
+        phone,
+        registrationType,
+        amountPaid,
+        paymentStatus,
+        paymentMethod,
+        paymentProof: paymentProofUrl,
+        source: "WEB"
+      }
+    })
+
+    // Disparar alertas por email a la directiva y mails adicionales
+    sendEventRegistrationAlertToBoard(event, {
+      firstName,
+      lastName,
+      dni,
+      email,
+      phone,
+      registrationType,
+      amountPaid,
+      paymentMethod,
+      paymentProof: paymentProofUrl
+    }).catch(err => console.error("Error al enviar alerta por email a la directiva:", err))
+
+    revalidatePath("/admin")
+    revalidatePath("/admin/eventos")
+    revalidatePath(`/admin/eventos/${eventId}`)
+    revalidatePath(`/eventos/${eventId}`)
+
+    return { 
+      success: true, 
+      message: paymentProofUrl 
+        ? "¡Inscripción y comprobante recibidos con éxito! Estaremos verificando tu pago." 
+        : "¡Inscripción registrada con éxito! Te esperamos en el evento." 
+    }
+  } catch (err: any) {
+    console.error("Error en registerPublicAttendee:", err)
+    return { success: false, error: err?.message || "Ocurrió un error al procesar tu inscripción." }
+  }
+}
+
 export async function deleteRegistration(regId: string, eventId: string) {
   await db.eventRegistration.delete({ where: { id: regId } })
   revalidatePath(`/admin/eventos/${eventId}`)
@@ -89,4 +177,7 @@ export async function updatePaymentStatus(regId: string, eventId: string, status
     data: { paymentStatus: status, amountPaid: amount }
   })
   revalidatePath(`/admin/eventos/${eventId}`)
+  revalidatePath("/admin/eventos")
+  revalidatePath("/admin")
 }
+
