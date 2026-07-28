@@ -19,13 +19,17 @@ export default async function SociosPage({
   
   const BAJA_STATUS_KEYS = ["DECEASED", "RESIGNED", "INACTIVE", "ARCHIVED"]
 
+  const viewFilter = view === "honorary"
+    ? { type: "HONORARIO", status: { notIn: BAJA_STATUS_KEYS } }
+    : view === "archive" 
+    ? (status ? (status === "INACTIVE" ? { status: { in: ["INACTIVE", "ARCHIVED"] } } : { status }) : { status: { in: BAJA_STATUS_KEYS } })
+    : { status: { notIn: BAJA_STATUS_KEYS }, type: { not: "HONORARIO" } }
+
   // Fetch members according to view
   const membersData = await db.member.findMany({
     where: {
       AND: [
-        view === "archive" 
-          ? (status ? (status === "INACTIVE" ? { status: { in: ["INACTIVE", "ARCHIVED"] } } : { status }) : { status: { in: BAJA_STATUS_KEYS } })
-          : { status: { notIn: BAJA_STATUS_KEYS } },
+        viewFilter,
         query ? {
           OR: [
             { firstName: { contains: query, mode: 'insensitive' } },
@@ -103,7 +107,7 @@ export default async function SociosPage({
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/5 p-6 rounded-[32px] border border-white/10 backdrop-blur-md">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-white/90">
-            {view === "archive" ? "Archivo de Socios" : "Directorio de Socios"}
+            {view === "honorary" ? "Padrón de Socios Honorarios" : view === "archive" ? "Archivo de Socios" : "Directorio de Socios"}
           </h1>
           <p className="text-zinc-500 mt-1">
             {filteredMembers.length} {filteredMembers.length === 1 ? 'socio encontrado' : 'socios encontrados'}

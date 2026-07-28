@@ -69,6 +69,12 @@ export function SociosFilters() {
             Directorio Activo
           </button>
           <button 
+            onClick={() => handleViewChange("honorary")}
+            className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${currentView === "honorary" ? "bg-amber-500 text-zinc-950 shadow-xl font-extrabold" : "text-amber-400/80 hover:text-amber-300 hover:bg-amber-500/10"}`}
+          >
+            Socios Honorarios
+          </button>
+          <button 
             onClick={() => handleViewChange("archive")}
             className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${currentView === "archive" ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-white hover:bg-white/5"}`}
           >

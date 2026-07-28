@@ -29,10 +29,11 @@ export default async function EstadoSociosPage({
   const BAJA_STATUSES = ["DECEASED", "RESIGNED", "INACTIVE", "ARCHIVED"]
 
   if (query) {
-    // Search Mode: Find any active member matching the query
+    // Search Mode: Find any active member matching the query (excluding Honorarios)
     membersData = await db.member.findMany({
       where: {
         status: { notIn: BAJA_STATUSES },
+        type: { not: "HONORARIO" },
         OR: [
           { firstName: { contains: query, mode: 'insensitive' } },
           { lastName: { contains: query, mode: 'insensitive' } },
@@ -65,10 +66,11 @@ export default async function EstadoSociosPage({
       take: 50 // Limit to avoid massive renders on short queries
     } as any) as any[]
   } else {
-    // Default Mode: Find active members participating (paid at least one fee from Jan 2026)
+    // Default Mode: Find active members participating (paid at least one fee from Jan 2026, excluding Honorarios)
     membersData = await db.member.findMany({
       where: {
         status: { notIn: BAJA_STATUSES },
+        type: { not: "HONORARIO" },
         fees: {
           some: {
             paymentStatus: "PAID",
