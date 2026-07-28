@@ -1,4 +1,4 @@
-export type CalculatedStatus = 'AL DIA' | 'EN MORA' | 'INACTIVO' | 'SUSPENDIDO' | 'BAJA'
+export type CalculatedStatus = 'AL DIA' | 'EN MORA' | 'INACTIVO' | 'SUSPENDIDO' | 'BAJA' | 'HONORARIO'
 
 /**
  * Calculates the current status of a member based on payment and activity history.
@@ -6,6 +6,11 @@ export type CalculatedStatus = 'AL DIA' | 'EN MORA' | 'INACTIVO' | 'SUSPENDIDO' 
  * @param now Reference date (default current).
  */
 export function calculateMemberStatus(member: any, now: Date = new Date()): CalculatedStatus {
+  // If the member is an Honorary Member, they are permanently HONORARIO (exempt from fee debt)
+  if (member.type === 'HONORARIO') {
+    return 'HONORARIO'
+  }
+
   // If the manual status is already a terminal state, return BAJA
   if (["DECEASED", "RESIGNED", "ARCHIVED", "INACTIVE"].includes(member.status)) {
     return 'BAJA'
@@ -120,6 +125,7 @@ export function getMemberBajaReason(member: any): string | null {
  */
 export function getStatusBadgeStyles(status: CalculatedStatus) {
   switch (status) {
+    case 'HONORARIO': return "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 text-amber-300 border-amber-500/40 font-bold"
     case 'AL DIA': return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
     case 'EN MORA': return "bg-amber-500/10 text-amber-300 border-amber-500/20"
     case 'INACTIVO': return "bg-zinc-500/10 text-zinc-400 border-white/10"

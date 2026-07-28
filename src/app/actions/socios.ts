@@ -349,3 +349,49 @@ export async function updateMemberProfile(memberId: string, formData: FormData) 
   revalidatePath("/socios")
   return { success: true }
 }
+
+export async function nombrarSocioHonorario(memberId: string, reason: string, honorarioDateStr?: string) {
+  if (!reason || reason.trim().length === 0) {
+    throw new Error("Debe proporcionar el motivo de la designación como Socio Honorario.")
+  }
+
+  const dateStr = honorarioDateStr 
+    ? new Date(honorarioDateStr).toLocaleDateString("es-AR")
+    : new Date().toLocaleDateString("es-AR")
+
+  const noteText = `SOCIO HONORARIO (Nombrado el ${dateStr}): ${reason.trim()}`
+
+  const existingMember = await db.member.findUnique({
+    where: { id: memberId },
+    select: { notes: true }
+  })
+
+  const updatedNotes = existingMember?.notes 
+    ? `${noteText}\n\n${existingMember.notes}`
+    : noteText
+
+  await db.member.update({
+    where: { id: memberId },
+    data: {
+      type: "HONORARIO",
+      notes: updatedNotes
+    }
+  })
+
+  // Auditoría en Comunicaciones
+  await db.communication.create({
+    data: {
+      memberId,
+      type: "GENERAL",
+      subject: "Designación como Socio Honorario",
+      content: noteText,
+      channel: "MANUAL",
+      status: "SENT"
+    }
+  })
+
+  revalidatePath(`/admin/socios/${memberId}`)
+  revalidatePath("/admin/socios")
+  return { success: true }
+}
+

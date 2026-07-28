@@ -3,6 +3,7 @@ import Link from "next/link"
 import { ArrowLeft, Edit, CheckCircle2, Mail, Users, AlertCircle, History, MapPin, Phone, User, CreditCard, Clock, Trophy, Medal, Star, X, Calendar } from "lucide-react"
 import { notFound } from "next/navigation"
 import { DeactivateMemberButton } from "./DeactivateButton"
+import { NombrarHonorarioModal } from "./NombrarHonorarioModal"
 import { FamilyDiscountToggle } from "./FamilyDiscountToggle"
 import { RegisterFeeForm } from "./RegisterFeeForm"
 import { AddBoardHistoryForm } from "./AddBoardHistoryForm"
@@ -105,6 +106,7 @@ export default async function FichaSocioPage(props: any) {
         </div>
 
         <div className="flex gap-2 flex-wrap items-center relative z-10">
+          <NombrarHonorarioModal memberId={member.id} isHonorario={member.type === "HONORARIO"} />
           <Link href={`/admin/socios/${member.id}/editar`} className="bg-white/5 hover:bg-white/10 text-white px-5 py-2.5 rounded-2xl text-xs font-bold border border-white/5 transition-all">
             Editar
           </Link>

@@ -1,11 +1,12 @@
 "use client"
 import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
-import { Trophy, Medal, Star, User, Maximize2, X } from "lucide-react"
+import { Trophy, Medal, Star, User, Maximize2, X, Award } from "lucide-react"
 
 export function DigitalMemberCard({ member, awards }: { member: any, awards: any[] }) {
   const hasPodium = awards.some(a => a.place <= 3)
   const isChampion = awards.some(a => a.place === 1)
+  const isHonorario = member.type === "HONORARIO"
   const [fullscreen, setFullscreen] = useState(false)
   const [mounted, setMounted] = useState(false)
   // Detecta si el dispositivo está en modo portrait (vertical) para rotar el carnet
@@ -37,14 +38,16 @@ export function DigitalMemberCard({ member, awards }: { member: any, awards: any
 
   const cardContent = (
     <div className={`relative w-full bg-gradient-to-br border shadow-2xl rounded-[32px] overflow-hidden backdrop-blur-md flex flex-col justify-between ${
-      isChampion
+      isHonorario
+        ? "from-zinc-900 via-amber-950/40 to-yellow-950/30 border-amber-500/40 shadow-amber-900/20"
+        : isChampion
         ? "from-zinc-900 via-zinc-950 to-amber-900/40 border-amber-500/30"
         : "from-zinc-900/95 to-zinc-950/98 border-white/10"
     } ${fullscreen ? "h-full p-10 md:p-14" : "p-6 md:p-8 aspect-[1.8/1]"}`}>
 
       {/* Background Glow */}
       <div className={`absolute inset-0 rounded-[32px] blur-3xl opacity-10 pointer-events-none bg-gradient-to-tr ${
-        isChampion ? "from-amber-600 via-amber-400 to-yellow-200" : "from-amber-800 to-zinc-900"
+        isHonorario ? "from-yellow-400 via-amber-500 to-amber-700" : isChampion ? "from-amber-600 via-amber-400 to-yellow-200" : "from-amber-800 to-zinc-900"
       }`} />
 
       {/* Watermark */}
@@ -62,7 +65,12 @@ export function DigitalMemberCard({ member, awards }: { member: any, awards: any
            <p className="text-[10px] text-zinc-600 font-bold ml-10">FUNDADA EN 1991</p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          {isHonorario && (
+            <div className="bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-zinc-950 text-[9px] font-black px-3 py-1 rounded-full flex items-center gap-1 shadow-lg shadow-amber-500/30">
+              <Award size={10} /> SOCIO HONORARIO
+            </div>
+          )}
           {isChampion && (
             <div className="bg-amber-500 text-zinc-950 text-[9px] font-black px-3 py-1 rounded-full flex items-center gap-1 shadow-lg shadow-amber-500/20 animate-pulse">
               <Trophy size={10} /> CAMPEÓN CAT
