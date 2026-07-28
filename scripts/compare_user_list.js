@@ -1,0 +1,96 @@
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+const rawList = `
+513	DIAZ MARGOT
+514	SANCHEZ LUCRECIA
+515	VILLALOBOS GRACIELA
+516	MELIS MARIA SOLEDAD
+517	GARZON MIGUEL
+518	OSTERTAG MARTA
+519	COLL CYNTHIA JUDITH
+520	NITOR JOSE ARIEL
+521	GUTIERREZ ELIDA
+522	SILVA ANTONIA
+523	LABAT RAMON
+524	VALERO MARIA ALEJANDRA
+525	DEOCARETS DELIA
+526	BARRIENTOS NESTOR
+527	RETAMOZO RAMON
+528	HAGA NORMA
+529	MENDOZA CLOTILDE
+530	MILLAMAN MARIA
+531	STEINBACH ELVIRA
+532	CARDOSO VIDAL SILVIA NOEMI
+533	MORALES PEDRO ISIDORO
+534	CEJAS CRISTINA
+535	OYARZO NOEMI (MIMI)
+536	AMUINAHUEL JORGE
+537	ANTUNEZ CLAUDIA
+538	ROLDAN LUCAS
+539	ARTEAGA JOSE ALBERTO
+540	PONS MARCOS
+541	GOROSITO VERONICA
+542	MENDOZA JULIAN
+543	LORENZO DIANA
+544	RIVERO ROBERTO GABRIEL
+545	LESLYBETH GALLE V
+546	SANDANDER FLAVIA
+547	ZAHIRA MOLMANTI
+548	VELAZCO ANDREA
+549	MARINELLI LAURA
+550	MURUA LUCIA
+551	ROMAN AGOSTINA
+552	MOYA MARCELA
+553	CANEPA LILIANA
+554	AZCONA MARCELA GLADYS
+555	GOMEZ JAVIER ANGEL
+556	SEPULVEDA DANTE MATIAS
+557	VILLARROEL HEBE
+558	NIEVA, MARIA OFELIA
+559	GALLEGOS, SERGIO DIEGO
+560	RUA, ESTELA BEATRIZ
+561	MAURO MARCINKEIVCIUS
+562	LOPEZ MIGUEL
+563	DIAZ VIRGINIA CELESTE
+564	ESAINS MAURO
+565	QUERCIA VERONICA
+566	PANASIUK MARIELA
+567	SIERRA MELISSA ALEJANDRA
+568	NATALIA SOLEDAD HERNANDEZ
+569	NIEVA MARIANA
+570	CERATI CAROLINA CONSTANZA
+571	URIBE NAVARRO JOSE RUPERTO
+572	YARILLO CINTIA MICAELA
+573	TOGNETTI CONRADO
+574	CARRERA SONIA LILIAN
+575	ORTIZ YANINA PAOLA
+576	GARRIDO ARACELI
+577	TABOADA ANGELA DANIELA 
+578	ANTONIO TRONCOSO
+`;
+
+async function main() {
+  const allMembers = await prisma.member.findMany();
+  const lines = rawList.trim().split('\n').filter(l => l.trim().length > 0);
+
+  for (const line of lines) {
+    const match = line.trim().match(/^(\d+)\s+(.+)$/);
+    if (!match) continue;
+
+    const listNum = match[1];
+    const listName = match[2].trim();
+
+    const m = allMembers.find(mem => mem.memberNumber === listNum);
+    if (m) {
+      console.log(`[OK] List N° ${listNum}: "${listName}"  <===>  BD N° ${m.memberNumber}: "${m.lastName}, ${m.firstName}"`);
+    } else {
+      const matchByName = allMembers.find(mem => mem.lastName.toUpperCase().includes('TRONCOSO') || mem.firstName.toUpperCase().includes('TRONCOSO'));
+      console.log(`[DIF] List N° ${listNum}: "${listName}"  <===>  BD N° ${matchByName ? matchByName.memberNumber : 'NO ENCONTRADO'}: "${matchByName ? matchByName.lastName + ', ' + matchByName.firstName : ''}"`);
+    }
+  }
+}
+
+main()
+  .catch(console.error)
+  .finally(() => prisma.$disconnect());
