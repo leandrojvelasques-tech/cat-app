@@ -215,75 +215,75 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
     document.body.removeChild(link)
   }
 
+  function handleOpenMailModal() {
+    if (selectedIds.length === 0) {
+      const idsWithEmail = displayedMembers.filter(m => m.email).map(m => m.id)
+      setSelectedIds(idsWithEmail)
+    }
+    setSendResult(null)
+    setIsModalOpen(true)
+  }
+
   return (
     <div className="space-y-6">
-      {/* Interactive Stats Cards */}
+      {/* Interactive Stats Cards (Clicking filters the table below) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Card Al Día */}
         <div 
-          onClick={() => handleSelectStatusGroup('AL DIA')}
+          onClick={() => setFilterStatus(prev => prev === "AL DIA" ? "ALL" : "AL DIA")}
           className={`cursor-pointer p-5 rounded-[24px] flex flex-col justify-center items-center border transition-all hover:scale-[1.02] active:scale-95 ${
-            isGroupAllSelected('AL DIA')
-              ? 'bg-emerald-950/60 border-emerald-500 shadow-lg shadow-emerald-500/10'
-              : isGroupAnySelected('AL DIA')
-              ? 'bg-emerald-900/30 border-emerald-500/40'
-              : 'bg-emerald-900/10 border-emerald-500/10'
+            filterStatus === 'AL DIA'
+              ? 'bg-emerald-950/80 border-emerald-500 shadow-xl shadow-emerald-500/20 ring-2 ring-emerald-500/50'
+              : 'bg-emerald-900/10 border-emerald-500/10 hover:border-emerald-500/30'
           }`}
         >
           <div className="flex items-center gap-2">
             <span className="text-3xl font-black text-emerald-400">{totalAlDia}</span>
-            {isGroupAllSelected('AL DIA') && <CheckSquare className="text-emerald-400" size={18} />}
           </div>
-          <span className="text-xs uppercase font-bold tracking-widest text-emerald-500/70 mt-1">Socios Al Día</span>
-          <span className="text-[9px] text-zinc-500 mt-2 uppercase font-black tracking-widest">
-            {isGroupAllSelected('AL DIA') ? 'Desmarcar Grupo' : 'Seleccionar Grupo'}
+          <span className="text-xs uppercase font-bold tracking-widest text-emerald-500/80 mt-1">Socios Al Día</span>
+          <span className="text-[9px] text-zinc-400 mt-2 uppercase font-black tracking-widest">
+            {filterStatus === 'AL DIA' ? '✓ Filtrando Al Día (clic para quitar)' : 'Filtrar por Al Día'}
           </span>
         </div>
 
         {/* Card En Mora */}
         <div 
-          onClick={() => handleSelectStatusGroup('EN MORA')}
+          onClick={() => setFilterStatus(prev => prev === "EN MORA" ? "ALL" : "EN MORA")}
           className={`cursor-pointer p-5 rounded-[24px] flex flex-col justify-center items-center border transition-all hover:scale-[1.02] active:scale-95 ${
-            isGroupAllSelected('EN MORA')
-              ? 'bg-amber-950/60 border-amber-500 shadow-lg shadow-amber-500/10'
-              : isGroupAnySelected('EN MORA')
-              ? 'bg-amber-900/30 border-amber-500/40'
-              : 'bg-amber-900/10 border-amber-500/10'
+            filterStatus === 'EN MORA'
+              ? 'bg-amber-950/80 border-amber-500 shadow-xl shadow-amber-500/20 ring-2 ring-amber-500/50'
+              : 'bg-amber-900/10 border-amber-500/10 hover:border-amber-500/30'
           }`}
         >
           <div className="flex items-center gap-2">
             <span className="text-3xl font-black text-amber-400">{totalEnMora}</span>
-            {isGroupAllSelected('EN MORA') && <CheckSquare className="text-amber-400" size={18} />}
           </div>
-          <span className="text-xs uppercase font-bold tracking-widest text-amber-500/70 mt-1">En Mora (90 días)</span>
-          <span className="text-[9px] text-zinc-500 mt-2 uppercase font-black tracking-widest">
-            {isGroupAllSelected('EN MORA') ? 'Desmarcar Grupo' : 'Seleccionar Grupo'}
+          <span className="text-xs uppercase font-bold tracking-widest text-amber-500/80 mt-1">En Mora (90 días)</span>
+          <span className="text-[9px] text-zinc-400 mt-2 uppercase font-black tracking-widest">
+            {filterStatus === 'EN MORA' ? '✓ Filtrando En Mora (clic para quitar)' : 'Filtrar por En Mora'}
           </span>
         </div>
 
         {/* Card Inactivos */}
         <div 
-          onClick={() => handleSelectStatusGroup('INACTIVOS')}
+          onClick={() => setFilterStatus(prev => prev === "INACTIVOS" ? "ALL" : "INACTIVOS")}
           className={`cursor-pointer p-5 rounded-[24px] flex flex-col justify-center items-center border transition-all hover:scale-[1.02] active:scale-95 ${
-            isGroupAllSelected('INACTIVOS')
-              ? 'bg-zinc-800/80 border-zinc-500 shadow-lg shadow-zinc-500/10'
-              : isGroupAnySelected('INACTIVOS')
-              ? 'bg-zinc-900/50 border-white/20'
-              : 'bg-zinc-900/20 border-white/10'
+            filterStatus === 'INACTIVOS'
+              ? 'bg-zinc-800/90 border-white/40 shadow-xl ring-2 ring-white/30'
+              : 'bg-zinc-900/20 border-white/10 hover:border-white/20'
           }`}
         >
           <div className="flex items-center gap-2">
             <span className="text-3xl font-black text-zinc-400">{totalInactivos}</span>
-            {isGroupAllSelected('INACTIVOS') && <CheckSquare className="text-zinc-400" size={18} />}
           </div>
-          <span className="text-xs uppercase font-bold tracking-widest text-zinc-500 mt-1">Inactivos (+90 días)</span>
-          <span className="text-[9px] text-zinc-500 mt-2 uppercase font-black tracking-widest">
-            {isGroupAllSelected('INACTIVOS') ? 'Desmarcar Grupo' : 'Seleccionar Grupo'}
+          <span className="text-xs uppercase font-bold tracking-widest text-zinc-400 mt-1">Inactivos (+90 días)</span>
+          <span className="text-[9px] text-zinc-400 mt-2 uppercase font-black tracking-widest">
+            {filterStatus === 'INACTIVOS' ? '✓ Filtrando Inactivos (clic para quitar)' : 'Filtrar por Inactivos'}
           </span>
         </div>
       </div>
 
-      {/* Filter and Export Toolbar */}
+      {/* Filter and Actions Toolbar */}
       <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-white/5 p-4 rounded-[24px] border border-white/10 backdrop-blur-md">
         <div className="flex flex-wrap items-center gap-3">
           {/* Status Filter */}
@@ -317,7 +317,16 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
           </div>
         </div>
 
-        <div className="flex items-end justify-start md:justify-end">
+        <div className="flex flex-wrap items-center gap-2 justify-start md:justify-end">
+          <button
+            onClick={handleOpenMailModal}
+            disabled={displayedMembers.length === 0}
+            className="flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:opacity-30 text-black px-5 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-amber-500/20 hover:scale-[1.02]"
+          >
+            <Mail size={16} />
+            <span>Enviar Mail {selectedIds.length > 0 ? `(${selectedIds.length})` : ''}</span>
+          </button>
+
           <button
             onClick={handleExportCSV}
             disabled={displayedMembers.length === 0}
