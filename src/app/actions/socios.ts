@@ -27,14 +27,14 @@ export async function createMember(formData: FormData) {
   const birthDate = birthDateStr ? new Date(birthDateStr) : null
   const joinDate = joinDateStr ? new Date(joinDateStr) : new Date()
 
-  // Logic to get the next member number.
-  const lastMember = await db.member.findFirst({
-    orderBy: { memberNumber: "desc" },
-  })
+  // Logic to get the next member number correctly (numeric max).
+  const allMembers = await db.member.findMany({ select: { memberNumber: true } })
+  const maxNumber = allMembers
+    .map(m => Number(m.memberNumber))
+    .filter(n => !isNaN(n))
+    .reduce((max, cur) => (cur > max ? cur : max), 0)
   
-  const nextMemberNumber = lastMember && !isNaN(Number(lastMember.memberNumber))
-    ? (Number(lastMember.memberNumber) + 1).toString()
-    : "1000"
+  const nextMemberNumber = (maxNumber + 1).toString()
 
   // DNI & Email Uniqueness Validation
   if (dni && dni.length > 0) {
