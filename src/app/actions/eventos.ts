@@ -154,13 +154,16 @@ export async function createEvent(prevState: any, formData: FormData) {
         } : undefined
       }
     })
+
+    revalidatePath("/")
+    revalidatePath("/admin/eventos")
+    revalidatePath("/eventos")
+    revalidatePath("/socios")
   } catch (error: any) {
+    if (error.digest?.startsWith("NEXT_REDIRECT")) throw error
     return { error: error.message || "Error al crear el evento" }
   }
 
-  revalidatePath("/admin/eventos")
-  revalidatePath("/eventos")
-  revalidatePath("/socios")
   redirect("/admin/eventos")
 }
 
@@ -290,14 +293,17 @@ export async function updateEvent(id: string, prevState: any, formData: FormData
         }))
       })
     }
+
+    revalidatePath("/")
+    revalidatePath("/admin/eventos")
+    revalidatePath(`/admin/eventos/${id}`)
+    revalidatePath("/eventos")
+    revalidatePath("/socios")
   } catch (error: any) {
+    if (error.digest?.startsWith("NEXT_REDIRECT")) throw error
     return { error: error.message || "Error al actualizar el evento" }
   }
 
-  revalidatePath("/admin/eventos")
-  revalidatePath(`/admin/eventos/${id}`)
-  revalidatePath("/eventos")
-  revalidatePath("/socios")
   redirect("/admin/eventos")
 }
 
@@ -310,6 +316,7 @@ export async function deleteEvent(id: string) {
     
     await db.event.delete({ where: { id } })
 
+    revalidatePath("/")
     revalidatePath("/admin/eventos")
     revalidatePath("/eventos")
     revalidatePath("/socios")

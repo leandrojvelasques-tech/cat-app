@@ -33,14 +33,16 @@ export default async function Home() {
     orderBy: { startDate: "asc" },
   })
 
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
+
   const upcomingEvents = allPublicEvents
     .map(evt => ({
       ...evt,
       computedDate: getNextEventDate(evt, now)
     }))
-    .filter(evt => evt.computedDate >= new Date(now.setHours(0, 0, 0, 0)) || evt.isRecurring)
+    .filter(evt => evt.computedDate >= todayStart || evt.isRecurring)
     .sort((a, b) => a.computedDate.getTime() - b.computedDate.getTime())
-    .slice(0, 3)
+    .slice(0, 6)
 
   // Obtener docentes del mes
   const docentesSetting = await db.setting.findUnique({
@@ -125,7 +127,7 @@ export default async function Home() {
           <div className="hidden md:flex items-center gap-8">
             <Link href="/" className="text-cat-gold font-bold pb-0.5 border-b border-cat-gold text-sm transition-colors">Inicio</Link>
             <Link href="#nosotros" className="text-zinc-400 hover:text-white text-sm transition-colors">Nosotros</Link>
-            <Link href="#eventos" className="text-zinc-400 hover:text-white text-sm transition-colors">Eventos</Link>
+            <Link href="#eventos" className="text-zinc-400 hover:text-white text-sm transition-colors">Agenda Tanguera</Link>
             <Link href="#beneficios" className="text-zinc-400 hover:text-white text-sm transition-colors">Beneficios</Link>
             <Link href="/login" className="text-zinc-400 hover:text-white text-sm transition-colors flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-xl border border-white/5 hover:bg-white/10">
               <LogIn size={14} />
@@ -234,12 +236,12 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Próximos Eventos */}
+      {/* Próximos Eventos - Agenda Tanguera */}
       <section id="eventos" className="bg-[#131313] py-24 md:py-32 px-6 md:px-16">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-end mb-16">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white font-serif mb-3">Próximos Eventos</h2>
+              <h2 className="text-3xl md:text-4xl font-bold text-white font-serif mb-3">Agenda Tanguera</h2>
               <div className="w-20 h-1 bg-cat-gold rounded-full"></div>
             </div>
           </div>
