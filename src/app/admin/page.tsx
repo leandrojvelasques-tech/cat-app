@@ -63,9 +63,7 @@ export default async function AdminDashboard() {
     'EN MORA': 0,
     'INACTIVO': 0,
     'SUSPENDIDO': 0,
-    'BAJA': 0,
-    'FALLECIDO': 0,
-    'RENUNCIA': 0
+    'BAJA': 0
   }
 
   allMembers.forEach(m => {
@@ -79,7 +77,7 @@ export default async function AdminDashboard() {
   const sociosDeudores = stats['EN MORA']
   const sociosSuspendidos = stats['SUSPENDIDO']
   const sociosInactivos = stats['INACTIVO']
-  const sociosBaja = stats['BAJA'] + stats['FALLECIDO'] + stats['RENUNCIA']
+  const sociosBaja = stats['BAJA']
   
   const cuotaSetting = await db.setting.findUnique({ where: { key: 'cuota_mensual' } })
   const cuotaMensual = parseFloat(cuotaSetting?.value || "6000")
