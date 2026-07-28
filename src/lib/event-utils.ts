@@ -139,3 +139,9 @@ export function getEffectiveEventPrices(event: any, referenceDate: Date = new Da
   }
 }
 
+export function isExternalEvent(event?: { type?: string | null } | null): boolean {
+  if (!event || !event.type) return false
+  const t = event.type.toUpperCase()
+  return t.includes("DIFUSIÓN") || t.includes("DIFUSION") || t.includes("EXTERNO")
+}
+

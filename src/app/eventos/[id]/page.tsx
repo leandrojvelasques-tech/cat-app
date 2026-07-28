@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Calendar, MapPin, Music, ChevronLeft, User, DollarSign, Headphones, Clock, Sparkles, BookOpen, ExternalLink, MessageSquare, Mail, Phone, Tag } from "lucide-react"
 import { auth } from "@/auth"
 import { PublicEventCheckoutModal } from "../components/PublicEventCheckoutModal"
-import { getEffectiveEventPrices } from "@/lib/event-utils"
+import { getEffectiveEventPrices, isExternalEvent } from "@/lib/event-utils"
 
 export default async function PublicEventLandingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -148,7 +148,11 @@ export default async function PublicEventLandingPage({ params }: { params: Promi
           <div className="lg:col-span-3 space-y-8 bg-white/[0.02] border border-white/5 p-8 md:p-10 rounded-3xl backdrop-blur-xl">
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-2.5">
-                {event.isFree ? (
+                {isExternalEvent(event) ? (
+                  <span className="px-3 py-1 text-[10px] font-black rounded-full border bg-purple-500/20 text-purple-300 border-purple-500/40 tracking-wider flex items-center gap-1 shadow-lg shadow-purple-950/30">
+                    <Sparkles size={12} /> 📢 DIFUSIÓN EXTERNA
+                  </span>
+                ) : event.isFree ? (
                   <span className="px-3 py-1 text-[10px] font-extrabold rounded-full border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 tracking-wider">
                     🎁 EVENTO SIN CARGO ($0)
                   </span>
@@ -356,25 +360,34 @@ export default async function PublicEventLandingPage({ params }: { params: Promi
             <hr className="border-white/5" />
 
             {/* Booking CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-2">
-              <PublicEventCheckoutModal event={event} />
+            {isExternalEvent(event) ? (
+              <div className="bg-purple-500/10 border border-purple-500/20 p-5 rounded-2xl text-xs text-purple-300 flex items-center justify-between w-full shadow-lg">
+                <div className="flex items-center gap-3">
+                  <Sparkles size={20} className="text-purple-400 shrink-0" />
+                  <span><strong>Evento de Difusión Cultural:</strong> Compartido por el Centro Amigos del Tango. Para asistir o consultar detalles, contactá al organizador mediante los medios indicados.</span>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                <PublicEventCheckoutModal event={event} />
 
-              {session?.user ? (
-                <Link 
-                  href="/socios" 
-                  className="bg-gradient-to-tr from-amber-500 to-amber-700 hover:brightness-110 text-zinc-950 font-extrabold px-6 py-4 rounded-2xl shadow-lg shadow-amber-500/20 text-center text-xs tracking-widest uppercase transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shrink-0"
-                >
-                  <Sparkles size={16} /> Reservar con Descuento Socio CAT
-                </Link>
-              ) : (
-                <Link 
-                  href={`/login?callbackUrl=${encodeURIComponent(`/eventos/${event.id}`)}`}
-                  className="bg-white/10 hover:bg-white/20 text-amber-300 font-extrabold px-6 py-4 rounded-2xl border border-amber-500/30 text-center text-xs tracking-widest uppercase transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shrink-0"
-                >
-                  <Sparkles size={16} className="text-amber-400" /> Soy Socio CAT (Aplicar Descuento)
-                </Link>
-              )}
-            </div>
+                {session?.user ? (
+                  <Link 
+                    href="/socios" 
+                    className="bg-gradient-to-tr from-amber-500 to-amber-700 hover:brightness-110 text-zinc-950 font-extrabold px-6 py-4 rounded-2xl shadow-lg shadow-amber-500/20 text-center text-xs tracking-widest uppercase transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shrink-0"
+                  >
+                    <Sparkles size={16} /> Reservar con Descuento Socio CAT
+                  </Link>
+                ) : (
+                  <Link 
+                    href={`/login?callbackUrl=${encodeURIComponent(`/eventos/${event.id}`)}`}
+                    className="bg-white/10 hover:bg-white/20 text-amber-300 font-extrabold px-6 py-4 rounded-2xl border border-amber-500/30 text-center text-xs tracking-widest uppercase transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shrink-0"
+                  >
+                    <Sparkles size={16} className="text-amber-400" /> Soy Socio CAT (Aplicar Descuento)
+                  </Link>
+                )}
+              </div>
+            )}
 
           </div>
 

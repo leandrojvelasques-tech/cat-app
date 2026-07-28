@@ -16,8 +16,8 @@ import {
 } from "lucide-react"
 import { EscuelitaCarousel } from "./EscuelitaCarousel"
 
-import { getNextEventDate, getDayName } from "@/lib/event-utils"
-import { Repeat } from "lucide-react"
+import { getNextEventDate, getDayName, isExternalEvent } from "@/lib/event-utils"
+import { Repeat, Sparkles as SparklesIcon } from "lucide-react"
 
 export const revalidate = 3600 // Revalida cada hora
 
@@ -332,21 +332,25 @@ export default async function Home() {
                         <span className="text-[10px] uppercase font-bold leading-none">{month.replace(".", "")}</span>
                         <span className="text-lg leading-none mt-1">{day}</span>
                       </div>
-                      {event.isRecurring && (
+                      {isExternalEvent(event) ? (
+                        <div className="absolute top-4 right-4 bg-purple-950/90 backdrop-blur-md px-2.5 py-1 rounded-lg text-[9px] font-extrabold text-purple-300 border border-purple-500/40 flex items-center gap-1 shadow-lg">
+                          <SparklesIcon size={10} /> 📢 DIFUSIÓN
+                        </div>
+                      ) : event.isRecurring ? (
                         <div className="absolute top-4 right-4 bg-zinc-950/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-[9px] font-extrabold text-cat-gold border border-cat-gold/30 flex items-center gap-1">
                           <Repeat size={10} /> Todos los {getDayName(event.recurrenceDay)}
                         </div>
-                      )}
+                      ) : null}
                     </div>
                     <h4 className="text-xl font-bold text-white mb-2">{event.title}</h4>
                     <p className="text-zinc-400 text-xs font-light leading-relaxed mb-6 line-clamp-3">
-                      {event.description || "Disfrutá de este gran evento organizado por la Asociación."}
+                      {event.description || "Disfrutá de este gran evento de tango."}
                     </p>
                     <Link 
                       href={`/eventos/${event.id}`} 
                       className="text-cat-gold font-bold text-sm flex items-center gap-2 hover:translate-x-1 transition-transform"
                     >
-                      <span>Inscribirme / Info</span>
+                      <span>{isExternalEvent(event) ? "Ver Flyer / Info" : "Inscribirme / Info"}</span>
                       <ArrowRight size={14} />
                     </Link>
                   </div>

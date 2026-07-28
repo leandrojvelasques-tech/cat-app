@@ -2,6 +2,7 @@ import { db } from "@/lib/db"
 import { Calendar, Plus, Users, Music, ShoppingBag, Share2, Tag, ShieldAlert, ArrowRight, CheckCircle2, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { EventPreviewModal } from "./components/EventPreviewModal"
+import { isExternalEvent } from "@/lib/event-utils"
 
 export default async function EventosPage() {
   const events = await db.event.findMany({
@@ -23,7 +24,7 @@ export default async function EventosPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-white/90">Eventos y Milongas</h1>
-          <p className="text-zinc-400 mt-1">Gestione milongas, capacitaciones y registros de asistentes.</p>
+          <p className="text-zinc-400 mt-1">Gestione milongas, capacitaciones, difusión y registros de asistentes.</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -106,19 +107,26 @@ export default async function EventosPage() {
             const publicUrl = `https://centroamigosdeltango.com/eventos/${eventSlug}`
             const waShareText = `💃 *${event.title}* - Centro Amigos del Tango\n🗓️ Fecha: ${dateStr}\n📍 Lugar: ${event.location || 'Sede CAT'}\n\n👉 ¡Inscríbete y reserva tu entrada aquí!\n${publicUrl}`
             const waShareUrl = `https://wa.me/?text=${encodeURIComponent(waShareText)}`
+            const isExternal = isExternalEvent(event)
 
             return (
               <div key={event.id} className="group relative bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md hover:bg-white/[0.08] transition-all hover:border-white/20 flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-start mb-4">
                     <div className={`p-3 rounded-2xl ${
+                      isExternal ? "bg-purple-500/10 text-purple-400" :
                       event.type === "MILONGA" ? "bg-red-500/10 text-red-400" :
                       event.type === "WORKSHOP" ? "bg-blue-500/10 text-blue-400" : "bg-purple-500/10 text-purple-400"
                     }`}>
-                      {event.type === "MILONGA" ? <Music size={24} /> : <Users size={24} />}
+                      {isExternal ? <Sparkles size={24} /> : event.type === "MILONGA" ? <Music size={24} /> : <Users size={24} />}
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5 justify-end">
-                      {event.isFree && (
+                      {isExternal && (
+                        <span className="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/30 tracking-wider">
+                          📢 DIFUSIÓN
+                        </span>
+                      )}
+                      {event.isFree && !isExternal && (
                         <span className="px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 tracking-wider">
                           🎁 SIN CARGO
                         </span>
@@ -155,10 +163,16 @@ export default async function EventosPage() {
                     </div>
                     <div className="flex items-center justify-between text-zinc-400 text-sm">
                       <div className="flex items-center gap-2">
-                        <Users size={14} className="text-zinc-600" />
-                        <span className="text-white font-medium">{event._count.registrations}</span> inscritos
+                        {isExternal ? (
+                          <span className="text-xs text-purple-300 font-medium">Difusión externa</span>
+                        ) : (
+                          <>
+                            <Users size={14} className="text-zinc-600" />
+                            <span className="text-white font-medium">{event._count.registrations}</span> inscritos
+                          </>
+                        )}
                       </div>
-                      {event.hasEarlyBird && (
+                      {event.hasEarlyBird && !isExternal && (
                         <div className="flex items-center gap-1 text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">
                           <Tag size={12} />
                           <span>Venta Anticipada</span>

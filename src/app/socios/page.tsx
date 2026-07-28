@@ -9,8 +9,9 @@ import { es } from "date-fns/locale"
 import { EditProfileModal } from "./EditProfileModal"
 import { SocioAccordionSections } from "./SocioAccordionSections"
 import { SocioEventRegisterModal } from "./SocioEventRegisterModal"
+import { SocioExternalEventModal } from "./SocioExternalEventModal"
 import { getSocioEventRegistrations } from "@/app/actions/eventos"
-import { getNextEventDate, getDayName } from "@/lib/event-utils"
+import { getNextEventDate, getDayName, isExternalEvent } from "@/lib/event-utils"
 
 export default async function PortalSocioPage() {
   const session = await auth()
@@ -137,6 +138,7 @@ export default async function PortalSocioPage() {
                   // Helper visual para etiquetas configurables
                   const getTypeBadgeStyles = (typeStr: string) => {
                      const t = (typeStr || "").toUpperCase()
+                     if (t.includes("DIFUSIÓN") || t.includes("DIFUSION") || t.includes("EXTERNO")) return "bg-purple-600/90 text-white border-purple-400/40 font-black shadow-purple-900/30"
                      if (t === "MILONGA") return "bg-red-500/80 text-white border-red-400/30"
                      if (t === "CLASE") return "bg-cyan-500/80 text-white border-cyan-400/30"
                      if (t === "WORKSHOP" || t === "SEMINARIO") return "bg-purple-500/80 text-white border-purple-400/30"
@@ -224,11 +226,15 @@ export default async function PortalSocioPage() {
 
                         {/* Acciones del Evento */}
                         <div className="p-6 pt-0">
-                           <SocioEventRegisterModal 
-                              event={event} 
-                              member={member} 
-                              registration={registration} 
-                           />
+                           {isExternalEvent(event) ? (
+                              <SocioExternalEventModal event={event} />
+                           ) : (
+                              <SocioEventRegisterModal 
+                                 event={event} 
+                                 member={member} 
+                                 registration={registration} 
+                              />
+                           )}
                         </div>
                      </div>
                   )

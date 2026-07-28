@@ -40,6 +40,8 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
   const [selectedTags, setSelectedTags] = useState<string[]>(parseInitialTags(initialData?.type))
   const [customTagInput, setCustomTagInput] = useState("")
 
+  const isExternalTag = selectedTags.some((t) => t.includes("DIFUSIÓN") || t.includes("DIFUSION") || t.includes("EXTERNO"))
+
   const toggleTag = (tag: string) => {
     const formattedTag = tag.toUpperCase().trim()
     if (!formattedTag) return
@@ -143,7 +145,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
             <h1 className="text-3xl font-semibold tracking-tight text-white/90">
               {isEditing ? "Editar Evento" : "Programar Nuevo Evento"}
             </h1>
-            <p className="text-zinc-400 mt-1">Gestión modular de Milonga, Capacitaciones (clases) y buffet.</p>
+            <p className="text-zinc-400 mt-1">Gestión modular de Milonga, Capacitaciones, Difusión y Buffet.</p>
           </div>
         </div>
       </div>
@@ -176,7 +178,16 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
                </div>
             </div>
 
-            {isFree && (
+            {isExternalTag && (
+              <div className="bg-purple-500/10 border border-purple-500/30 p-4 rounded-2xl flex items-center justify-between text-xs text-purple-300 animate-in fade-in duration-300">
+                <div className="flex items-center gap-2.5">
+                  <Sparkles size={18} className="text-purple-400 shrink-0" />
+                  <span><strong>Modo Difusión / Evento Externo Activado:</strong> Este evento no es organizado por el CAT. Solo requiere cargar Flyer (Imagen), Título, Fecha y Texto Descriptivo. No requiere tarifas ni inscripción online.</span>
+                </div>
+              </div>
+            )}
+
+            {isFree && !isExternalTag && (
               <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl flex items-center justify-between text-xs text-emerald-300">
                 <div className="flex items-center gap-2">
                   <Sparkles size={16} className="text-emerald-400 shrink-0" />
@@ -228,7 +239,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
                 <div className="space-y-1.5 pt-1">
                   <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">Selección Rápida de Etiquetas:</span>
                   <div className="flex flex-wrap gap-2">
-                    {["MILONGA", "CLASE", "WORKSHOP", "CAMPEONATO", "COMPETENCIA", "SEMINARIO", "CONCIERTO"].map((tag) => {
+                    {["MILONGA", "CLASE", "WORKSHOP", "CAMPEONATO", "COMPETENCIA", "SEMINARIO", "CONCIERTO", "DIFUSIÓN", "EVENTO EXTERNO"].map((tag) => {
                       const isSelected = selectedTags.includes(tag)
                       return (
                         <button
@@ -237,7 +248,9 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
                           onClick={() => toggleTag(tag)}
                           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                             isSelected
-                              ? "bg-amber-500 text-zinc-950 shadow-md font-black"
+                              ? tag.includes("DIFUSIÓN") || tag.includes("EXTERNO")
+                                ? "bg-purple-600 text-white shadow-md font-black"
+                                : "bg-amber-500 text-zinc-950 shadow-md font-black"
                               : "bg-white/5 hover:bg-white/10 text-zinc-400 border border-white/5"
                           }`}
                         >
@@ -630,7 +643,17 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
               <DollarSign size={20} className="text-emerald-500"/> Tarifario Configurable
             </h2>
 
-            {/* Venta Anticipada (Early Bird) */}
+            {isExternalTag ? (
+              <div className="bg-purple-500/10 border border-purple-500/20 p-6 rounded-2xl text-center space-y-3 animate-in fade-in duration-300">
+                <Sparkles size={28} className="mx-auto text-purple-400" />
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider">Modo Difusión Informativa</h3>
+                <p className="text-xs text-zinc-400 font-light leading-relaxed">
+                  Los eventos de difusión se comparten como agenda tanguera externa en la web y en la app del socio. No requieren configuración de precios ni cobran reservas online.
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Venta Anticipada (Early Bird) */}
             <div className="space-y-4 bg-amber-500/5 border border-amber-500/20 p-4 rounded-2xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -779,8 +802,8 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
                  </div>
               </div>
             )}
-            
-            <input type="hidden" name="type" value="MILONGA" />
+            </>
+            )}
 
             <button 
               type="submit" 
