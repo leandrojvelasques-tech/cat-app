@@ -111,11 +111,11 @@ export function SociosFilters() {
             <select 
               value={currentStatus}
               onChange={(e) => handleStatusChange(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-2xl pl-11 pr-10 py-3 text-sm text-white focus:outline-none appearance-none cursor-pointer hover:bg-white/10 transition-all font-medium min-w-[150px]"
+              className="bg-white/5 border border-white/10 rounded-2xl pl-11 pr-10 py-3 text-sm text-white focus:outline-none appearance-none cursor-pointer hover:bg-white/10 transition-all font-medium min-w-[170px]"
             >
-              <option value="" className="bg-zinc-900 italic">Todos</option>
               {currentView === 'active' ? (
                 <>
+                  <option value="" className="bg-zinc-900 italic">Todos</option>
                   <option value="ACTIVE" className="bg-zinc-900 font-bold text-emerald-400">Al Día</option>
                   <option value="DEBTOR" className="bg-zinc-900 font-bold text-amber-400">En Mora</option>
                   <option value="INACTIVE" className="bg-zinc-900 font-bold text-zinc-400">Inactivos</option>
@@ -123,7 +123,10 @@ export function SociosFilters() {
                 </>
               ) : (
                 <>
-                  <option value="ARCHIVED" className="bg-zinc-900">Histórico / Bajas</option>
+                  <option value="" className="bg-zinc-900 italic">Todos los motivos</option>
+                  <option value="DECEASED" className="bg-zinc-900 font-bold text-purple-400">Baja por Fallecimiento</option>
+                  <option value="RESIGNED" className="bg-zinc-900 font-bold text-orange-400">Baja por Renuncia</option>
+                  <option value="INACTIVE" className="bg-zinc-900 font-bold text-zinc-400">Baja Administrativa</option>
                 </>
               )}
             </select>

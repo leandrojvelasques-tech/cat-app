@@ -9,7 +9,7 @@ import { AddBoardHistoryForm } from "./AddBoardHistoryForm"
 import { deleteBoardHistory } from "@/app/actions/board-history"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { calculateMemberStatus, getStatusBadgeStyles } from "@/lib/member-utils"
+import { calculateMemberStatus, getStatusBadgeStyles, getMemberBajaReason, getBajaReasonStyles } from "@/lib/member-utils"
 
 
 
@@ -91,6 +91,14 @@ export default async function FichaSocioPage(props: any) {
               <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-lg border shadow-sm ${getStatusBadgeStyles(calculatedStatus)}`}>
                 {calculatedStatus}
               </span>
+              {calculatedStatus === 'BAJA' && (() => {
+                const bajaReason = getMemberBajaReason(member)
+                return bajaReason ? (
+                  <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-lg border shadow-sm ${getBajaReasonStyles(bajaReason)}`}>
+                    {bajaReason}
+                  </span>
+                ) : null
+              })()}
             </div>
             <p className="text-zinc-500 font-bold uppercase tracking-widest text-[10px] mt-1">Socio #{member.memberNumber}</p>
           </div>

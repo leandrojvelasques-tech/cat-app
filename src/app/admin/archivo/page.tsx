@@ -3,7 +3,7 @@ import { Archive } from "lucide-react"
 import Link from "next/link"
 import { SociosFilters } from "../socios/SociosFilters"
 import { Member } from "@prisma/client"
-import { calculateMemberStatus, getStatusBadgeStyles } from "@/lib/member-utils"
+import { calculateMemberStatus, getStatusBadgeStyles, getMemberBajaReason, getBajaReasonStyles } from "@/lib/member-utils"
 
 export default async function ArchivoSociosPage({
   searchParams,
@@ -14,7 +14,7 @@ export default async function ArchivoSociosPage({
 
   const members = await db.member.findMany({
     where: {
-      status: { in: ["INACTIVE", "DECEASED", "RESIGNED", "ARCHIVED"] },
+      status: status ? (status === "INACTIVE" ? { in: ["INACTIVE", "ARCHIVED"] } : status) : { in: ["INACTIVE", "DECEASED", "RESIGNED", "ARCHIVED"] },
       AND: [
         query
           ? {
@@ -25,7 +25,6 @@ export default async function ArchivoSociosPage({
               ],
             }
           : {},
-        status ? { status } : {},
       ],
     },
     orderBy: { lastName: "asc" },
@@ -62,6 +61,7 @@ export default async function ArchivoSociosPage({
               ) : (
                 members.map((member: Member) => {
                   const calculated = calculateMemberStatus(member)
+                  const bajaReason = getMemberBajaReason(member)
                   return (
                     <tr key={member.id} className="hover:bg-white/[0.02] transition-colors group">
                       <td className="px-6 py-4 text-zinc-500 font-medium">#{member.memberNumber}</td>
@@ -70,9 +70,16 @@ export default async function ArchivoSociosPage({
                       </td>
                       <td className="px-6 py-4 text-zinc-400">{member.dni}</td>
                       <td className="px-6 py-4">
-                        <span className={`px-3 py-1 text-[9px] uppercase font-black rounded-lg border shadow-sm ${getStatusBadgeStyles(calculated)}`}>
-                          {calculated}
-                        </span>
+                        <div className="flex flex-col gap-1 items-start">
+                          <span className={`px-3 py-1 text-[9px] uppercase font-black rounded-lg border shadow-sm ${getStatusBadgeStyles(calculated)}`}>
+                            {calculated}
+                          </span>
+                          {bajaReason && (
+                            <span className={`px-2 py-0.5 text-[8px] uppercase font-bold rounded-md border ${getBajaReasonStyles(bajaReason)}`}>
+                              {bajaReason}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <Link 

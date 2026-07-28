@@ -1,6 +1,4 @@
-import { Member, MembershipFee, EventRegistration } from "@prisma/client"
-
-export type CalculatedStatus = 'AL DIA' | 'EN MORA' | 'INACTIVO' | 'SUSPENDIDO' | 'BAJA' | 'FALLECIDO' | 'RENUNCIA'
+export type CalculatedStatus = 'AL DIA' | 'EN MORA' | 'INACTIVO' | 'SUSPENDIDO' | 'BAJA'
 
 /**
  * Calculates the current status of a member based on payment and activity history.
@@ -8,10 +6,8 @@ export type CalculatedStatus = 'AL DIA' | 'EN MORA' | 'INACTIVO' | 'SUSPENDIDO' 
  * @param now Reference date (default current).
  */
 export function calculateMemberStatus(member: any, now: Date = new Date()): CalculatedStatus {
-  // If the manual status is already a terminal state, return specific reason
-  if (member.status === "DECEASED") return 'FALLECIDO'
-  if (member.status === "RESIGNED") return 'RENUNCIA'
-  if (["ARCHIVED", "INACTIVE"].includes(member.status)) {
+  // If the manual status is already a terminal state, return BAJA
+  if (["DECEASED", "RESIGNED", "ARCHIVED", "INACTIVE"].includes(member.status)) {
     return 'BAJA'
   }
 
@@ -112,6 +108,13 @@ export function calculateMemberStatus(member: any, now: Date = new Date()): Calc
   return 'SUSPENDIDO'
 }
 
+export function getMemberBajaReason(member: any): string | null {
+  if (member.status === "DECEASED") return "Fallecimiento"
+  if (member.status === "RESIGNED") return "Renuncia"
+  if (["ARCHIVED", "INACTIVE"].includes(member.status)) return "Baja Administrativa"
+  return null
+}
+
 /**
  * Helper to get the Tailwind classes for a status badge.
  */
@@ -122,8 +125,15 @@ export function getStatusBadgeStyles(status: CalculatedStatus) {
     case 'INACTIVO': return "bg-zinc-500/10 text-zinc-400 border-white/10"
     case 'SUSPENDIDO': return "bg-red-500/10 text-red-500 border-red-500/20"
     case 'BAJA': return "bg-zinc-800 text-zinc-300 border-zinc-700"
-    case 'FALLECIDO': return "bg-purple-950/70 text-purple-300 border-purple-800/60"
-    case 'RENUNCIA': return "bg-orange-950/70 text-orange-300 border-orange-800/60"
     default: return "bg-zinc-500/10 text-zinc-400 border-white/10"
+  }
+}
+
+export function getBajaReasonStyles(reason: string | null) {
+  switch (reason) {
+    case 'Fallecimiento': return "bg-purple-950/70 text-purple-300 border-purple-800/50"
+    case 'Renuncia': return "bg-orange-950/70 text-orange-300 border-orange-800/50"
+    case 'Baja Administrativa': return "bg-zinc-900/80 text-zinc-400 border-zinc-700/50"
+    default: return "bg-zinc-800 text-zinc-400 border-zinc-700"
   }
 }

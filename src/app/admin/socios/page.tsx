@@ -2,7 +2,7 @@ import { db } from "@/lib/db"
 import { UserPlus, UserCheck, UserX, Clock, Users } from "lucide-react"
 import Link from "next/link"
 import { SociosFilters } from "./SociosFilters"
-import { calculateMemberStatus, getStatusBadgeStyles } from "@/lib/member-utils"
+import { calculateMemberStatus, getStatusBadgeStyles, getMemberBajaReason, getBajaReasonStyles } from "@/lib/member-utils"
 
 export default async function SociosPage({
   searchParams,
@@ -18,14 +18,13 @@ export default async function SociosPage({
   ]
   
   const BAJA_STATUS_KEYS = ["DECEASED", "RESIGNED", "INACTIVE", "ARCHIVED"]
-  const BAJA_CALCULATED_STATUSES = ['BAJA', 'FALLECIDO', 'RENUNCIA']
 
   // Fetch members according to view
   const membersData = await db.member.findMany({
     where: {
       AND: [
         view === "archive" 
-          ? { status: { in: BAJA_STATUS_KEYS } }
+          ? (status ? (status === "INACTIVE" ? { status: { in: ["INACTIVE", "ARCHIVED"] } } : { status }) : { status: { in: BAJA_STATUS_KEYS } })
           : { status: { notIn: BAJA_STATUS_KEYS } },
         query ? {
           OR: [
@@ -60,13 +59,13 @@ export default async function SociosPage({
     }
   } as any) as any[]
 
-  // Apply final filtering based on our dynamic status logic
+  // Apply final filtering based on dynamic status logic
   const filteredMembers = membersData.filter((member: any) => {
     const calculated = calculateMemberStatus(member, now)
     
     // If we are in "Archive" view, show terminal states
     if (view === "archive") {
-       return BAJA_CALCULATED_STATUSES.includes(calculated)
+       return calculated === 'BAJA'
     }
 
     // Filter by specific status if requested
@@ -76,7 +75,7 @@ export default async function SociosPage({
     if (status === "SUSPENDED") return calculated === 'SUSPENDIDO'
 
     // By default, in "active" view, exclude all BAJA statuses completely
-    return !BAJA_CALCULATED_STATUSES.includes(calculated)
+    return calculated !== 'BAJA'
   }).sort((a: any, b: any) => {
     const numA = Number(a.memberNumber) || 0
     const numB = Number(b.memberNumber) || 0
@@ -156,6 +155,7 @@ export default async function SociosPage({
                   const calculated = calculateMemberStatus(member, now)
                   const lastFee = member.fees[0]
                   const lastPaidLabel = lastFee ? `${monthNames[lastFee.periodMonth-1]} ${lastFee.periodYear}` : 'Sin pagos'
+                  const bajaReason = getMemberBajaReason(member)
 
                   return (
                     <tr key={member.id} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors group">
@@ -182,9 +182,16 @@ export default async function SociosPage({
                         </div>
                       </td>
                       <td className="py-4">
-                        <span className={`px-3 py-1 text-[9px] uppercase font-black rounded-lg border shadow-sm ${getStatusBadgeStyles(calculated)}`}>
-                          {calculated}
-                        </span>
+                        <div className="flex flex-col gap-1 items-start">
+                          <span className={`px-3 py-1 text-[9px] uppercase font-black rounded-lg border shadow-sm ${getStatusBadgeStyles(calculated)}`}>
+                            {calculated}
+                          </span>
+                          {calculated === 'BAJA' && bajaReason && (
+                            <span className={`px-2 py-0.5 text-[8px] uppercase font-bold rounded-md border ${getBajaReasonStyles(bajaReason)}`}>
+                              {bajaReason}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-4 pr-6 text-right">
                         <Link 
