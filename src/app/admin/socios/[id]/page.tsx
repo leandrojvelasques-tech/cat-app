@@ -9,7 +9,7 @@ import { AddBoardHistoryForm } from "./AddBoardHistoryForm"
 import { deleteBoardHistory } from "@/app/actions/board-history"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { calculateMemberStatus, getStatusBadgeStyles, getMemberBajaReason, getBajaReasonStyles } from "@/lib/member-utils"
+import { calculateMemberStatus, getStatusBadgeStyles, getMemberBajaReason, getBajaReasonStyles, formatDNI } from "@/lib/member-utils"
 
 
 
@@ -250,7 +250,7 @@ export default async function FichaSocioPage(props: any) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-10 gap-x-12">
               <div className="group">
                 <p className="text-zinc-600 text-[10px] font-black uppercase tracking-widest mb-1 group-hover:text-zinc-400 transition-colors">DNI</p>
-                <p className="text-lg text-zinc-200 font-medium font-mono tracking-tight">{member.dni}</p>
+                <p className="text-lg text-zinc-200 font-medium font-mono tracking-tight">{formatDNI(member.dni)}</p>
               </div>
               <div className="group">
                 <p className="text-zinc-600 text-[10px] font-black uppercase tracking-widest mb-1 group-hover:text-zinc-400 transition-colors">Teléfono</p>

@@ -137,3 +137,31 @@ export function getBajaReasonStyles(reason: string | null) {
     default: return "bg-zinc-800 text-zinc-400 border-zinc-700"
   }
 }
+
+/**
+ * Strips dots, spaces, and dashes from raw DNI input before saving to database.
+ */
+export function cleanDNI(dni?: string | null): string {
+  if (!dni) return ""
+  const trimmed = dni.trim()
+  if (trimmed.startsWith("TEMP") || trimmed.startsWith("PENDIENTE")) {
+    return trimmed
+  }
+  return trimmed.replace(/[\.\s-]/g, "")
+}
+
+/**
+ * Formats a clean DNI string into thousand separators with dots for display (e.g., 31092126 -> 31.092.126).
+ * Leaves TEMP / PENDIENTE strings intact.
+ */
+export function formatDNI(dni?: string | null): string {
+  if (!dni) return ""
+  const trimmed = dni.trim()
+  if (trimmed.startsWith("TEMP") || trimmed.startsWith("PENDIENTE")) {
+    return trimmed
+  }
+  const cleanDigits = trimmed.replace(/\D/g, "")
+  if (!cleanDigits) return trimmed
+  return new Intl.NumberFormat("es-AR").format(Number(cleanDigits))
+}
+

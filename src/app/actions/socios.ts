@@ -2,11 +2,12 @@
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { cleanDNI } from "@/lib/member-utils"
 
 export async function createMember(formData: FormData) {
-  const firstName = formData.get("firstName") as string
-  const lastName = formData.get("lastName") as string
-  const dni = formData.get("dni") as string
+  const firstNameRaw = formData.get("firstName") as string
+  const lastNameRaw = formData.get("lastName") as string
+  const dniRaw = formData.get("dni") as string
   const email = formData.get("email") as string
   const phone = formData.get("phone") as string
   const city = formData.get("city") as string
@@ -17,6 +18,10 @@ export async function createMember(formData: FormData) {
   const birthDateStr = formData.get("birthDate") as string
   const joinDateStr = formData.get("joinDate") as string
   const wantsMailing = formData.get("wantsMailing") === "on"
+
+  const firstName = firstNameRaw ? firstNameRaw.trim().toUpperCase() : ""
+  const lastName = lastNameRaw ? lastNameRaw.trim().toUpperCase() : ""
+  const dni = cleanDNI(dniRaw)
 
   // Dates
   const birthDate = birthDateStr ? new Date(birthDateStr) : null
@@ -32,8 +37,8 @@ export async function createMember(formData: FormData) {
     : "1000"
 
   // DNI & Email Uniqueness Validation
-  if (dni && dni.trim().length > 0) {
-    const existingDni = await db.member.findFirst({ where: { dni: dni.trim() } })
+  if (dni && dni.length > 0) {
+    const existingDni = await db.member.findFirst({ where: { dni } })
     if (existingDni) {
       throw new Error("Ya existe un socio registrado con este DNI.")
     }
@@ -51,7 +56,7 @@ export async function createMember(formData: FormData) {
       memberNumber: nextMemberNumber,
       firstName,
       lastName,
-      dni: dni ? dni.trim() : "",
+      dni,
       email: email ? email.trim().toLowerCase() : null,
       phone: phone || null,
       city: city || null,
@@ -179,9 +184,9 @@ export async function updateMemberAvatar(memberId: string, avatarUrl: string | n
 }
 
 export async function updateMember(id: string, formData: FormData) {
-  const firstName = formData.get("firstName") as string
-  const lastName = formData.get("lastName") as string
-  const dni = formData.get("dni") as string
+  const firstNameRaw = formData.get("firstName") as string
+  const lastNameRaw = formData.get("lastName") as string
+  const dniRaw = formData.get("dni") as string
   const email = formData.get("email") as string
   const phone = formData.get("phone") as string
   const city = formData.get("city") as string
@@ -194,14 +199,18 @@ export async function updateMember(id: string, formData: FormData) {
   const wantsMailing = formData.get("wantsMailing") === "on"
   const avatarUrl = formData.get("avatarUrl") as string
 
+  const firstName = firstNameRaw ? firstNameRaw.trim().toUpperCase() : ""
+  const lastName = lastNameRaw ? lastNameRaw.trim().toUpperCase() : ""
+  const dni = cleanDNI(dniRaw)
+
   // Dates
   const birthDate = birthDateStr ? new Date(birthDateStr) : null
   const joinDate = joinDateStr ? new Date(joinDateStr) : new Date()
 
   // DNI & Email Uniqueness Validation
-  if (dni && dni.trim().length > 0) {
+  if (dni && dni.length > 0) {
     const existingDni = await db.member.findFirst({
-      where: { dni: dni.trim(), NOT: { id } }
+      where: { dni, NOT: { id } }
     })
     if (existingDni) {
       throw new Error("Ya existe otro socio registrado con este DNI.")
@@ -222,7 +231,7 @@ export async function updateMember(id: string, formData: FormData) {
     data: {
       firstName,
       lastName,
-      dni: dni ? dni.trim() : "",
+      dni,
       email: email ? email.trim().toLowerCase() : null,
       phone: phone || null,
       city: city || null,

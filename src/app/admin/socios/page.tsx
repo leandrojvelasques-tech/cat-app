@@ -2,7 +2,7 @@ import { db } from "@/lib/db"
 import { UserPlus, UserCheck, UserX, Clock, Users } from "lucide-react"
 import Link from "next/link"
 import { SociosFilters } from "./SociosFilters"
-import { calculateMemberStatus, getStatusBadgeStyles, getMemberBajaReason, getBajaReasonStyles } from "@/lib/member-utils"
+import { calculateMemberStatus, getStatusBadgeStyles, getMemberBajaReason, getBajaReasonStyles, formatDNI } from "@/lib/member-utils"
 
 export default async function SociosPage({
   searchParams,
@@ -169,12 +169,12 @@ export default async function SociosPage({
                             )}
                           </div>
                           <div>
-                            <p className="text-zinc-100 font-bold group-hover:text-amber-400 transition-colors">{member.lastName}, {member.firstName}</p>
+                            <p className="text-zinc-100 font-bold uppercase group-hover:text-amber-400 transition-colors">{member.lastName}, {member.firstName}</p>
                             <p className="text-[10px] text-zinc-500 uppercase font-black tracking-tighter">Socio #{member.memberNumber}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="py-4 text-zinc-400 text-sm font-mono">{member.dni}</td>
+                      <td className="py-4 text-zinc-400 text-sm font-mono">{formatDNI(member.dni)}</td>
                       <td className="py-4">
                         <div className="flex flex-col">
                           <span className="text-zinc-300 text-sm">{lastPaidLabel}</span>
