@@ -4,6 +4,60 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { cleanDNI } from "@/lib/member-utils"
 
+export async function getNextMemberNumberInfo() {
+  const allMembers = await db.member.findMany({ select: { memberNumber: true } })
+  const maxNumber = allMembers
+    .map(m => Number(m.memberNumber))
+    .filter(n => !isNaN(n))
+    .reduce((max, cur) => (cur > max ? cur : max), 0)
+  return (maxNumber + 1).toString()
+}
+
+export async function checkMemberDuplicate(dniRaw?: string, emailRaw?: string, excludeId?: string) {
+  const dni = cleanDNI(dniRaw)
+  const email = emailRaw ? emailRaw.trim().toLowerCase() : ""
+
+  let duplicateDniMember = null
+  let duplicateEmailMember = null
+
+  if (dni && dni.length > 0) {
+    duplicateDniMember = await db.member.findFirst({
+      where: {
+        dni,
+        ...(excludeId ? { NOT: { id: excludeId } } : {})
+      },
+      select: {
+        id: true,
+        memberNumber: true,
+        firstName: true,
+        lastName: true,
+        dni: true
+      }
+    })
+  }
+
+  if (email && email.length > 0) {
+    duplicateEmailMember = await db.member.findFirst({
+      where: {
+        email,
+        ...(excludeId ? { NOT: { id: excludeId } } : {})
+      },
+      select: {
+        id: true,
+        memberNumber: true,
+        firstName: true,
+        lastName: true,
+        email: true
+      }
+    })
+  }
+
+  return {
+    duplicateDniMember,
+    duplicateEmailMember
+  }
+}
+
 export async function createMember(formData: FormData) {
   const firstNameRaw = formData.get("firstName") as string
   const lastNameRaw = formData.get("lastName") as string
