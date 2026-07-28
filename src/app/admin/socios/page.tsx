@@ -17,10 +17,16 @@ export default async function SociosPage({
     "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
   ]
   
-  // Fetch all members with their entire history for accurate calculation
+  const BAJA_STATUS_KEYS = ["DECEASED", "RESIGNED", "INACTIVE", "ARCHIVED"]
+  const BAJA_CALCULATED_STATUSES = ['BAJA', 'FALLECIDO', 'RENUNCIA']
+
+  // Fetch members according to view
   const membersData = await db.member.findMany({
     where: {
       AND: [
+        view === "archive" 
+          ? { status: { in: BAJA_STATUS_KEYS } }
+          : { status: { notIn: BAJA_STATUS_KEYS } },
         query ? {
           OR: [
             { firstName: { contains: query, mode: 'insensitive' } },
@@ -28,7 +34,6 @@ export default async function SociosPage({
             { dni: { contains: query, mode: 'insensitive' } },
             { email: { contains: query, mode: 'insensitive' } },
             { memberNumber: { contains: query, mode: 'insensitive' } },
-            // Handle space separated terms (Name Surname)
             ...(query.includes(' ') ? [
               {
                 AND: [
@@ -59,9 +64,9 @@ export default async function SociosPage({
   const filteredMembers = membersData.filter((member: any) => {
     const calculated = calculateMemberStatus(member, now)
     
-    // If we are in "Archive" view, only show terminal states
+    // If we are in "Archive" view, show terminal states
     if (view === "archive") {
-       return calculated === 'BAJA'
+       return BAJA_CALCULATED_STATUSES.includes(calculated)
     }
 
     // Filter by specific status if requested
@@ -70,8 +75,8 @@ export default async function SociosPage({
     if (status === "INACTIVE") return calculated === 'INACTIVO'
     if (status === "SUSPENDED") return calculated === 'SUSPENDIDO'
 
-    // By default, in "active" view, we show everyone EXCEPT those manually archived or calculated as BAJA
-    return calculated !== 'BAJA'
+    // By default, in "active" view, exclude all BAJA statuses completely
+    return !BAJA_CALCULATED_STATUSES.includes(calculated)
   }).sort((a: any, b: any) => {
     const numA = Number(a.memberNumber) || 0
     const numB = Number(b.memberNumber) || 0

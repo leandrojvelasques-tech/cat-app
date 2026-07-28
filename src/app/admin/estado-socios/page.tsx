@@ -26,11 +26,13 @@ export default async function EstadoSociosPage({
   })
 
   let membersData = []
+  const BAJA_STATUSES = ["DECEASED", "RESIGNED", "INACTIVE", "ARCHIVED"]
 
   if (query) {
-    // Search Mode: Find any member matching the query across the entire DB
+    // Search Mode: Find any active member matching the query
     membersData = await db.member.findMany({
       where: {
+        status: { notIn: BAJA_STATUSES },
         OR: [
           { firstName: { contains: query, mode: 'insensitive' } },
           { lastName: { contains: query, mode: 'insensitive' } },
@@ -63,9 +65,10 @@ export default async function EstadoSociosPage({
       take: 50 // Limit to avoid massive renders on short queries
     } as any) as any[]
   } else {
-    // Default Mode: Find members participating (paid at least one fee from Jan 2026)
+    // Default Mode: Find active members participating (paid at least one fee from Jan 2026)
     membersData = await db.member.findMany({
       where: {
+        status: { notIn: BAJA_STATUSES },
         fees: {
           some: {
             paymentStatus: "PAID",
@@ -83,18 +86,18 @@ export default async function EstadoSociosPage({
     } as any) as any[]
   }
 
-  // We still calculate their dynamic status for display purposes
-  const filteredMembers = membersData.map((member: any) => {
-    return {
+  // Calculate dynamic status and filter out any remaining BAJA/FALLECIDO/RENUNCIA
+  const filteredMembers = membersData
+    .map((member: any) => ({
       ...member,
       calculatedStatus: calculateMemberStatus(member, now)
-    }
-  })
+    }))
+    .filter((m: any) => !['BAJA', 'FALLECIDO', 'RENUNCIA'].includes(m.calculatedStatus))
 
   // Calcular resumen
   const totalAlDia = filteredMembers.filter((m: any) => m.calculatedStatus === 'AL DIA').length
   const totalEnMora = filteredMembers.filter((m: any) => m.calculatedStatus === 'EN MORA').length
-  const totalInactivos = filteredMembers.filter((m: any) => m.calculatedStatus === 'INACTIVO' || m.calculatedStatus === 'SUSPENDIDO' || m.calculatedStatus === 'BAJA').length
+  const totalInactivos = filteredMembers.filter((m: any) => m.calculatedStatus === 'INACTIVO' || m.calculatedStatus === 'SUSPENDIDO').length
 
   // Ordenar
   filteredMembers.sort((a: any, b: any) => {

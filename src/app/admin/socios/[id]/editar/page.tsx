@@ -103,15 +103,15 @@ export default async function EditarSocioPage(props: any) {
               <select 
                 name="status"
                 defaultValue={member.status}
-                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 focus:outline-none focus:border-amber-500/50 transition-colors font-light appearance-none"
+                className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50 transition-colors font-light appearance-none"
               >
-                <option value="ACTIVE">Activo</option>
-                <option value="PENDING">Pendiente</option>
-                <option value="INACTIVE">Baja</option>
-                <option value="DEBTOR">Deudor</option>
-                <option value="SUSPENDED">Suspendido</option>
-                <option value="DECEASED">Fallecido</option>
-                <option value="RESIGNED">Renuncia</option>
+                <option value="ACTIVE" className="bg-zinc-900 text-white">Activo</option>
+                <option value="PENDING" className="bg-zinc-900 text-white">Pendiente</option>
+                <option value="INACTIVE" className="bg-zinc-900 text-white">Baja</option>
+                <option value="DEBTOR" className="bg-zinc-900 text-white">Deudor</option>
+                <option value="SUSPENDED" className="bg-zinc-900 text-white">Suspendido</option>
+                <option value="DECEASED" className="bg-zinc-900 text-white">Fallecido</option>
+                <option value="RESIGNED" className="bg-zinc-900 text-white">Renuncia</option>
               </select>
             </div>
           </div>
@@ -151,10 +151,10 @@ export default async function EditarSocioPage(props: any) {
               <select 
                 name="type"
                 defaultValue={member.type}
-                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 focus:outline-none focus:border-amber-500/50 transition-colors font-light appearance-none"
+                className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50 transition-colors font-light appearance-none"
               >
-                <option value="ACTIVO">Socio Activo</option>
-                <option value="HONORARIO">Socio Honorario</option>
+                <option value="ACTIVO" className="bg-zinc-900 text-white">Socio Activo</option>
+                <option value="HONORARIO" className="bg-zinc-900 text-white">Socio Honorario</option>
               </select>
             </div>
           </div>
