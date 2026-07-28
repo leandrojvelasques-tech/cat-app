@@ -31,8 +31,8 @@ import Link from "next/link"
 type Step = 'CATEGORY' | 'SEARCH_MEMBER' | 'DEBT_SELECTION' | 'PAYMENT' | 'EVENT_SELECTION' | 'EVENT_FORM' | 'SUCCESS'
 
 export default function CobrarWizard() {
-  const [step, setStep] = useState<Step>('CATEGORY')
-  const [category, setCategory] = useState<'CUOTA' | 'EVENTO' | null>(null)
+  const [step, setStep] = useState<Step>('SEARCH_MEMBER')
+  const [category, setCategory] = useState<'CUOTA' | 'EVENTO' | null>('CUOTA')
   
   // Member Flow
   const [memberQuery, setMemberQuery] = useState("")
@@ -172,88 +172,38 @@ export default function CobrarWizard() {
   return (
     <div className="max-w-3xl mx-auto py-8">
       {/* Stepper Progress Indicator */}
-      <div className="flex items-center justify-between mb-12 px-4">
-         {[1, 2, 3, 4].map((num) => (
+      <div className="flex items-center justify-between mb-12 px-4 max-w-xl mx-auto">
+         {[1, 2, 3].map((num) => (
            <div key={num} className="flex items-center flex-1 last:flex-none">
              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all border-2 ${
-               (step === 'CATEGORY' && num === 1) || 
-               ((step === 'SEARCH_MEMBER' || step === 'EVENT_SELECTION') && num === 2) ||
-               ((step === 'DEBT_SELECTION' || step === 'EVENT_FORM') && num === 3) ||
-               (step === 'PAYMENT' && num === 4) ||
-               (step === 'SUCCESS' && num === 4)
+               (step === 'SEARCH_MEMBER' && num === 1) || 
+               (step === 'DEBT_SELECTION' && num === 2) ||
+               (step === 'PAYMENT' && num === 3) ||
+               (step === 'SUCCESS' && num === 3)
                  ? "bg-amber-600 border-amber-600 text-white shadow-lg shadow-amber-900/40" 
-                 : (num < 4 && (
-                    (step !== 'CATEGORY' && num === 1) ||
-                    ((step === 'DEBT_SELECTION' || step === 'EVENT_FORM' || step === 'PAYMENT' || step === 'SUCCESS') && num === 2) ||
-                    ((step === 'PAYMENT' || step === 'SUCCESS') && num === 3)
+                 : (num < 3 && (
+                    (step === 'DEBT_SELECTION' || step === 'PAYMENT' || step === 'SUCCESS') && num === 1 ||
+                    (step === 'PAYMENT' || step === 'SUCCESS') && num === 2
                  ))
                  ? "bg-amber-600/20 border-amber-600/50 text-amber-500" 
                  : "bg-zinc-900 border-white/5 text-zinc-600"
              }`}>
-                {num === 4 && step === 'SUCCESS' ? <CheckCircle2 size={24} /> : num}
+                {num === 3 && step === 'SUCCESS' ? <CheckCircle2 size={24} /> : num}
              </div>
-             {num < 4 && <div className={`h-[2px] flex-1 mx-4 rounded-full ${
-               (num === 1 && step !== 'CATEGORY') ||
-               (num === 2 && (step === 'DEBT_SELECTION' || step === 'EVENT_FORM' || step === 'PAYMENT' || step === 'SUCCESS')) ||
-               (num === 3 && (step === 'PAYMENT' || step === 'SUCCESS'))
+             {num < 3 && <div className={`h-[2px] flex-1 mx-4 rounded-full ${
+               (num === 1 && (step === 'DEBT_SELECTION' || step === 'PAYMENT' || step === 'SUCCESS')) ||
+               (num === 2 && (step === 'PAYMENT' || step === 'SUCCESS'))
                ? "bg-amber-600/50" : "bg-zinc-900"
              }`}></div>}
            </div>
          ))}
       </div>
 
-      {/* Step 1: Category Selection */}
-      {step === 'CATEGORY' && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 text-center">
-           <h2 className="text-3xl font-bold mb-2">¿Qué desea cobrar?</h2>
-           <p className="text-zinc-500 mb-10">Seleccione el servicio o evento para continuar con el registro de pago.</p>
-           
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <button 
-                onClick={() => {setCategory('CUOTA'); setStep('SEARCH_MEMBER')}}
-                className="group p-8 bg-white/5 border border-white/10 rounded-3xl hover:bg-amber-600/10 hover:border-amber-500/50 transition-all text-left relative overflow-hidden"
-              >
-                 <div className="absolute right-0 bottom-0 opacity-5 group-hover:scale-110 transition-transform -mb-6 -mr-6 text-amber-500">
-                    <Users size={180} />
-                 </div>
-                 <div className="w-16 h-16 bg-amber-600/20 text-amber-500 rounded-2xl flex items-center justify-center mb-6 border border-amber-600/20">
-                    <Users size={32} />
-                 </div>
-                 <h3 className="text-2xl font-bold mb-2">Cuota de Socio</h3>
-                 <p className="text-zinc-400">Mensualidades, inscripciones, y saldos pendientes.</p>
-                 <div className="mt-8 flex items-center gap-2 text-amber-500 font-bold text-sm uppercase tracking-widest">
-                    Continuar <ArrowRight size={16} />
-                 </div>
-              </button>
-
-              <button 
-                 onClick={handleSelectEventCategory}
-                 className="group p-8 bg-white/5 border border-white/10 rounded-3xl hover:bg-red-600/10 hover:border-red-500/50 transition-all text-left relative overflow-hidden"
-              >
-                 <div className="absolute right-0 bottom-0 opacity-5 group-hover:scale-110 transition-transform -mb-6 -mr-6 text-red-500">
-                    <TangoShoe size={180} />
-                 </div>
-                 <div className="w-16 h-16 bg-red-600/20 text-red-500 rounded-2xl flex items-center justify-center mb-6 border border-red-600/20">
-                    <TangoShoe size={32} />
-                 </div>
-                 <h3 className="text-2xl font-bold mb-2">Milongas / Entradas</h3>
-                 <p className="text-zinc-400">Cobro de entradas a milongas y eventos sociales.</p>
-                 <div className="mt-8 flex items-center gap-2 text-red-500 font-bold text-sm uppercase tracking-widest">
-                    Continuar <ArrowRight size={16} />
-                 </div>
-              </button>
-           </div>
-        </div>
-      )}
-
-      {/* Step 2A: Member Search */}
+      {/* Step 1: Member Search */}
       {step === 'SEARCH_MEMBER' && (
         <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-           <button onClick={() => setStep('CATEGORY')} className="text-zinc-500 hover:text-white flex items-center gap-2 mb-6 transition-colors">
-              <ArrowLeft size={16} /> Volver
-           </button>
-           <h2 className="text-3xl font-bold mb-2">Buscar Socio</h2>
-           <p className="text-zinc-500 mb-8">Ingrese el nombre, DNI o número de ficha para identificar al socio.</p>
+           <h2 className="text-3xl font-bold mb-2">Cobrar Cuota - Buscar Socio</h2>
+           <p className="text-zinc-500 mb-8">Ingrese el nombre, DNI o número de ficha para identificar al socio y ver su deuda.</p>
            
            <div className="relative mb-6">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
@@ -275,18 +225,22 @@ export default function CobrarWizard() {
                 <button 
                   key={member.id}
                   onClick={() => handleSelectMember(member)}
-                  className="w-full flex items-center justify-between p-5 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 hover:border-white/10 transition-all text-left group"
+                  className="w-full flex items-center justify-between p-5 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 hover:border-amber-500/30 transition-all text-left group"
                 >
                   <div className="flex items-center gap-4">
-                     <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:bg-amber-600 group-hover:text-white transition-colors">
-                        {member.firstName[0]}{member.lastName[0]}
+                     <div className="w-14 h-14 rounded-2xl bg-zinc-800 border border-white/10 flex items-center justify-center text-zinc-400 group-hover:border-amber-500/50 transition-colors overflow-hidden shrink-0 shadow-lg">
+                        {member.avatarUrl ? (
+                          <img src={member.avatarUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="font-black text-sm uppercase text-zinc-400 group-hover:text-amber-500">{member.firstName[0]}{member.lastName[0]}</span>
+                        )}
                      </div>
                      <div>
-                        <p className="font-bold text-lg">{member.lastName}, {member.firstName}</p>
-                        <p className="text-zinc-500 text-sm italic">#{member.memberNumber} • DNI: {member.dni}</p>
+                        <p className="font-bold text-lg text-white group-hover:text-amber-400 transition-colors">{member.lastName}, {member.firstName}</p>
+                        <p className="text-zinc-500 text-sm font-mono">Socio #{member.memberNumber} • DNI: {member.dni}</p>
                      </div>
                   </div>
-                  <ChevronRight className="text-zinc-700 transition-transform group-hover:translate-x-1" />
+                  <ChevronRight className="text-zinc-700 transition-transform group-hover:translate-x-1 group-hover:text-amber-500" />
                 </button>
               ))}
               {memberQuery.length > 2 && memberResults.length === 0 && (
@@ -296,14 +250,29 @@ export default function CobrarWizard() {
         </div>
       )}
 
-      {/* Step 3A: Debt Selection */}
+      {/* Step 2: Debt Selection */}
       {step === 'DEBT_SELECTION' && (
         <div className="animate-in fade-in slide-in-from-right-4 duration-500">
            <button onClick={() => setStep('SEARCH_MEMBER')} className="text-zinc-500 hover:text-white flex items-center gap-2 mb-6 transition-colors">
-              <ArrowLeft size={16} /> Volver
+              <ArrowLeft size={16} /> Volver a buscar socio
            </button>
-           <h2 className="text-3xl font-bold mb-2">Estado de Deuda</h2>
-           <p className="text-zinc-500 mb-8">Socio: <span className="text-white font-medium">{selectedMember.firstName} {selectedMember.lastName}</span></p>
+           
+           <div className="flex items-center gap-4 mb-8 bg-white/5 p-5 rounded-3xl border border-white/10 backdrop-blur-md">
+             <div className="w-16 h-16 rounded-2xl bg-zinc-800 border border-white/10 flex items-center justify-center text-zinc-400 overflow-hidden shrink-0 shadow-xl">
+               {selectedMember.avatarUrl ? (
+                 <img src={selectedMember.avatarUrl} alt="" className="w-full h-full object-cover" />
+               ) : (
+                 <span className="font-black text-base uppercase text-amber-500">{selectedMember.firstName[0]}{selectedMember.lastName[0]}</span>
+               )}
+             </div>
+             <div>
+                <p className="text-2xl font-black text-white">{selectedMember.lastName}, {selectedMember.firstName}</p>
+                <p className="text-xs text-zinc-400 font-mono mt-0.5">Socio #{selectedMember.memberNumber} • DNI: {selectedMember.dni}</p>
+             </div>
+           </div>
+
+           <h2 className="text-2xl font-bold mb-2">Estado de Deuda</h2>
+           <p className="text-zinc-500 mb-8">Seleccione las cuotas mensuales que desea cobrar a continuación.</p>
 
            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md mb-8">
               <div className="flex flex-col gap-4">
@@ -461,10 +430,22 @@ export default function CobrarWizard() {
                                   setIsEventMemberSearchOpen(false);
                                   setEventMemberQuery("");
                                 }}
-                                className="w-full text-left p-2 rounded-lg bg-zinc-900 border border-white/5 hover:bg-zinc-800 flex justify-between items-center cursor-pointer transition-colors"
+                                className="w-full text-left p-2.5 rounded-xl bg-zinc-900 border border-white/5 hover:bg-zinc-800 flex justify-between items-center cursor-pointer transition-colors"
                              >
-                                <span className="text-xs font-bold">{m.lastName}, {m.firstName}</span>
-                                <span className="text-[10px] text-zinc-500">#{m.memberNumber}</span>
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-lg bg-zinc-800 border border-white/10 flex items-center justify-center text-zinc-400 overflow-hidden shrink-0">
+                                    {m.avatarUrl ? (
+                                      <img src={m.avatarUrl} alt="" className="w-full h-full object-cover" />
+                                    ) : (
+                                      <span className="font-bold text-xs uppercase text-amber-500">{m.firstName[0]}{m.lastName[0]}</span>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <span className="text-xs font-bold block text-white">{m.lastName}, {m.firstName}</span>
+                                    <span className="text-[10px] text-zinc-500 font-mono">DNI: {m.dni}</span>
+                                  </div>
+                                </div>
+                                <span className="text-[10px] text-zinc-500 font-bold">#{m.memberNumber}</span>
                              </div>
                            ))}
                         </div>
@@ -474,7 +455,13 @@ export default function CobrarWizard() {
                     <div className="space-y-4">
                        {selectedMember && (
                          <div className="p-3 bg-amber-600/10 border border-amber-600/30 rounded-xl flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-amber-600 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-amber-600/20">S</div>
+                            <div className="w-10 h-10 rounded-xl bg-zinc-800 border border-amber-600/30 flex items-center justify-center text-xs font-bold text-amber-500 overflow-hidden shrink-0 shadow-lg">
+                              {selectedMember.avatarUrl ? (
+                                <img src={selectedMember.avatarUrl} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <span>{selectedMember.firstName[0]}{selectedMember.lastName[0]}</span>
+                              )}
+                            </div>
                             <div>
                                <p className="text-[10px] font-bold text-amber-500 uppercase tracking-tighter leading-none mb-1">Socio Identificado</p>
                                <p className="text-xs text-zinc-300 font-bold uppercase">{selectedMember.firstName} {selectedMember.lastName} (#{selectedMember.memberNumber})</p>
