@@ -268,4 +268,19 @@ export async function updatePaymentStatus(regId: string, eventId: string, status
   revalidatePath("/admin")
 }
 
+export async function toggleAttendeePresence(regId: string, eventId: string, attended: boolean) {
+  const updatedReg = await db.eventRegistration.update({
+    where: { id: regId },
+    data: { 
+      attended,
+      attendedAt: attended ? new Date() : null
+    }
+  })
+
+  revalidatePath(`/admin/eventos/${eventId}`)
+  revalidatePath("/socios")
+  revalidatePath("/admin")
+  return { success: true, attended: updatedReg.attended }
+}
+
 

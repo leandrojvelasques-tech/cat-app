@@ -3,7 +3,21 @@ import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { Trophy, Medal, Star, User, Maximize2, X, Award } from "lucide-react"
 
-export function DigitalMemberCard({ member, awards }: { member: any, awards: any[] }) {
+export interface AttendedMilonga {
+  id: string
+  title: string
+  date: Date | string
+}
+
+export function DigitalMemberCard({ 
+  member, 
+  awards,
+  attendedMilongas = [] 
+}: { 
+  member: any
+  awards: any[]
+  attendedMilongas?: AttendedMilonga[]
+}) {
   const hasPodium = awards.some(a => a.place <= 3)
   const isChampion = awards.some(a => a.place === 1)
   const isHonorario = member.type === "HONORARIO"
@@ -125,8 +139,8 @@ export function DigitalMemberCard({ member, awards }: { member: any, awards: any
       </div>
 
       {/* Bottom Bar */}
-      <div className="flex justify-between items-center border-t border-white/5 pt-4 relative z-10">
-         <div className="flex gap-4">
+      <div className="flex justify-between items-center border-t border-white/5 pt-4 relative z-10 flex-wrap gap-2">
+         <div className="flex gap-4 items-center">
             <div className="flex flex-col">
                <span className="text-[7px] uppercase font-black tracking-widest text-zinc-600">Socio Desde</span>
                <span className={`font-bold text-zinc-300 ${fullscreen ? "text-base" : "text-[9px]"}`}>{new Date(member.joinDate).getFullYear()}</span>
@@ -143,8 +157,34 @@ export function DigitalMemberCard({ member, awards }: { member: any, awards: any
             )}
          </div>
 
-         {/* Medallas */}
-         <div className="flex gap-1.5">
+         {/* Condecoraciones & Medallas */}
+         <div className="flex items-center gap-2 flex-wrap">
+            {/* Insignias de Asistencia a Milongas del Año */}
+            {attendedMilongas.length > 0 && (
+              <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-xl shadow-lg">
+                <span className="text-[8px] font-black uppercase text-amber-400 tracking-wider">
+                  {attendedMilongas.length} {attendedMilongas.length === 1 ? "Milonga" : "Milongas"} {new Date().getFullYear()}
+                </span>
+                <div className="flex gap-1 ml-1 max-w-[120px] overflow-hidden">
+                  {attendedMilongas.slice(0, 6).map((m, idx) => (
+                    <div
+                      key={m.id || idx}
+                      title={`Presente en: ${m.title}`}
+                      className="w-5 h-5 rounded-md bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center justify-center text-[9px] font-black shadow-sm"
+                    >
+                      ★
+                    </div>
+                  ))}
+                  {attendedMilongas.length > 6 && (
+                    <span className="text-[8px] font-black text-amber-400 self-center">
+                      +{attendedMilongas.length - 6}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Medallas de Campeonato */}
             {awards.map((award, i) => (
               <div
                 key={i}

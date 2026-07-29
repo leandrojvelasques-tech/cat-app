@@ -2,7 +2,6 @@ import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import { redirect } from "next/navigation"
 import { Calendar, MapPin, User, AlertCircle, Sparkles, ShieldCheck, Repeat, Music } from "lucide-react"
-import { DigitalMemberCard } from "./DigitalMemberCard"
 import { calculateMemberStatus, getStatusBadgeStyles } from "@/lib/member-utils"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -10,7 +9,10 @@ import { EditProfileModal } from "./EditProfileModal"
 import { SocioAccordionSections } from "./SocioAccordionSections"
 import { SocioEventRegisterModal } from "./SocioEventRegisterModal"
 import { SocioExternalEventModal } from "./SocioExternalEventModal"
+import { SocioCarnetToggle } from "./SocioCarnetToggle"
+import { SocioDuesPaymentSection } from "./SocioDuesPaymentSection"
 import { getSocioEventRegistrations } from "@/app/actions/eventos"
+import { getMemberDebt } from "@/app/actions/billing"
 import { getNextEventDate, getDayName, isExternalEvent } from "@/lib/event-utils"
 
 export default async function PortalSocioPage() {
@@ -45,20 +47,55 @@ export default async function PortalSocioPage() {
   const calculatedStatus = calculateMemberStatus(member as any, now)
   const isAlDia = calculatedStatus === 'AL DIA'
 
-  // Fetch all open events and compute next occurrence date for recurring ones
+  // Fetch Member Debt / Unpaid months
+  const debtData = await getMemberDebt(member.id)
+
+  // Fetch Member's Attended Milongas (presente registrado)
+  const attendedRegistrations = await db.eventRegistration.findMany({
+    where: {
+      memberId: member.id,
+      attended: true
+    },
+    include: {
+      event: { select: { id: true, title: true, startDate: true } }
+    },
+    orderBy: { createdAt: 'desc' }
+  })
+
+  const attendedMilongas = attendedRegistrations.map(r => ({
+    id: r.id,
+    title: r.event.title,
+    date: r.event.startDate
+  }))
+
+  // Filter events: Rest of current month + full next month
+  const todayStart = new Date(now.setHours(0, 0, 0, 0))
+  const currentMonth = now.getMonth()
+  const currentYear = now.getFullYear()
+
+  const nextMonthDate = new Date(currentYear, currentMonth + 1, 1)
+  const nextMonth = nextMonthDate.getMonth()
+  const nextMonthYear = nextMonthDate.getFullYear()
+
   const allEvents = await db.event.findMany({
     where: { status: "OPEN" },
     include: { classes: { orderBy: { order: "asc" } } }
   })
 
-  const nextEvents = allEvents
+  const filteredEvents = allEvents
     .map(evt => ({
       ...evt,
       computedDate: getNextEventDate(evt, now)
     }))
-    .filter(evt => evt.computedDate >= new Date(now.setHours(0, 0, 0, 0)) || evt.isRecurring)
+    .filter(evt => {
+      if (evt.computedDate < todayStart && !evt.isRecurring) return false
+      const m = evt.computedDate.getMonth()
+      const y = evt.computedDate.getFullYear()
+      const isCurrentMonth = (y === currentYear && m === currentMonth)
+      const isNextMonth = (y === nextMonthYear && m === nextMonth)
+      return isCurrentMonth || isNextMonth || evt.isRecurring
+    })
     .sort((a, b) => a.computedDate.getTime() - b.computedDate.getTime())
-    .slice(0, 6)
 
   // Fetch member's event registrations
   const registrations = await getSocioEventRegistrations(member.id)
@@ -106,17 +143,31 @@ export default async function PortalSocioPage() {
          </div>
       </div>
 
-      {/* 2. Carnet Digital — bloque propio, full-width */}
-      <DigitalMemberCard member={member} awards={[]} />
+      {/* 2. Carnet Digital Plegable ("Ver Carnet") */}
+      <SocioCarnetToggle 
+        member={member} 
+        awards={[]} 
+        attendedMilongas={attendedMilongas} 
+      />
 
-      {/* 2. Prioridad 1: Agenda de Milongas y Eventos (Full Width) */}
+      {/* 3. Control de Morosidad y Pago de Cuotas con Comprobante */}
+      <SocioDuesPaymentSection
+        memberId={member.id}
+        debtMonths={debtData.months}
+        totalDebt={debtData.total}
+        calculatedStatus={calculatedStatus}
+      />
+
+      {/* 4. Agenda de Milongas & Eventos (Mes Actual + Próximo Mes) */}
       <div className="bg-white/5 border border-white/10 p-8 md:p-10 rounded-[48px] backdrop-blur-md shadow-2xl space-y-8">
          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter flex items-center gap-3">
-                  <Calendar size={24} className="text-amber-500" /> Agenda de Milongas & Eventos
+                  <Calendar size={24} className="text-amber-500" /> Agenda Tanguera
                </h2>
-               <p className="text-xs text-zinc-400 mt-1">Reserve su lugar con beneficio exclusivo de Tarifa Socio</p>
+               <p className="text-xs text-zinc-400 mt-1">
+                  Eventos programados para lo que queda del mes y el próximo mes
+               </p>
             </div>
             <span className="text-[10px] font-black uppercase tracking-widest text-amber-500 bg-amber-500/10 px-4 py-1.5 rounded-full border border-amber-500/20 flex items-center gap-1.5">
                <ShieldCheck size={14} /> Beneficio Socio Activo
@@ -124,18 +175,16 @@ export default async function PortalSocioPage() {
          </div>
          
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {nextEvents.length === 0 ? (
+            {filteredEvents.length === 0 ? (
                <div className="col-span-full py-16 text-center bg-white/[0.02] rounded-3xl border border-dashed border-white/10">
                   <Sparkles size={32} className="mx-auto text-zinc-600 mb-3" />
-                  <p className="text-zinc-500 font-bold uppercase italic tracking-widest text-sm">No hay eventos programados en este momento</p>
-                  <p className="text-zinc-600 text-xs mt-1">Pronto publicaremos nuevas milongas y actividades para socios.</p>
+                  <p className="text-zinc-500 font-bold uppercase italic tracking-widest text-sm">No hay eventos programados para este período</p>
+                  <p className="text-zinc-600 text-xs mt-1">Pronto publicaremos nuevas milongas y actividades.</p>
                </div>
             ) : (
-               nextEvents.map(event => {
+               filteredEvents.map(event => {
                   const registration = registrations.find(r => r.eventId === event.id)
-                  const priceSocio = event.priceSocioMilonga || 0
 
-                  // Helper visual para etiquetas configurables
                   const getTypeBadgeStyles = (typeStr: string) => {
                      const t = (typeStr || "").toUpperCase()
                      if (t.includes("DIFUSIÓN") || t.includes("DIFUSION") || t.includes("EXTERNO")) return "bg-purple-600/90 text-white border-purple-400/40 font-black shadow-purple-900/30"
@@ -147,13 +196,11 @@ export default async function PortalSocioPage() {
                      return "bg-blue-500/80 text-white border-blue-400/30"
                   }
 
-                  // Limpieza y formateo de la ubicación (priorizando la dirección escrita en Información General)
                   const rawLoc = event.location || event.milongaLocation || "Sede Central CAT"
                   const isUrl = rawLoc.startsWith("http://") || rawLoc.startsWith("https://")
                   const mapUrl = event.milongaMapsUrl || (isUrl ? rawLoc : null)
                   const displayLocation = isUrl ? "Sede Central CAT" : rawLoc
 
-                  // Arreglo de múltiples etiquetas
                   const eventTags = (event.type || "MILONGA").split(",").map(t => t.trim()).filter(Boolean)
 
                   return (
@@ -182,7 +229,7 @@ export default async function PortalSocioPage() {
                                  <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">{format(event.computedDate, "MMMM", { locale: es })}</p>
                               </div>
 
-                              {/* Badges de tipo sobrepuestos (Múltiples Etiquetas) */}
+                              {/* Badges de tipo sobrepuestos */}
                               <div className="absolute top-3 left-3 flex flex-wrap items-start gap-1.5 z-10 max-w-[68%]">
                                  {eventTags.map((tag, idx) => (
                                     <span key={idx} className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-lg backdrop-blur-md border ${getTypeBadgeStyles(tag)} shadow-md`}>
@@ -203,7 +250,6 @@ export default async function PortalSocioPage() {
                               </h4>
 
                               <div className="space-y-2">
-                                 {/* Ubicación del Evento */}
                                  {mapUrl ? (
                                     <a 
                                        href={mapUrl} 
@@ -240,10 +286,32 @@ export default async function PortalSocioPage() {
                   )
                })
             )}
+
+            {/* Banner Tarjeta para ver Calendario Anual Completo */}
+            <div className="col-span-full mt-4 p-8 bg-gradient-to-r from-amber-950/60 via-zinc-900 to-zinc-950 border border-amber-500/30 rounded-[32px] flex flex-col md:flex-row justify-between items-center gap-6 shadow-2xl relative overflow-hidden">
+               <div className="absolute right-0 top-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+               <div className="relative z-10 space-y-1 text-center md:text-left">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+                     Agenda Anual CAT
+                  </span>
+                  <h3 className="text-xl font-black text-white uppercase italic tracking-tight pt-2">
+                     ¿Querés consultar los eventos programados para el resto del año?
+                  </h3>
+                  <p className="text-xs text-zinc-400 max-w-xl">
+                     Accedé al calendario completo de milongas, seminarios, conciertos y campeonatos del Centro Amigos del Tango.
+                  </p>
+               </div>
+               <a 
+                  href="/eventos" 
+                  className="relative z-10 px-8 py-4 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black text-xs uppercase tracking-widest rounded-2xl transition-all shadow-xl hover:scale-105 shrink-0 flex items-center gap-2"
+               >
+                  Ver Calendario Anual Completo →
+               </a>
+            </div>
          </div>
       </div>
 
-      {/* 3. Prioridad 2: Accesos Informativos y Administrativos (Cuotas, Datos, Gestión) en Desplegables */}
+      {/* 5. Historial de Pagos y Ficha de Socio en Desplegables */}
       <SocioAccordionSections member={member} isAlDia={isAlDia} />
 
     </div>

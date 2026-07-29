@@ -63,7 +63,8 @@ export default async function AdminDashboard() {
     'EN MORA': 0,
     'INACTIVO': 0,
     'SUSPENDIDO': 0,
-    'BAJA': 0
+    'BAJA': 0,
+    'HONORARIO': 0
   }
 
   allMembers.forEach(m => {

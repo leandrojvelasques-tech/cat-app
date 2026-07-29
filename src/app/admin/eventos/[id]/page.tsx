@@ -7,6 +7,7 @@ import { EventDetailsClient } from "./EventDetailsClient"
 import { DeleteEventButton } from "../components/DeleteEventButton"
 import { ApproveRegistrationButton } from "../components/ApproveRegistrationButton"
 import { EventPreviewModal } from "../components/EventPreviewModal"
+import { PresenceButton } from "@/app/admin/components/PresenceButton"
 import { getEffectiveEventPrices } from "@/lib/event-utils"
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -231,6 +232,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                       <th className="px-6 py-4 font-bold">Asistente</th>
                       <th className="px-6 py-4 font-bold">Tipo</th>
                       <th className="px-6 py-4 font-bold">Pago</th>
+                      <th className="px-6 py-4 font-bold text-center">Asistencia</th>
                       <th className="px-6 py-4 font-bold text-center">Acción / Comprobante</th>
                       <th className="px-6 py-4 font-bold text-right">Hora</th>
                     </tr>
@@ -262,6 +264,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                               </div>
                               <span className="text-[9px] text-zinc-600 uppercase font-medium">{reg.paymentMethod || "Efectivo"}</span>
                            </div>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <PresenceButton 
+                            registrationId={reg.id}
+                            eventId={event.id}
+                            initialAttended={reg.attended}
+                          />
                         </td>
                         <td className="px-6 py-4 text-center">
                           <ApproveRegistrationButton

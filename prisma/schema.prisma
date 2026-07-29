@@ -238,6 +238,10 @@ model EventRegistration {
   paymentProof     String? // URL/Path to image
   realPaymentDate  DateTime? // Fecha REAL en que ocurrió el pago (null = usa createdAt)
 
+  // Asistencia a la milonga
+  attended         Boolean   @default(false)
+  attendedAt       DateTime?
+
   // Source tracking
   source       String  @default("MANAGEMENT") // WEB, MANAGEMENT
   recordedById String?
