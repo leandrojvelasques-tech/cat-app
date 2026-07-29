@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { Trophy, Medal, Star, User, Maximize2, X, Award } from "lucide-react"
+import { format } from "date-fns"
 
 export interface AttendedMilonga {
   id: string
@@ -159,28 +160,30 @@ export function DigitalMemberCard({
 
          {/* Condecoraciones & Medallas */}
          <div className="flex items-center gap-2 flex-wrap">
-            {/* Insignias de Asistencia a Milongas del Año */}
+            {/* Insignias de Asistencia a Milongas del Año con Título y Fecha */}
             {attendedMilongas.length > 0 && (
-              <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-xl shadow-lg">
-                <span className="text-[8px] font-black uppercase text-amber-400 tracking-wider">
-                  {attendedMilongas.length} {attendedMilongas.length === 1 ? "Milonga" : "Milongas"} {new Date().getFullYear()}
-                </span>
-                <div className="flex gap-1 ml-1 max-w-[120px] overflow-hidden">
-                  {attendedMilongas.slice(0, 6).map((m, idx) => (
+              <div className="flex items-center gap-2 flex-wrap">
+                {attendedMilongas.map((m, idx) => {
+                  const eventDate = new Date(m.date)
+                  const formattedDate = format(eventDate, "dd/MM/yyyy")
+
+                  return (
                     <div
                       key={m.id || idx}
-                      title={`Presente en: ${m.title}`}
-                      className="w-5 h-5 rounded-md bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center justify-center text-[9px] font-black shadow-sm"
+                      className="flex items-center gap-1.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 px-2.5 py-1 rounded-xl shadow-md transition-all"
                     >
-                      ★
+                      <span className="text-amber-400 text-xs font-black">★</span>
+                      <div className="flex flex-col leading-none">
+                        <span className="text-[9px] font-black uppercase text-white tracking-tight truncate max-w-[140px]">
+                          {m.title}
+                        </span>
+                        <span className="text-[7px] font-bold text-amber-300/90 tracking-widest">
+                          {formattedDate}
+                        </span>
+                      </div>
                     </div>
-                  ))}
-                  {attendedMilongas.length > 6 && (
-                    <span className="text-[8px] font-black text-amber-400 self-center">
-                      +{attendedMilongas.length - 6}
-                    </span>
-                  )}
-                </div>
+                  )
+                })}
               </div>
             )}
 
