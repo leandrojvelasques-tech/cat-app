@@ -14,7 +14,7 @@ export default async function ArchivoSociosPage({
 
   const members = await db.member.findMany({
     where: {
-      status: status ? (status === "INACTIVE" ? { in: ["INACTIVE", "ARCHIVED"] } : status) : { in: ["INACTIVE", "DECEASED", "RESIGNED", "ARCHIVED"] },
+      status: status ? (status === "INACTIVE" ? { in: ["INACTIVE", "ARCHIVED", "ADMINISTRATIVE"] } : status) : { in: ["INACTIVE", "DECEASED", "RESIGNED", "ARCHIVED", "DUPLICATE", "MOROSIDAD", "ADMINISTRATIVE"] },
       AND: [
         query
           ? {

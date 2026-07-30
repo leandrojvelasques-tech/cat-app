@@ -40,7 +40,7 @@ export default async function FichaSocioPage(props: any) {
   if (!member) return notFound()
 
   const otherMembers = await db.member.findMany({
-    where: { id: { not: id }, status: { notIn: ["INACTIVE", "DECEASED", "RESIGNED"] } },
+    where: { id: { not: id }, status: { notIn: ["INACTIVE", "DECEASED", "RESIGNED", "DUPLICATE", "MOROSIDAD", "ADMINISTRATIVE", "ARCHIVED"] } },
     select: { id: true, firstName: true, lastName: true, memberNumber: true },
     orderBy: { lastName: 'asc' }
   }) as any[]

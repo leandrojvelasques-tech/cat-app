@@ -12,7 +12,7 @@ export function calculateMemberStatus(member: any, now: Date = new Date()): Calc
   }
 
   // If the manual status is already a terminal state, return BAJA
-  if (["DECEASED", "RESIGNED", "ARCHIVED", "INACTIVE"].includes(member.status)) {
+  if (["DECEASED", "RESIGNED", "ARCHIVED", "INACTIVE", "DUPLICATE", "MOROSIDAD", "ADMINISTRATIVE"].includes(member.status)) {
     return 'BAJA'
   }
 
@@ -116,7 +116,9 @@ export function calculateMemberStatus(member: any, now: Date = new Date()): Calc
 export function getMemberBajaReason(member: any): string | null {
   if (member.status === "DECEASED") return "Fallecimiento"
   if (member.status === "RESIGNED") return "Renuncia"
-  if (["ARCHIVED", "INACTIVE"].includes(member.status)) return "Baja Administrativa"
+  if (member.status === "DUPLICATE") return "Socio Duplicado"
+  if (member.status === "MOROSIDAD") return "Morosidad"
+  if (["ARCHIVED", "INACTIVE", "ADMINISTRATIVE"].includes(member.status)) return "Decisión Administrativa"
   return null
 }
 
@@ -139,7 +141,9 @@ export function getBajaReasonStyles(reason: string | null) {
   switch (reason) {
     case 'Fallecimiento': return "bg-purple-950/70 text-purple-300 border-purple-800/50"
     case 'Renuncia': return "bg-orange-950/70 text-orange-300 border-orange-800/50"
-    case 'Baja Administrativa': return "bg-zinc-900/80 text-zinc-400 border-zinc-700/50"
+    case 'Socio Duplicado': return "bg-blue-950/70 text-blue-300 border-blue-800/50"
+    case 'Morosidad': return "bg-red-950/70 text-red-300 border-red-800/50"
+    case 'Decisión Administrativa': return "bg-zinc-900/80 text-zinc-400 border-zinc-700/50"
     default: return "bg-zinc-800 text-zinc-400 border-zinc-700"
   }
 }

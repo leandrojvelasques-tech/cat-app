@@ -17,7 +17,7 @@ export async function GET(req: Request) {
         { dni: { contains: query, mode: 'insensitive' } },
       ],
       AND: [
-        { status: { notIn: ['INACTIVE', 'DECEASED', 'RESIGNED'] } }
+        { status: { notIn: ['INACTIVE', 'DECEASED', 'RESIGNED', 'DUPLICATE', 'MOROSIDAD', 'ADMINISTRATIVE', 'ARCHIVED'] } }
       ]
     },
     take: 5,

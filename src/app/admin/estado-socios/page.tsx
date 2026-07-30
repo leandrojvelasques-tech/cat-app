@@ -26,7 +26,7 @@ export default async function EstadoSociosPage({
   })
 
   let membersData = []
-  const BAJA_STATUSES = ["DECEASED", "RESIGNED", "INACTIVE", "ARCHIVED"]
+  const BAJA_STATUSES = ["DECEASED", "RESIGNED", "INACTIVE", "ARCHIVED", "DUPLICATE", "MOROSIDAD", "ADMINISTRATIVE"]
 
   if (query) {
     // Search Mode: Find any active member matching the query (excluding Honorarios)

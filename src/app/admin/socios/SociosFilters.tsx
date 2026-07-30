@@ -139,7 +139,9 @@ export function SociosFilters() {
                   <option value="" className="bg-zinc-900 italic">Todos los motivos</option>
                   <option value="DECEASED" className="bg-zinc-900 font-bold text-purple-400">Baja por Fallecimiento</option>
                   <option value="RESIGNED" className="bg-zinc-900 font-bold text-orange-400">Baja por Renuncia</option>
-                  <option value="INACTIVE" className="bg-zinc-900 font-bold text-zinc-400">Baja Administrativa</option>
+                  <option value="MOROSIDAD" className="bg-zinc-900 font-bold text-red-400">Baja por Morosidad</option>
+                  <option value="INACTIVE" className="bg-zinc-900 font-bold text-zinc-400">Decisión Administrativa</option>
+                  <option value="DUPLICATE" className="bg-zinc-900 font-bold text-blue-400">Socio Duplicado</option>
                 </>
               )}
             </select>

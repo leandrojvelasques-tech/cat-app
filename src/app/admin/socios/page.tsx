@@ -17,12 +17,12 @@ export default async function SociosPage({
     "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
   ]
   
-  const BAJA_STATUS_KEYS = ["DECEASED", "RESIGNED", "INACTIVE", "ARCHIVED"]
+  const BAJA_STATUS_KEYS = ["DECEASED", "RESIGNED", "INACTIVE", "ARCHIVED", "DUPLICATE", "MOROSIDAD", "ADMINISTRATIVE"]
 
   const viewFilter = view === "honorary"
     ? { type: "HONORARIO", status: { notIn: BAJA_STATUS_KEYS } }
     : view === "archive" 
-    ? (status ? (status === "INACTIVE" ? { status: { in: ["INACTIVE", "ARCHIVED"] } } : { status }) : { status: { in: BAJA_STATUS_KEYS } })
+    ? (status ? (status === "INACTIVE" ? { status: { in: ["INACTIVE", "ARCHIVED", "ADMINISTRATIVE"] } } : { status }) : { status: { in: BAJA_STATUS_KEYS } })
     : view === "all"
     ? (status ? { status } : {})
     : { status: { notIn: BAJA_STATUS_KEYS }, type: { not: "HONORARIO" } }

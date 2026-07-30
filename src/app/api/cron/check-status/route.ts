@@ -37,7 +37,7 @@ export async function GET(request: Request) {
     const members = await db.member.findMany({
       where: {
         NOT: {
-          status: { in: ["DECEASED", "RESIGNED", "ARCHIVED", "INACTIVE"] }
+          status: { in: ["DECEASED", "RESIGNED", "ARCHIVED", "INACTIVE", "DUPLICATE", "MOROSIDAD", "ADMINISTRATIVE"] }
         }
       },
       include: {

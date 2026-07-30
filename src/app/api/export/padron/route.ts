@@ -22,12 +22,12 @@ export async function GET(req: NextRequest) {
   const statusParam = searchParams.get("status") || ""
 
   const now = new Date()
-  const BAJA_STATUS_KEYS = ["DECEASED", "RESIGNED", "INACTIVE", "ARCHIVED"]
+  const BAJA_STATUS_KEYS = ["DECEASED", "RESIGNED", "INACTIVE", "ARCHIVED", "DUPLICATE", "MOROSIDAD", "ADMINISTRATIVE"]
 
   const viewFilter = view === "honorary"
     ? { type: "HONORARIO", status: { notIn: BAJA_STATUS_KEYS } }
     : view === "archive" 
-    ? (statusParam ? (statusParam === "INACTIVE" ? { status: { in: ["INACTIVE", "ARCHIVED"] } } : { status: statusParam }) : { status: { in: BAJA_STATUS_KEYS } })
+    ? (statusParam ? (statusParam === "INACTIVE" ? { status: { in: ["INACTIVE", "ARCHIVED", "ADMINISTRATIVE"] } } : { status: statusParam }) : { status: { in: BAJA_STATUS_KEYS } })
     : view === "all"
     ? (statusParam ? { status: statusParam } : {})
     : { status: { notIn: BAJA_STATUS_KEYS }, type: { not: "HONORARIO" } }
