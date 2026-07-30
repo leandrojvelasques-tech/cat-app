@@ -1,7 +1,7 @@
 "use server"
 
 import { db } from "@/lib/db"
-import { sendPasswordResetEmail } from "@/lib/emails"
+import { sendPasswordResetEmail, getBaseUrl } from "@/lib/emails"
 import crypto from "crypto"
 import bcrypt from "bcrypt"
 
@@ -38,7 +38,7 @@ export async function requestPasswordReset(email: string) {
     })
 
     // 4. Construir enlace de reset
-    const baseUrl = process.env.AUTH_URL || "http://localhost:3000"
+    const baseUrl = getBaseUrl()
     const resetLink = `${baseUrl}/reset-password?token=${token}`
 
     // 5. Enviar el correo

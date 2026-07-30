@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import { Calendar, Plus, Users, Music, ShoppingBag, Share2, Tag, ShieldAlert, ArrowRight, CheckCircle2, Sparkles } from "lucide-react"
+import { Calendar, Plus, Users, Music, ShoppingBag, Share2, Tag, ShieldAlert, ArrowRight, CheckCircle2, Sparkles, BookOpen } from "lucide-react"
 import Link from "next/link"
 import { EventPreviewModal } from "./components/EventPreviewModal"
 import { isExternalEvent } from "@/lib/event-utils"
@@ -24,10 +24,18 @@ export default async function EventosPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-white/90">Eventos y Milongas</h1>
-          <p className="text-zinc-400 mt-1">Gestione milongas, capacitaciones, difusión y registros de asistentes.</p>
+          <p className="text-zinc-400 mt-1">Gestione milongas, capacitaciones, difusión, clases locales y registros.</p>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <Link 
+            href="/admin/clases-comodoro" 
+            className="flex items-center gap-2 bg-gradient-to-r from-amber-500/10 to-amber-600/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 px-4 py-2.5 rounded-xl font-medium transition-colors shadow-lg"
+          >
+            <BookOpen size={18} />
+            Clases en Comodoro
+          </Link>
+
           <Link 
             href="/admin/buffet" 
             className="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-amber-500 border border-amber-500/30 px-4 py-2.5 rounded-xl font-medium transition-colors shadow-lg"

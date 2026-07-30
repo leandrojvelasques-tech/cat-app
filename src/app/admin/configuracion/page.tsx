@@ -187,7 +187,7 @@ export default async function SettingsPage() {
   const vencimientoDia = await getSetting("vencimiento_dia", "10")
   const envioDia = await getSetting("envio_dia", "1")
   const recordatorioDia = await getSetting("recordatorio_dia", "5")
-  const emailAdmin = await getSetting("email_admin", "centroamigosdeltango@gmail.com")
+  const emailAdmin = await getSetting("email_admin", "info@centroamigosdeltango.com")
   const feeHistory = await getFeeHistory()
   const auditLogs = await getAuditLogs()
   

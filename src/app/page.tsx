@@ -12,7 +12,8 @@ import {
   MapPin, 
   Mail, 
   Phone, 
-  LogIn 
+  LogIn,
+  BookOpen
 } from "lucide-react"
 import { EscuelitaCarousel } from "./EscuelitaCarousel"
 
@@ -131,6 +132,10 @@ export default async function Home() {
             <Link href="/" className="text-cat-gold font-bold pb-0.5 border-b border-cat-gold text-sm transition-colors">Inicio</Link>
             <Link href="#nosotros" className="text-zinc-400 hover:text-white text-sm transition-colors">Nosotros</Link>
             <Link href="#eventos" className="text-zinc-400 hover:text-white text-sm transition-colors">Agenda Tanguera</Link>
+            <Link href="/clases-comodoro" className="text-amber-400 font-bold hover:text-amber-300 text-sm transition-colors flex items-center gap-1.5 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/20">
+              <BookOpen size={14} />
+              <span>Clases de Tango</span>
+            </Link>
             <Link href="#beneficios" className="text-zinc-400 hover:text-white text-sm transition-colors">Beneficios</Link>
             <Link href="/login" className="text-zinc-400 hover:text-white text-sm transition-colors flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-xl border border-white/5 hover:bg-white/10">
               <LogIn size={14} />

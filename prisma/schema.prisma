@@ -505,3 +505,42 @@ model EnrollmentRequest {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
+
+model LocalTangoTeacher {
+  id        String            @id @default(uuid())
+  fullName  String
+  photoUrl  String?
+  bio       String?
+  phone     String?
+  email     String?
+  instagram String?
+  city      String            @default("Comodoro Rivadavia")
+  isActive  Boolean           @default(true)
+  classes   LocalTangoClass[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+model LocalTangoClass {
+  id              String             @id @default(uuid())
+  title           String?
+  teacherName     String
+  group           String?            // e.g. Escuelita del CAT, Comodoro Tango, Garufa
+  teacherId       String?
+  teacher         LocalTangoTeacher? @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  city            String             @default("Comodoro Rivadavia") // Comodoro Rivadavia, Rada Tilly
+  neighborhood    String?            // e.g. Centro, Industrial, Roca, KM5
+  locationName    String             // e.g. Centro Cultural Comodoro, Biblioteca Publica CIP
+  address         String             // e.g. Hipólito Yrigoyen 99
+  schedule        String             // e.g. Martes de 20 a 22 hs.
+  contactInfo     String?            // e.g. 297-5025462
+  priceType       String             @default("ARANCELADO") // GRATIS, ARANCELADO, CONSULTAR
+  priceDetails    String?
+  registrationUrl String?
+  notes           String?            // Observaciones / Comentarios adicionales
+  isPublished     Boolean            @default(true)
+  order           Int                @default(0)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+}
+

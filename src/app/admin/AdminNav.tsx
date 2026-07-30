@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Users, CreditCard, LayoutDashboard, Settings, Archive, Calendar, Trophy, ShieldCheck, GraduationCap, Gamepad2 } from "lucide-react"
+import { Users, CreditCard, LayoutDashboard, Settings, Archive, Calendar, Trophy, ShieldCheck, GraduationCap, Gamepad2, BookOpen } from "lucide-react"
 
 export function AdminNav({ role }: { role?: string }) {
   const pathname = usePathname()
@@ -12,6 +12,7 @@ export function AdminNav({ role }: { role?: string }) {
     { href: "/admin/estado-socios", icon: Users, label: "Panel de Socios" },
     { href: "/admin/cuotas", icon: CreditCard, label: "Caja" },
     { href: "/admin/eventos", icon: Calendar, label: "Eventos" },
+    { href: "/admin/clases-comodoro", icon: BookOpen, label: "Clases de Tango" },
     { href: "/admin/escuelita", icon: GraduationCap, label: "Escuelita CAT" },
     { href: "/admin/vientos-de-tango", icon: Trophy, label: "Vientos de Tango" },
     { href: "/admin/juegos", icon: Gamepad2, label: "Juegos" },

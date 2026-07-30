@@ -75,9 +75,17 @@ export async function sendEmail({ to, subject, html, memberId, type, from }: Sen
   return status === "SENT"
 }
 
+export function getBaseUrl(): string {
+  const envUrl = process.env.NEXTAUTH_URL || process.env.AUTH_URL || process.env.NEXT_PUBLIC_APP_URL
+  if (envUrl && !envUrl.includes("localhost")) {
+    return envUrl.replace(/\/+$/, "")
+  }
+  return "https://www.centroamigosdeltango.com"
+}
+
 // Helper para convertir texto plano de plantillas en un correo HTML institucional elegante
 function buildEmailLayout(contentHtml: string) {
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
+  const baseUrl = getBaseUrl()
   return `
     <div style="background-color: #f4f4f5; padding: 30px 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
       <div style="max-width: 600px; margin: 0 auto; bg-color: #ffffff; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #e4e4e7;">
@@ -150,7 +158,7 @@ export async function sendEnrollmentSubmittedEmail(request: { firstName: string;
 // 2. Notificación al Tesorero de nueva solicitud recibida
 export async function sendNewEnrollmentAlertToBoard(request: { firstName: string; lastName: string; DNI: string }) {
   const adminEmailSetting = await db.setting.findUnique({ where: { key: "email_admin" } })
-  const to = adminEmailSetting?.value || "centroamigosdeltango@gmail.com"
+  const to = adminEmailSetting?.value || "info@centroamigosdeltango.com"
   
   const subject = "Nueva solicitud de inscripción recibida — CAT"
   const content = `
@@ -162,7 +170,7 @@ export async function sendNewEnrollmentAlertToBoard(request: { firstName: string
     </div>
     <p>Por favor, ingresá al Panel de Administración para validar el comprobante de pago y autorizar el alta del socio.</p>
     <div style="margin-top: 24px; text-align: center;">
-      <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/admin/solicitudes" style="background-color: #A6702E; color: white; padding: 12px 24px; text-decoration: none; border-radius: 10px; font-weight: bold; display: inline-block;">Ver Solicitudes Pendientes</a>
+      <a href="${getBaseUrl()}/admin/solicitudes" style="background-color: #A6702E; color: white; padding: 12px 24px; text-decoration: none; border-radius: 10px; font-weight: bold; display: inline-block;">Ver Solicitudes Pendientes</a>
     </div>
   `
 
@@ -190,7 +198,7 @@ export async function sendEventRegistrationAlertToBoard(
   }
 ) {
   const adminEmailSetting = await db.setting.findUnique({ where: { key: "email_admin" } })
-  const defaultAdminEmail = adminEmailSetting?.value || "centroamigosdeltango@gmail.com"
+  const defaultAdminEmail = adminEmailSetting?.value || "info@centroamigosdeltango.com"
 
   // Recopilar correos adicionales del evento
   const additionalEmailsRaw = event.notificationEmails || ""
@@ -207,7 +215,7 @@ export async function sendEventRegistrationAlertToBoard(
     ? `Nuevo comprobante enviado para evento: "${event.title}" — CAT`
     : `Nueva inscripción a evento: "${event.title}" — CAT`
 
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
+  const baseUrl = getBaseUrl()
   const adminEventUrl = `${baseUrl}/admin/eventos/${event.id}`
 
   const content = `
@@ -255,7 +263,7 @@ export async function sendEnrollmentApprovedEmail(
   if (!member.email) return false
   
   const subject = "¡Bienvenido/a al Centro Amigos del Tango!"
-  const authUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
+  const authUrl = getBaseUrl()
   
   // Buscar plantilla de bienvenida en DB o usar default
   const setting = await db.setting.findUnique({ where: { key: "msg_bienvenida" } })
