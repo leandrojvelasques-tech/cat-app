@@ -114,7 +114,7 @@ function buildEmailLayout(contentHtml: string) {
 }
 
 function processTemplateText(text: string, variables: Record<string, string>): string {
-  let result = text
+  let result = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n")
   for (const [key, val] of Object.entries(variables)) {
     const reg = new RegExp(`\\{${key}\\}`, "g")
     result = result.replace(reg, val)
