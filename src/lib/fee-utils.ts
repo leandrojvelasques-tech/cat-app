@@ -82,3 +82,28 @@ export function getFeeAmountForPeriod(
   // Apply 50% discount for family/partner
   return isFamilyDiscount ? Math.round(matchedAmount / 2) : matchedAmount
 }
+
+/**
+ * Gets the current effective monthly fee amount.
+ * Checks setting 'cuota_mensual' or falls back to fee history calculation for the current period.
+ */
+export async function getCurrentFeeAmount(): Promise<number> {
+  try {
+    const setting = await db.setting.findUnique({
+      where: { key: "cuota_mensual" }
+    })
+    if (setting && setting.value) {
+      const parsed = parseFloat(setting.value)
+      if (!isNaN(parsed) && parsed > 0) {
+        return parsed
+      }
+    }
+    const now = new Date()
+    const history = await getFeeHistory()
+    return getFeeAmountForPeriod(now.getFullYear(), now.getMonth() + 1, false, history)
+  } catch (error) {
+    console.error("Error obteniendo cuota mensual actual:", error)
+    return 7000
+  }
+}
+

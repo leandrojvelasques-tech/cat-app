@@ -4,6 +4,8 @@ import { db } from "@/lib/db"
 import { writeFileSync, existsSync, mkdirSync } from "fs"
 import { join } from "path"
 import { sendEnrollmentSubmittedEmail, sendNewEnrollmentAlertToBoard } from "@/lib/emails"
+import { getCurrentFeeAmount } from "@/lib/fee-utils"
+
 
 export async function submitEnrollmentRequest(formData: FormData) {
   try {
@@ -136,6 +138,8 @@ export async function approveEnrollmentRequest(requestId: string) {
     // 4. Crear contraseña temporal y hash
     const tempPassword = Math.random().toString(36).slice(-8)
     const passwordHash = await bcrypt.hash(tempPassword, 10)
+    
+    const feeAmount = await getCurrentFeeAmount()
 
     let createdMember: any = null
     let createdUser: any = null
@@ -188,8 +192,8 @@ export async function approveEnrollmentRequest(requestId: string) {
           memberId: member.id,
           periodYear: new Date().getFullYear(),
           periodMonth: new Date().getMonth() + 1,
-          amountDue: 10000,
-          amountPaid: 10000,
+          amountDue: feeAmount,
+          amountPaid: feeAmount,
           paymentDate: new Date(),
           paymentMethod: "TRANSFER",
           paymentStatus: "PAID",

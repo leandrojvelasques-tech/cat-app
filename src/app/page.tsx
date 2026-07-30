@@ -18,11 +18,14 @@ import { EscuelitaCarousel } from "./EscuelitaCarousel"
 
 import { getNextEventDate, getDayName, isExternalEvent } from "@/lib/event-utils"
 import { Repeat, Sparkles as SparklesIcon } from "lucide-react"
+import { getCurrentFeeAmount } from "@/lib/fee-utils"
 
 export const revalidate = 3600 // Revalida cada hora
 
 export default async function Home() {
   const now = new Date()
+  const currentFee = await getCurrentFeeAmount()
+
 
   // Obtener eventos reales públicos y calcular fecha próxima (incluyendo recurrentes)
   const allPublicEvents = await db.event.findMany({
@@ -483,7 +486,7 @@ export default async function Home() {
             >
               Asociate Ahora
             </Link>
-            <p className="mt-6 text-xs text-zinc-500">Suscripción mensual simple y transparente de $10.000. Trámite digital.</p>
+            <p className="mt-6 text-xs text-zinc-500">Suscripción mensual simple y transparente de ${currentFee.toLocaleString("es-AR")}. Trámite digital.</p>
           </div>
         </div>
       </section>

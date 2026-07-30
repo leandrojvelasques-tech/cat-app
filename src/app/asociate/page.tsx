@@ -1,8 +1,11 @@
 import Link from "next/link"
 import { EnrollmentForm } from "./EnrollmentForm"
 import { Sparkles, Heart, ChevronLeft, CreditCard } from "lucide-react"
+import { getCurrentFeeAmount } from "@/lib/fee-utils"
 
-export default function AsociatePage() {
+export default async function AsociatePage() {
+  const currentFee = await getCurrentFeeAmount()
+
   return (
     <div className="bg-[#131313] text-[#e4e2e0] min-h-screen selection:bg-cat-gold/30 font-sans relative overflow-x-hidden">
       
@@ -153,7 +156,7 @@ export default function AsociatePage() {
             
             <div className="flex justify-center mb-8">
               <div className="bg-cat-gold/10 border border-cat-gold/20 px-6 py-2.5 rounded-full text-sm font-bold text-cat-gold">
-                Valor cuota mensual: $ 10.000
+                Valor cuota mensual: $ {currentFee.toLocaleString("es-AR")}
               </div>
             </div>
 

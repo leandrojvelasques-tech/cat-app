@@ -39,6 +39,8 @@ async function updateSetting(formData: FormData) {
   )
 
   revalidatePath("/admin/configuracion")
+  revalidatePath("/asociate")
+  revalidatePath("/")
 }
 
 async function addFeePeriod(formData: FormData) {
@@ -90,6 +92,8 @@ async function addFeePeriod(formData: FormData) {
   )
 
   revalidatePath("/admin/configuracion")
+  revalidatePath("/asociate")
+  revalidatePath("/")
 }
 
 async function deleteFeePeriod(id: string) {
@@ -116,6 +120,8 @@ async function deleteFeePeriod(id: string) {
   )
 
   revalidatePath("/admin/configuracion")
+  revalidatePath("/asociate")
+  revalidatePath("/")
 }
 
 // Role permission definitions shown in the UI
