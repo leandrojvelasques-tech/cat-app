@@ -23,6 +23,8 @@ export default async function SociosPage({
     ? { type: "HONORARIO", status: { notIn: BAJA_STATUS_KEYS } }
     : view === "archive" 
     ? (status ? (status === "INACTIVE" ? { status: { in: ["INACTIVE", "ARCHIVED"] } } : { status }) : { status: { in: BAJA_STATUS_KEYS } })
+    : view === "all"
+    ? (status ? { status } : {})
     : { status: { notIn: BAJA_STATUS_KEYS }, type: { not: "HONORARIO" } }
 
   // Fetch members according to view
@@ -67,6 +69,15 @@ export default async function SociosPage({
   const filteredMembers = membersData.filter((member: any) => {
     const calculated = calculateMemberStatus(member, now)
     
+    if (view === "all") {
+      if (status === "ACTIVE") return calculated === 'AL DIA'
+      if (status === "DEBTOR") return calculated === 'EN MORA'
+      if (status === "INACTIVE") return calculated === 'INACTIVO'
+      if (status === "SUSPENDED") return calculated === 'SUSPENDIDO'
+      if (status === "BAJA") return calculated === 'BAJA'
+      return true
+    }
+
     // If we are in "Archive" view, show terminal states
     if (view === "archive") {
        return calculated === 'BAJA'
@@ -107,7 +118,7 @@ export default async function SociosPage({
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/5 p-6 rounded-[32px] border border-white/10 backdrop-blur-md">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-white/90">
-            {view === "honorary" ? "Padrón de Socios Honorarios" : view === "archive" ? "Archivo de Socios" : "Directorio de Socios"}
+            {view === "all" ? "Padrón Completo de Socios" : view === "honorary" ? "Padrón de Socios Honorarios" : view === "archive" ? "Archivo de Socios" : "Directorio de Socios"}
           </h1>
           <p className="text-zinc-500 mt-1">
             {filteredMembers.length} {filteredMembers.length === 1 ? 'socio encontrado' : 'socios encontrados'}

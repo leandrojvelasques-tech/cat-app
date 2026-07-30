@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { Search, Filter, ArrowUpDown } from "lucide-react"
+import { Search, Filter, ArrowUpDown, Download } from "lucide-react"
 import { useTransition } from "react"
 
 export function SociosFilters() {
@@ -61,22 +61,28 @@ export function SociosFilters() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="flex gap-1 bg-white/5 p-1 rounded-2xl border border-white/10 w-fit backdrop-blur-md">
+        <div className="flex flex-wrap gap-1 bg-white/5 p-1 rounded-2xl border border-white/10 w-fit backdrop-blur-md">
           <button 
             onClick={() => handleViewChange("active")}
-            className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${currentView === "active" ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-white hover:bg-white/5"}`}
+            className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${currentView === "active" ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-white hover:bg-white/5"}`}
           >
             Directorio Activo
           </button>
           <button 
-            onClick={() => handleViewChange("honorary")}
-            className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${currentView === "honorary" ? "bg-amber-500 text-zinc-950 shadow-xl font-extrabold" : "text-amber-400/80 hover:text-amber-300 hover:bg-amber-500/10"}`}
+            onClick={() => handleViewChange("all")}
+            className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${currentView === "all" ? "bg-emerald-500 text-zinc-950 shadow-xl font-extrabold" : "text-emerald-400/80 hover:text-emerald-300 hover:bg-emerald-500/10"}`}
           >
-            Socios Honorarios
+            Padrón Completo
+          </button>
+          <button 
+            onClick={() => handleViewChange("honorary")}
+            className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${currentView === "honorary" ? "bg-amber-500 text-zinc-950 shadow-xl font-extrabold" : "text-amber-400/80 hover:text-amber-300 hover:bg-amber-500/10"}`}
+          >
+            Honorarios
           </button>
           <button 
             onClick={() => handleViewChange("archive")}
-            className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${currentView === "archive" ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-white hover:bg-white/5"}`}
+            className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${currentView === "archive" ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-white hover:bg-white/5"}`}
           >
             Archivo / Bajas
           </button>
@@ -119,13 +125,14 @@ export function SociosFilters() {
               onChange={(e) => handleStatusChange(e.target.value)}
               className="bg-white/5 border border-white/10 rounded-2xl pl-11 pr-10 py-3 text-sm text-white focus:outline-none appearance-none cursor-pointer hover:bg-white/10 transition-all font-medium min-w-[170px]"
             >
-              {currentView === 'active' ? (
+              {currentView === 'active' || currentView === 'all' ? (
                 <>
                   <option value="" className="bg-zinc-900 italic">Todos</option>
                   <option value="ACTIVE" className="bg-zinc-900 font-bold text-emerald-400">Al Día</option>
                   <option value="DEBTOR" className="bg-zinc-900 font-bold text-amber-400">En Mora</option>
                   <option value="INACTIVE" className="bg-zinc-900 font-bold text-zinc-400">Inactivos</option>
                   <option value="SUSPENDED" className="bg-zinc-900 font-bold text-red-400">Suspendidos</option>
+                  {currentView === 'all' && <option value="BAJA" className="bg-zinc-900 font-bold text-red-500">Bajas</option>}
                 </>
               ) : (
                 <>
@@ -140,6 +147,15 @@ export function SociosFilters() {
                <div className="w-1.5 h-1.5 border-r border-b border-zinc-500 rotate-45 transform -translate-y-0.5"></div>
             </div>
           </div>
+
+          <a
+            href={`/api/export/padron?view=${currentView}&query=${searchParams.get("query") || ""}&status=${currentStatus}`}
+            className="flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all shadow-lg cursor-pointer shrink-0"
+            title="Descargar padrón completo en formato CSV"
+          >
+            <Download size={16} />
+            <span>Descargar CSV</span>
+          </a>
         </div>
       </div>
     </div>
