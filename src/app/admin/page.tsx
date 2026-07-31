@@ -160,10 +160,7 @@ export default async function AdminDashboard() {
   // 6. Pending Event Approvals
   const pendingEventRegistrations = await db.eventRegistration.findMany({
     where: {
-      OR: [
-        { paymentStatus: "PENDING" },
-        { paymentProof: { not: null } }
-      ]
+      paymentStatus: "PENDING"
     },
     include: { event: true },
     orderBy: { createdAt: 'desc' },

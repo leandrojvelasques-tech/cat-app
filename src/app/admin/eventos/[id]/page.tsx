@@ -29,7 +29,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   if (!event) notFound()
 
   const prices = getEffectiveEventPrices(event)
-  const pendingApprovalsCount = event.registrations.filter(r => r.paymentStatus !== "PAID" || !!r.paymentProof).length
+  const pendingApprovalsCount = event.registrations.filter(r => r.paymentStatus === "PENDING").length
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
