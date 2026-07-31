@@ -98,12 +98,27 @@ export function ApproveRegistrationButton({
             {/* Modal Body - Isolated Image Rendering */}
             <div className="p-6 flex flex-col items-center justify-center bg-black/60 max-h-[70vh] overflow-auto">
               {isPdf ? (
-                <iframe
-                  src={paymentProof}
-                  className="w-full h-[500px] rounded-xl border border-white/10"
-                  sandbox="allow-same-origin"
-                  title="Comprobante PDF"
-                />
+                <div className="w-full text-center space-y-4">
+                  <object
+                    data={paymentProof}
+                    type="application/pdf"
+                    className="w-full h-[450px] rounded-xl border border-white/10 hidden md:block"
+                  >
+                    <p className="text-xs text-zinc-400">Su navegador no soporta vista previa directa de PDF.</p>
+                  </object>
+                  <div className="p-6 bg-white/5 border border-white/10 rounded-2xl flex flex-col items-center gap-3">
+                    <FileText size={40} className="text-amber-400" />
+                    <p className="text-xs text-zinc-300 font-medium">Comprobante enviado en formato documento PDF</p>
+                    <a
+                      href={paymentProof}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all"
+                    >
+                      Abrir PDF en Ventana Nueva
+                    </a>
+                  </div>
+                </div>
               ) : (
                 <img
                   src={paymentProof}

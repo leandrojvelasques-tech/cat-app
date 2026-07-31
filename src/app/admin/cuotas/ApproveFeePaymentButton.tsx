@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { approvePendingFeePayment, rejectPendingFeePayment } from "@/app/actions/cuotas"
-import { CheckCircle2, FileText, Loader2, X, ShieldCheck, Download, XCircle } from "lucide-react"
+import { CheckCircle2, FileText, Loader2, X, ShieldCheck, Download, XCircle, ExternalLink } from "lucide-react"
 import { toast } from "sonner"
 
 interface ApproveFeePaymentButtonProps {
@@ -20,6 +20,7 @@ export function ApproveFeePaymentButton({
 }: ApproveFeePaymentButtonProps) {
   const [isPending, startTransition] = useTransition()
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [imgError, setImgError] = useState(false)
 
   // Extract proof URL from notes if present
   let proofUrl = ""
@@ -53,7 +54,15 @@ export function ApproveFeePaymentButton({
     })
   }
 
-  const isPdf = proofUrl.startsWith("data:application/pdf")
+  const isPdf = proofUrl.startsWith("data:application/pdf") || proofUrl.toLowerCase().endsWith(".pdf")
+  const isImage = !isPdf && (
+    proofUrl.startsWith("data:image/") ||
+    proofUrl.startsWith("/uploads/") ||
+    proofUrl.endsWith(".png") ||
+    proofUrl.endsWith(".jpg") ||
+    proofUrl.endsWith(".jpeg") ||
+    proofUrl.endsWith(".webp")
+  )
 
   return (
     <>
@@ -61,7 +70,10 @@ export function ApproveFeePaymentButton({
         {proofUrl && (
           <button
             type="button"
-            onClick={() => setIsPreviewOpen(true)}
+            onClick={() => {
+              setImgError(false)
+              setIsPreviewOpen(true)
+            }}
             className="flex items-center gap-1 bg-white/5 hover:bg-white/10 text-zinc-300 border border-white/10 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer"
             title="Previsualizar comprobante de forma segura"
           >
@@ -117,7 +129,7 @@ export function ApproveFeePaymentButton({
               <button
                 type="button"
                 onClick={() => setIsPreviewOpen(false)}
-                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -125,46 +137,65 @@ export function ApproveFeePaymentButton({
 
             <div className="p-6 flex flex-col items-center justify-center bg-black/60 max-h-[70vh] overflow-auto">
               {isPdf ? (
-                <iframe
-                  src={proofUrl}
-                  className="w-full h-[500px] rounded-xl border border-white/10"
-                  sandbox="allow-same-origin"
-                  title="Comprobante PDF"
-                />
-              ) : proofUrl.startsWith("data:") ? (
+                <div className="w-full text-center space-y-4">
+                  <object
+                    data={proofUrl}
+                    type="application/pdf"
+                    className="w-full h-[450px] rounded-xl border border-white/10 hidden md:block"
+                  >
+                    <p className="text-xs text-zinc-400">Su navegador no soporta vista previa directa de PDF.</p>
+                  </object>
+                  <div className="p-6 bg-white/5 border border-white/10 rounded-2xl flex flex-col items-center gap-3">
+                    <FileText size={40} className="text-amber-400" />
+                    <p className="text-xs text-zinc-300 font-medium">Comprobante enviado en formato documento PDF</p>
+                    <a
+                      href={proofUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all"
+                    >
+                      <ExternalLink size={14} /> Abrir PDF en Ventana Nueva
+                    </a>
+                  </div>
+                </div>
+              ) : (isImage && !imgError) ? (
                 <img
                   src={proofUrl}
                   alt="Comprobante de pago"
                   className="max-w-full max-h-[60vh] object-contain rounded-xl border border-white/10 shadow-lg"
+                  onError={() => setImgError(true)}
                 />
               ) : (
-                <div className="p-10 text-center">
-                  <p className="text-zinc-400 text-xs mb-4">Comprobante almacenado en enlace externo:</p>
+                <div className="p-8 text-center flex flex-col items-center gap-4">
+                  <FileText size={48} className="text-amber-400" />
+                  <p className="text-zinc-300 text-xs font-medium max-w-sm">
+                    No se puede previsualizar directamente en pantalla o el formato es un enlace externo.
+                  </p>
                   <a
                     href={proofUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block bg-amber-500 text-black font-bold px-4 py-2 rounded-xl text-xs"
+                    className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all"
                   >
-                    Abrir Comprobante Externo
+                    <ExternalLink size={14} /> Abrir / Descargar Comprobante
                   </a>
                 </div>
               )}
             </div>
 
-            <div className="p-4 bg-zinc-950 border-t border-white/10 flex justify-between items-center">
-              {proofUrl.startsWith("data:") && (
-                <a
-                  href={proofUrl}
-                  download="comprobante-cuota.png"
-                  className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white font-medium"
-                >
-                  <Download size={14} /> Descargar Archivo
-                </a>
-              )}
+            <div className="p-4 bg-zinc-950 border-t border-white/10 flex justify-between items-center gap-4 flex-wrap">
+              <a
+                href={proofUrl}
+                download="comprobante-cuota"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white font-medium"
+              >
+                <Download size={14} /> Descargar Archivo
+              </a>
 
               {currentStatus !== "PAID" && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 ml-auto">
                   <button
                     type="button"
                     onClick={handleReject}
