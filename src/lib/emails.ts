@@ -1,43 +1,58 @@
 import { db } from "@/lib/db"
 
+export const EMAIL_FROM_COBRANZAS = "Cobranzas - Centro Amigos del Tango <cobranzas@centroamigosdeltango.com>"
+export const EMAIL_MAIN_INFO = "info@centroamigosdeltango.com"
+export const EMAIL_COBRANZAS = "cobranzas@centroamigosdeltango.com"
+
 interface SendEmailParams {
-  to: string
+  to: string | string[]
   subject: string
   html: string
   memberId?: string
   type: string
   from?: string
+  bcc?: string | string[]
+  cc?: string | string[]
 }
 
 /**
  * Función principal para enviar correos usando la API de Resend.
  * Si no está configurada la API KEY, escribe en consola y crea un registro de Communication "FAILED".
  */
-export async function sendEmail({ to, subject, html, memberId, type, from }: SendEmailParams) {
+export async function sendEmail({ to, subject, html, memberId, type, from, bcc, cc }: SendEmailParams) {
   const apiKey = process.env.RESEND_API_KEY
   let status = "SENT"
   
   const fromEmail = from || process.env.EMAIL_FROM || "CAT WEB <no-reply@centroamigosdeltango.com>"
+  const recipientList = Array.isArray(to) ? to : [to]
 
-  console.log(`[EMAIL SENDING] Enviando correo de tipo "${type}" a "${to}" con asunto "${subject}" desde "${fromEmail}"...`)
+  console.log(`[EMAIL SENDING] Enviando correo de tipo "${type}" a "${recipientList.join(", ")}" con asunto "${subject}" desde "${fromEmail}"...`)
 
   if (!apiKey) {
     console.warn(`[EMAIL WARNING] RESEND_API_KEY no configurada. El correo no se envió a producción, pero queda registrado en la base de datos local.`)
     status = "FAILED"
   } else {
     try {
+      const payload: Record<string, any> = {
+        from: fromEmail,
+        to: recipientList,
+        subject: subject,
+        html: html,
+      }
+      if (bcc) {
+        payload.bcc = Array.isArray(bcc) ? bcc : [bcc]
+      }
+      if (cc) {
+        payload.cc = Array.isArray(cc) ? cc : [cc]
+      }
+
       const response = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${apiKey}`,
         },
-        body: JSON.stringify({
-          from: fromEmail,
-          to: [to],
-          subject: subject,
-          html: html,
-        }),
+        body: JSON.stringify(payload),
       })
 
       if (!response.ok) {
@@ -45,7 +60,7 @@ export async function sendEmail({ to, subject, html, memberId, type, from }: Sen
         console.error("[EMAIL ERROR] Error de la API de Resend:", errData)
         status = "FAILED"
       } else {
-        console.log(`[EMAIL SUCCESS] Correo enviado exitosamente a "${to}" via Resend.`)
+        console.log(`[EMAIL SUCCESS] Correo enviado exitosamente a "${recipientList.join(", ")}" via Resend.`)
       }
     } catch (e) {
       console.error("[EMAIL ERROR] Excepción al enviar correo:", e)
@@ -149,6 +164,8 @@ export async function sendEnrollmentSubmittedEmail(request: { firstName: string;
 
   return sendEmail({
     to: request.email,
+    from: EMAIL_FROM_COBRANZAS,
+    bcc: [EMAIL_MAIN_INFO],
     subject,
     html,
     type: "WELCOME",
@@ -294,6 +311,8 @@ export async function sendEnrollmentApprovedEmail(
 
   return sendEmail({
     to: member.email,
+    from: EMAIL_FROM_COBRANZAS,
+    bcc: [EMAIL_MAIN_INFO],
     subject,
     html: finalHtml,
     memberId: member.id,
@@ -342,6 +361,8 @@ export async function sendFeeReminderEmail(
 
   return sendEmail({
     to: member.email,
+    from: EMAIL_FROM_COBRANZAS,
+    bcc: [EMAIL_MAIN_INFO],
     subject,
     html: body,
     memberId: member.id,
@@ -379,6 +400,8 @@ export async function sendSocioEnMoraEmail(
 
   return sendEmail({
     to: member.email,
+    from: EMAIL_FROM_COBRANZAS,
+    bcc: [EMAIL_MAIN_INFO],
     subject,
     html: body,
     memberId: member.id,
@@ -438,10 +461,44 @@ export async function sendPaymentValidatedEmail(
 
   return sendEmail({
     to: member.email,
+    from: EMAIL_FROM_COBRANZAS,
+    bcc: [EMAIL_MAIN_INFO],
     subject,
     html: body,
     memberId: member.id,
     type: "GENERAL",
+  })
+}
+
+// 6b. Acuse de recibo de comprobante de cuota social enviado por socio (Pendiente de Verificación por Tesorería)
+export async function sendFeePaymentPendingEmail(
+  member: { id: string; firstName: string; lastName: string; email: string | null },
+  periodsCount: number
+) {
+  if (!member.email) return false
+  
+  const subject = "Recibimos tu comprobante de pago de cuotas — CAT"
+  const contentHtml = `
+    <h2 style="color: #A6702E; margin-top: 0;">¡Hola ${member.firstName}!</h2>
+    <p>Confirmamos que hemos recibido tu comprobante de pago de cuota social (${periodsCount} período(s)).</p>
+    
+    <div style="background-color: #fafafa; border: 1px solid #e4e4e7; border-left: 4px solid #F2A81D; padding: 16px 20px; border-radius: 12px; margin: 20px 0;">
+      <p style="margin: 4px 0;"><strong>Socio:</strong> ${member.firstName} ${member.lastName}</p>
+      <p style="margin: 4px 0; color: #d97706; font-weight: bold;"><strong>Estado:</strong> En proceso de verificación por Tesorería</p>
+    </div>
+
+    <p>Nuestra área de Tesorería verificará la información a la brevedad. Una vez imputado el pago, recibirás tu recibo digital por este medio.</p>
+    <p>¡Muchas gracias por tu constante apoyo a la institución!</p>
+  `
+
+  return sendEmail({
+    to: member.email,
+    from: EMAIL_FROM_COBRANZAS,
+    bcc: [EMAIL_MAIN_INFO],
+    subject,
+    html: buildEmailLayout(contentHtml),
+    memberId: member.id,
+    type: "DEBT_REMINDER",
   })
 }
 
@@ -588,6 +645,8 @@ export async function sendAttendeePendingProofEmail(registration: {
 
   return sendEmail({
     to: registration.email,
+    from: EMAIL_FROM_COBRANZAS,
+    bcc: [EMAIL_MAIN_INFO],
     subject,
     html: buildEmailLayout(contentHtml),
     type: "EVENT_INFO",
@@ -626,6 +685,8 @@ export async function sendAttendeeRegistrationApprovedEmail(registration: {
 
   return sendEmail({
     to: registration.email,
+    from: EMAIL_FROM_COBRANZAS,
+    bcc: [EMAIL_MAIN_INFO],
     subject,
     html: buildEmailLayout(contentHtml),
     type: "EVENT_INFO",

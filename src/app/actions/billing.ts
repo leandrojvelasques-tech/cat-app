@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { getFeeHistory, getFeeAmountForPeriod } from "@/lib/fee-utils"
+import { sendPaymentValidatedEmail } from "@/lib/emails"
+import { writeFileSync, existsSync, mkdirSync } from "fs"
+import { join } from "path"
 
 export async function getActiveEvents() {
   const [events, settings] = await Promise.all([
@@ -140,13 +143,22 @@ export async function processMemberPayment(memberId: string, formData: FormData)
 
   let finalNotes = payload.notes || ""
   if (file && file.size > 0) {
-    if (file.size > 1024 * 1024 * 2) {
-      throw new Error("El comprobante es demasiado grande. Máximo 2MB.")
+    if (file.size > 1024 * 1024 * 5) {
+      throw new Error("El comprobante es demasiado grande. Máximo 5MB.")
     }
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-    const base64 = `data:${file.type};base64,${buffer.toString("base64")}`
-    finalNotes = `[COMPROBANTE: ${base64}]\n${finalNotes}`
+    
+    const uploadDir = join(process.cwd(), "public", "uploads")
+    if (!existsSync(uploadDir)) {
+      mkdirSync(uploadDir, { recursive: true })
+    }
+    const ext = file.name.split('.').pop() || "png"
+    const uniqueName = `admin-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`
+    const filepath = join(uploadDir, uniqueName)
+    writeFileSync(filepath, buffer)
+
+    finalNotes = `[COMPROBANTE: /uploads/${uniqueName}]\n${finalNotes}`
   }
 
   // Logic to create multiple MembershipFee records
@@ -187,7 +199,19 @@ export async function processMemberPayment(memberId: string, formData: FormData)
     })
   }
 
-  // TODO: Trigger email notification logic here
+  // Enviar email de confirmación de pago de cuota al socio
+  try {
+    const member = await db.member.findUnique({
+      where: { id: memberId },
+      select: { id: true, firstName: true, lastName: true, email: true }
+    })
+    if (member && member.email) {
+      const periods = payload.selectedMonths.map((m: any) => ({ month: m.month, year: m.year, amount: m.amount }))
+      await sendPaymentValidatedEmail(member, periods)
+    }
+  } catch (emailErr) {
+    console.error("Error al enviar email de confirmación de pago batch:", emailErr)
+  }
 
   revalidatePath("/admin/cuotas")
   revalidatePath(`/admin/socios/${memberId}`)

@@ -81,7 +81,11 @@ export function SocioAccordionSections({ member, isAlDia }: SocioAccordionSectio
                   <div key={fee.id} className="flex justify-between items-center p-4 md:p-5 rounded-2xl bg-white/[0.03] border border-white/5">
                     <div className="flex items-center gap-4">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
-                        fee.paymentStatus === 'PAID' ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-red-500/10 border-red-500/20 text-red-400"
+                        fee.paymentStatus === 'PAID' 
+                          ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
+                          : fee.paymentStatus === 'PENDING'
+                          ? "bg-amber-500/10 border-amber-500/20 text-amber-400 animate-pulse"
+                          : "bg-red-500/10 border-red-500/20 text-red-400"
                       }`}>
                         <CheckCircle2 size={20} />
                       </div>
@@ -90,16 +94,20 @@ export function SocioAccordionSections({ member, isAlDia }: SocioAccordionSectio
                           {format(new Date(2024, fee.periodMonth-1, 1), 'MMMM', { locale: es })} {fee.periodYear}
                         </p>
                         <p className="text-[10px] text-zinc-500 font-medium">
-                          Pagado el {format(new Date(fee.paymentDate), 'dd/MM/yyyy')}
+                          {fee.paymentStatus === 'PENDING' ? "Comprobante en verificación" : `Pagado el ${format(new Date(fee.paymentDate), 'dd/MM/yyyy')}`}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="text-base font-black text-white tracking-widest">${fee.amountPaid.toLocaleString()}</p>
                       <span className={`text-[8px] font-black px-2 py-0.5 rounded-md ${
-                        fee.paymentStatus === 'PAID' ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"
+                        fee.paymentStatus === 'PAID' 
+                          ? "bg-emerald-500/20 text-emerald-400" 
+                          : fee.paymentStatus === 'PENDING'
+                          ? "bg-amber-500/20 text-amber-400"
+                          : "bg-red-500/20 text-red-400"
                       }`}>
-                        {fee.paymentStatus === 'PAID' ? "CONFIRMADO" : "PENDIENTE"}
+                        {fee.paymentStatus === 'PAID' ? "CONFIRMADO" : fee.paymentStatus === 'PENDING' ? "EN VERIFICACIÓN" : "PENDIENTE"}
                       </span>
                     </div>
                   </div>

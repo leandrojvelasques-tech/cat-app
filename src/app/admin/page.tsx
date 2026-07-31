@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 import Link from "next/link"
 import { Users, TrendingUp, CreditCard, AlertTriangle, Activity, UserPlus, FileText, ArrowRight, UserCheck, AlertCircle, GraduationCap } from "lucide-react"
 import { calculateMemberStatus, CalculatedStatus } from "@/lib/member-utils"
+import { ApproveFeePaymentButton } from "./cuotas/ApproveFeePaymentButton"
 
 export default async function AdminDashboard() {
   const session = await auth()
@@ -167,6 +168,16 @@ export default async function AdminDashboard() {
     take: 5
   })
 
+  // 6b. Pending Fee Payment Approvals
+  const pendingFeePayments = await db.membershipFee.findMany({
+    where: {
+      paymentStatus: "PENDING"
+    },
+    include: { member: true },
+    orderBy: { createdAt: 'desc' },
+    take: 10
+  })
+
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       <div className="flex justify-between items-end">
@@ -179,6 +190,42 @@ export default async function AdminDashboard() {
            <p className="text-emerald-500 font-mono text-sm">{new Date().toLocaleString()}</p>
         </div>
       </div>
+
+      {/* Alert Banner: Fee Payment Approvals */}
+      {pendingFeePayments.length > 0 && (
+        <div className="bg-amber-500/10 border border-amber-500/30 p-6 rounded-3xl backdrop-blur-md space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="w-3 h-3 rounded-full bg-amber-500 animate-ping shrink-0" />
+              <h3 className="text-sm font-black text-amber-400 uppercase tracking-wider">
+                Se requiere aprobación — Cuotas Sociales ({pendingFeePayments.length} pendiente(s))
+              </h3>
+            </div>
+            <Link href="/admin/cuotas" className="text-xs font-bold text-amber-400 hover:underline">
+              Ir a Cobranzas →
+            </Link>
+          </div>
+          <p className="text-xs text-zinc-300">
+            Socios registraron comprobantes de pago de cuotas desde el portal. Revisá y aprobá para acreditar en caja y emitir el recibo digital:
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+            {pendingFeePayments.map(fee => (
+              <div key={fee.id} className="bg-black/40 border border-white/5 p-3 rounded-2xl flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-white">{fee.member.lastName}, {fee.member.firstName} (Socio N° #{fee.member.memberNumber})</p>
+                  <p className="text-[10px] text-amber-500 font-medium truncate">Cuota {fee.periodMonth}/{fee.periodYear} — ${fee.amountPaid.toLocaleString("es-AR")}</p>
+                </div>
+                <ApproveFeePaymentButton
+                  feeId={fee.id}
+                  amount={fee.amountPaid}
+                  notes={fee.notes}
+                  currentStatus={fee.paymentStatus}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Alert Banner: Event Registrations Requiring Approval */}
       {pendingEventRegistrations.length > 0 && (

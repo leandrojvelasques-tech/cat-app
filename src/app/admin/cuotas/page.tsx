@@ -21,6 +21,7 @@ import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { CobranzasFilters } from "./CobranzasFilters"
 import { PaymentDetailModal } from "./PaymentDetailModal"
+import { ApproveFeePaymentButton } from "./ApproveFeePaymentButton"
 
 export default async function CobranzasPage({
   searchParams,
@@ -33,9 +34,10 @@ export default async function CobranzasPage({
   const currentMonth = month ? parseInt(month) : now.getMonth() + 1
   const currentYear = year ? parseInt(year) : now.getFullYear()
 
-  // 1. Fetch Membership Fees
+  // 1. Fetch Paid Membership Fees
   const fees = await db.membershipFee.findMany({
     where: {
+      paymentStatus: 'PAID',
       AND: [
         month ? { periodMonth: parseInt(month) } : {},
         year ? { periodYear: parseInt(year) } : {},
@@ -53,6 +55,17 @@ export default async function CobranzasPage({
     include: {
       member: true,
       recordedBy: true
+    },
+    orderBy: { paymentDate: 'desc' }
+  })
+
+  // 1b. Fetch Pending Membership Fees for Approval
+  const pendingFees = await db.membershipFee.findMany({
+    where: {
+      paymentStatus: 'PENDING'
+    },
+    include: {
+      member: true
     },
     orderBy: { paymentDate: 'desc' }
   })
@@ -153,6 +166,37 @@ export default async function CobranzasPage({
           <Download size={14} /> Exportar CSV
         </Link>
       </div>
+
+      {/* Pending Fee Payments Alert */}
+      {pendingFees.length > 0 && (
+        <div className="bg-amber-500/10 border border-amber-500/30 p-6 rounded-3xl backdrop-blur-md space-y-3">
+          <div className="flex items-center gap-3">
+            <span className="w-3 h-3 rounded-full bg-amber-500 animate-ping shrink-0" />
+            <h3 className="text-sm font-black text-amber-400 uppercase tracking-wider">
+              Comprobantes de Cuotas Pendientes de Aprobación ({pendingFees.length})
+            </h3>
+          </div>
+          <p className="text-xs text-zinc-300">
+            Los siguientes comprobantes fueron subidos por los socios y están a la espera de validación de Tesorería para acreditarse en caja y emitir el recibo digital:
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+            {pendingFees.map(fee => (
+              <div key={fee.id} className="bg-black/40 border border-white/5 p-4 rounded-2xl flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold text-white">{fee.member.lastName}, {fee.member.firstName} (Socio #{fee.member.memberNumber})</p>
+                  <p className="text-[10px] text-amber-500 font-medium">Cuota {fee.periodMonth}/{fee.periodYear} — ${fee.amountPaid.toLocaleString("es-AR")}</p>
+                </div>
+                <ApproveFeePaymentButton
+                  feeId={fee.id}
+                  amount={fee.amountPaid}
+                  notes={fee.notes}
+                  currentStatus={fee.paymentStatus}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <CobranzasFilters 
         currentMonth={currentMonth} 

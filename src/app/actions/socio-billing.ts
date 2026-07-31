@@ -4,6 +4,9 @@ import { db } from "@/lib/db"
 import { auth } from "@/auth"
 import { revalidatePath } from "next/cache"
 import { validateAndSanitizeFile } from "@/lib/security-utils"
+import { sendFeePaymentPendingEmail } from "@/lib/emails"
+import { writeFileSync, existsSync, mkdirSync } from "fs"
+import { join } from "path"
 
 export async function submitSocioPaymentProof(formData: FormData) {
   try {
@@ -59,7 +62,17 @@ export async function submitSocioPaymentProof(formData: FormData) {
       if (!validation.isValid) {
         return { success: false, error: validation.error || "Formato de comprobante no válido por seguridad." }
       }
-      paymentProofUrl = `data:${validation.mimeType};base64,${buffer.toString("base64")}`
+
+      const uploadDir = join(process.cwd(), "public", "uploads")
+      if (!existsSync(uploadDir)) {
+        mkdirSync(uploadDir, { recursive: true })
+      }
+      const ext = file.name.split('.').pop() || "png"
+      const uniqueName = `cuota-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`
+      const filepath = join(uploadDir, uniqueName)
+      writeFileSync(filepath, buffer)
+
+      paymentProofUrl = `/uploads/${uniqueName}`
     }
 
     const proofNote = paymentProofUrl 
@@ -77,8 +90,8 @@ export async function submitSocioPaymentProof(formData: FormData) {
           }
         },
         update: {
-          amountPaid: { increment: item.amount },
-          paymentStatus: "PAID",
+          amountPaid: item.amount,
+          paymentStatus: "PENDING",
           paymentMethod,
           paymentDate: new Date(),
           notes: proofNote,
@@ -90,13 +103,27 @@ export async function submitSocioPaymentProof(formData: FormData) {
           periodMonth: item.month,
           amountDue: item.amount,
           amountPaid: item.amount,
-          paymentStatus: "PAID",
+          paymentStatus: "PENDING",
           paymentMethod,
           paymentDate: new Date(),
           notes: proofNote,
           recordedById: session.user.id
         }
       })
+    }
+
+    // Enviar email de acuse de recibo de comprobante al socio
+    try {
+      const fullMember = await db.member.findUnique({
+        where: { id: memberId },
+        select: { id: true, firstName: true, lastName: true, email: true }
+      })
+      if (fullMember && fullMember.email) {
+        sendFeePaymentPendingEmail(fullMember, selectedMonths.length)
+          .catch(err => console.error("Error al enviar acuse de recibo de cuota al socio:", err))
+      }
+    } catch (emailErr) {
+      console.error("Error obteniendo datos del socio para acuse de recibo:", emailErr)
     }
 
     revalidatePath("/socios")

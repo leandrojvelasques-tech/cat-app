@@ -9,6 +9,8 @@ import {
   sendAttendeeFreeEventConfirmationEmail
 } from "@/lib/emails"
 import { validateAndSanitizeFile } from "@/lib/security-utils"
+import { writeFileSync, existsSync, mkdirSync } from "fs"
+import { join } from "path"
 
 export async function registerAttendee(formData: FormData) {
   try {
@@ -179,7 +181,16 @@ export async function registerPublicAttendee(formData: FormData) {
         return { success: false, error: validation.error || "Formato de comprobante no permitido por seguridad." }
       }
 
-      paymentProofUrl = `data:${validation.mimeType};base64,${buffer.toString("base64")}`
+      const uploadDir = join(process.cwd(), "public", "uploads")
+      if (!existsSync(uploadDir)) {
+        mkdirSync(uploadDir, { recursive: true })
+      }
+      const ext = file.name.split('.').pop() || "png"
+      const uniqueName = `evento-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`
+      const filepath = join(uploadDir, uniqueName)
+      writeFileSync(filepath, buffer)
+
+      paymentProofUrl = `/uploads/${uniqueName}`
     }
 
     const paymentStatus = paymentProofUrl ? "PENDING" : (paymentMethod === "TRANSFER" ? "PENDING" : "PENDING")

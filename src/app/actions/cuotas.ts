@@ -119,3 +119,58 @@ export async function createPayment(memberId: string, formData: FormData) {
     redirect(`/admin/socios/${memberId}`)
   }
 }
+
+export async function approvePendingFeePayment(feeId: string) {
+  const session = await auth()
+  if (!session?.user || session.user.role !== "ADMIN") {
+    throw new Error("No autorizado")
+  }
+
+  const fee = await db.membershipFee.update({
+    where: { id: feeId },
+    data: {
+      paymentStatus: "PAID",
+      paymentDate: new Date(),
+      recordedById: session.user.id
+    },
+    include: {
+      member: true
+    }
+  })
+
+  // Enviar email de recibo digital validado al socio desde cobranzas@
+  if (fee.member && fee.member.email) {
+    try {
+      await sendPaymentValidatedEmail(fee.member, [{
+        month: fee.periodMonth,
+        year: fee.periodYear,
+        amount: fee.amountPaid
+      }])
+    } catch (err) {
+      console.error("Error al enviar email de confirmación de pago:", err)
+    }
+  }
+
+  revalidatePath("/admin")
+  revalidatePath("/admin/cuotas")
+  revalidatePath(`/admin/socios/${fee.memberId}`)
+  revalidatePath("/socios")
+  return { success: true }
+}
+
+export async function rejectPendingFeePayment(feeId: string) {
+  const session = await auth()
+  if (!session?.user || session.user.role !== "ADMIN") {
+    throw new Error("No autorizado")
+  }
+
+  const fee = await db.membershipFee.delete({
+    where: { id: feeId }
+  })
+
+  revalidatePath("/admin")
+  revalidatePath("/admin/cuotas")
+  revalidatePath(`/admin/socios/${fee.memberId}`)
+  revalidatePath("/socios")
+  return { success: true }
+}
