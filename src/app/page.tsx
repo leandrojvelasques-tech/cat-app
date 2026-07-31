@@ -16,6 +16,7 @@ import {
   BookOpen
 } from "lucide-react"
 import { EscuelitaCarousel } from "./EscuelitaCarousel"
+import { NovedadesHomeSection } from "./NovedadesHomeSection"
 
 import { getNextEventDate, getDayName, isExternalEvent } from "@/lib/event-utils"
 import { Repeat, Sparkles as SparklesIcon } from "lucide-react"
@@ -27,6 +28,12 @@ export default async function Home() {
   const now = new Date()
   const currentFee = await getCurrentFeeAmount()
 
+  // Obtener las últimas 3 novedades publicadas
+  const latestNovedades = await db.novedad.findMany({
+    where: { isPublished: true },
+    orderBy: { publishedAt: "desc" },
+    take: 3
+  })
 
   // Obtener eventos reales públicos y calcular fecha próxima (incluyendo recurrentes)
   const allPublicEvents = await db.event.findMany({
@@ -370,6 +377,9 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* Novedades CAT Section */}
+      <NovedadesHomeSection novedades={latestNovedades} />
 
       {/* Escuelita Section */}
       <EscuelitaCarousel photos={carouselPhotos} docentes={currentDocentes} />

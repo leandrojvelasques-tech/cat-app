@@ -11,6 +11,7 @@ import { SocioEventRegisterModal } from "./SocioEventRegisterModal"
 import { SocioExternalEventModal } from "./SocioExternalEventModal"
 import { SocioCarnetToggle } from "./SocioCarnetToggle"
 import { SocioDuesPaymentSection } from "./SocioDuesPaymentSection"
+import { SocioNovedadesSection } from "./SocioNovedadesSection"
 import { getSocioEventRegistrations } from "@/app/actions/eventos"
 import { getMemberDebt } from "@/app/actions/billing"
 import { getNextEventDate, getDayName, isExternalEvent } from "@/lib/event-utils"
@@ -99,6 +100,13 @@ export default async function PortalSocioPage() {
 
   // Fetch member's event registrations
   const registrations = await getSocioEventRegistrations(member.id)
+
+  // Fetch active novedades for member portal
+  const novedadesForSocio = await db.novedad.findMany({
+    where: { isPublished: true },
+    orderBy: { publishedAt: "desc" },
+    take: 6
+  })
 
   return (
     <div className="flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
@@ -310,6 +318,9 @@ export default async function PortalSocioPage() {
             </div>
          </div>
       </div>
+
+      {/* Novedades & Comunicados CAT */}
+      <SocioNovedadesSection novedades={novedadesForSocio} />
 
       {/* 5. Historial de Pagos y Ficha de Socio en Desplegables */}
       <SocioAccordionSections member={member} isAlDia={isAlDia} />
