@@ -277,7 +277,10 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
 
           {/* Banner / Flyer */}
           <div className="space-y-3">
-            <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Flyer / Imagen del Evento *</label>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+              <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Flyer / Imagen del Evento *</label>
+              <span className="text-[11px] text-purple-300/90 font-semibold">📐 Recomendado: 1200 × 630 px (proporción 16:9)</span>
+            </div>
             <div className="relative group overflow-hidden rounded-3xl border-2 border-dashed border-purple-500/30 bg-black/40 hover:border-purple-400 transition-all min-h-[220px] flex items-center justify-center">
               {bannerPreview ? (
                 <>
@@ -927,9 +930,12 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
 
           {/* Banner */}
           <section className="bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-md space-y-4">
-            <div className="flex items-center gap-3 mb-2">
-              <Plus className="text-amber-500" size={20} />
-              <h2 className="text-lg font-medium">Banner / Flyer del Evento</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
+              <div className="flex items-center gap-3">
+                <Plus className="text-amber-500" size={20} />
+                <h2 className="text-lg font-medium">Banner / Flyer del Evento</h2>
+              </div>
+              <span className="text-[11px] text-amber-300/90 font-semibold">📐 Recomendado: 1200 × 630 px (proporción 16:9)</span>
             </div>
             
             <div className="flex flex-col gap-4">

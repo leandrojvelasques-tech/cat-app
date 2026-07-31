@@ -26,7 +26,7 @@ export function NovedadesHomeSection({ novedades }: NovedadesHomeSectionProps) {
   if (!novedades || novedades.length === 0) return null
 
   return (
-    <section className="py-16 sm:py-24 px-6 md:px-16 max-w-7xl mx-auto border-t border-white/5 relative z-10">
+    <section id="novedades" className="py-16 sm:py-24 px-6 md:px-16 max-w-7xl mx-auto border-t border-white/5 relative z-10">
       
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">

@@ -137,8 +137,9 @@ export default async function Home() {
           
           <div className="hidden md:flex items-center gap-8">
             <Link href="/" className="text-cat-gold font-bold pb-0.5 border-b border-cat-gold text-sm transition-colors">Inicio</Link>
-            <Link href="#nosotros" className="text-zinc-400 hover:text-white text-sm transition-colors">Nosotros</Link>
+            <Link href="#novedades" className="text-zinc-400 hover:text-white text-sm transition-colors">Novedades</Link>
             <Link href="#eventos" className="text-zinc-400 hover:text-white text-sm transition-colors">Agenda Tanguera</Link>
+            <Link href="#nosotros" className="text-zinc-400 hover:text-white text-sm transition-colors">Nosotros</Link>
             <Link href="/clases-comodoro" className="text-amber-400 font-bold hover:text-amber-300 text-sm transition-colors flex items-center gap-1.5 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/20">
               <BookOpen size={14} />
               <span>Clases de Tango</span>
@@ -197,59 +198,8 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Sobre Nosotros */}
-      <section id="nosotros" className="bg-[#1b2621] py-24 md:py-32 px-6 md:px-16 relative">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-24">
-            <div className="space-y-6">
-              <h2 className="text-3xl md:text-4xl font-bold text-cat-gold font-serif">Sobre Nosotros</h2>
-              <p className="text-base md:text-lg text-zinc-300 leading-relaxed font-light">
-                Somos una asociación civil sin fines de lucro dedicada a preservar, difundir y enseñar el arte del Tango en Comodoro Rivadavia. Desde nuestra fundación en 2007, hemos trabajado incansablemente para crear un espacio de pertenencia para todos los amantes del 2x4.
-              </p>
-              <p className="text-sm text-zinc-400 font-light leading-relaxed">
-                Nuestra misión trasciende el baile; buscamos fortalecer los lazos culturales de nuestra comunidad patagónica a través de la música, la danza y la historia que nos define como argentinos.
-              </p>
-            </div>
-            
-            <div className="relative group">
-              <div className="absolute -inset-4 border border-cat-gold/10 rounded-2xl translate-x-4 translate-y-4 group-hover:translate-x-2 group-hover:translate-y-2 transition-transform duration-500"></div>
-              <div 
-                className="aspect-video bg-cover bg-center rounded-2xl border border-white/10 relative z-10 overflow-hidden shadow-2xl" 
-                style={{ 
-                  backgroundImage: `url('/images/tango/tango-pareja.jpg')` 
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Bento Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-[#59412c]/10 border border-white/5 p-8 rounded-2xl hover:bg-[#59412c]/20 transition-all duration-300 group">
-              <div className="w-12 h-12 rounded-2xl bg-cat-gold/10 flex items-center justify-center mb-6 text-cat-gold group-hover:scale-110 transition-transform shadow-lg shadow-cat-gold/5">
-                <Music size={24} />
-              </div>
-              <h3 className="text-lg font-bold text-white mb-3">Milongas Mensuales</h3>
-              <p className="text-zinc-400 text-sm font-light leading-relaxed">Eventos sociales donde la música en vivo y el abrazo se encuentran para celebrar nuestra pasión en la pista.</p>
-            </div>
-            
-            <div className="bg-[#59412c]/10 border border-white/5 p-8 rounded-2xl hover:bg-[#59412c]/20 transition-all duration-300 group">
-              <div className="w-12 h-12 rounded-2xl bg-cat-gold/10 flex items-center justify-center mb-6 text-cat-gold group-hover:scale-110 transition-transform shadow-lg shadow-cat-gold/5">
-                <GraduationCap size={24} />
-              </div>
-              <h3 className="text-lg font-bold text-white mb-3">Escuelita Gratuita</h3>
-              <p className="text-zinc-400 text-sm font-light leading-relaxed">Formación abierta y accesible para todas las edades, garantizando que el tango siga vivo en las nuevas generaciones.</p>
-            </div>
-            
-            <div className="bg-[#59412c]/10 border border-white/5 p-8 rounded-2xl hover:bg-[#59412c]/20 transition-all duration-300 group">
-              <div className="w-12 h-12 rounded-2xl bg-cat-gold/10 flex items-center justify-center mb-6 text-cat-gold group-hover:scale-110 transition-transform shadow-lg shadow-cat-gold/5">
-                <Trophy size={24} />
-              </div>
-              <h3 className="text-lg font-bold text-white mb-3">Campeonato Patagónico</h3>
-              <p className="text-zinc-400 text-sm font-light leading-relaxed">Sede regional y subsede oficial del Mundial de Tango de Buenos Aires, atrayendo a talentos de todo el sur.</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Novedades CAT Section */}
+      <NovedadesHomeSection novedades={latestNovedades} />
 
       {/* Próximos Eventos - Agenda Tanguera */}
       <section id="eventos" className="bg-[#131313] py-24 md:py-32 px-6 md:px-16">
@@ -378,8 +328,59 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Novedades CAT Section */}
-      <NovedadesHomeSection novedades={latestNovedades} />
+      {/* Sobre Nosotros */}
+      <section id="nosotros" className="bg-[#1b2621] py-24 md:py-32 px-6 md:px-16 relative">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-24">
+            <div className="space-y-6">
+              <h2 className="text-3xl md:text-4xl font-bold text-cat-gold font-serif">Sobre Nosotros</h2>
+              <p className="text-base md:text-lg text-zinc-300 leading-relaxed font-light">
+                Somos una asociación civil sin fines de lucro dedicada a preservar, difundir y enseñar el arte del Tango en Comodoro Rivadavia. Desde nuestra fundación en 2007, hemos trabajado incansablemente para crear un espacio de pertenencia para todos los amantes del 2x4.
+              </p>
+              <p className="text-sm text-zinc-400 font-light leading-relaxed">
+                Nuestra misión trasciende el baile; buscamos fortalecer los lazos culturales de nuestra comunidad patagónica a través de la música, la danza y la historia que nos define como argentinos.
+              </p>
+            </div>
+            
+            <div className="relative group">
+              <div className="absolute -inset-4 border border-cat-gold/10 rounded-2xl translate-x-4 translate-y-4 group-hover:translate-x-2 group-hover:translate-y-2 transition-transform duration-500"></div>
+              <div 
+                className="aspect-video bg-cover bg-center rounded-2xl border border-white/10 relative z-10 overflow-hidden shadow-2xl" 
+                style={{ 
+                  backgroundImage: `url('/images/tango/tango-pareja.jpg')` 
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Bento Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-[#59412c]/10 border border-white/5 p-8 rounded-2xl hover:bg-[#59412c]/20 transition-all duration-300 group">
+              <div className="w-12 h-12 rounded-2xl bg-cat-gold/10 flex items-center justify-center mb-6 text-cat-gold group-hover:scale-110 transition-transform shadow-lg shadow-cat-gold/5">
+                <Music size={24} />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-3">Milongas Mensuales</h3>
+              <p className="text-zinc-400 text-sm font-light leading-relaxed">Eventos sociales donde la música en vivo y el abrazo se encuentran para celebrar nuestra pasión en la pista.</p>
+            </div>
+            
+            <div className="bg-[#59412c]/10 border border-white/5 p-8 rounded-2xl hover:bg-[#59412c]/20 transition-all duration-300 group">
+              <div className="w-12 h-12 rounded-2xl bg-cat-gold/10 flex items-center justify-center mb-6 text-cat-gold group-hover:scale-110 transition-transform shadow-lg shadow-cat-gold/5">
+                <GraduationCap size={24} />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-3">Escuelita Gratuita</h3>
+              <p className="text-zinc-400 text-sm font-light leading-relaxed">Formación abierta y accesible para todas las edades, garantizando que el tango siga vivo en las nuevas generaciones.</p>
+            </div>
+            
+            <div className="bg-[#59412c]/10 border border-white/5 p-8 rounded-2xl hover:bg-[#59412c]/20 transition-all duration-300 group">
+              <div className="w-12 h-12 rounded-2xl bg-cat-gold/10 flex items-center justify-center mb-6 text-cat-gold group-hover:scale-110 transition-transform shadow-lg shadow-cat-gold/5">
+                <Trophy size={24} />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-3">Campeonato Patagónico</h3>
+              <p className="text-zinc-400 text-sm font-light leading-relaxed">Sede regional y subsede oficial del Mundial de Tango de Buenos Aires, atrayendo a talentos de todo el sur.</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Escuelita Section */}
       <EscuelitaCarousel photos={carouselPhotos} docentes={currentDocentes} />

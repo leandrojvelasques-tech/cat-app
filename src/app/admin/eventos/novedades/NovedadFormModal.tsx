@@ -194,10 +194,15 @@ export function NovedadFormModal({ novedad, onClose, onSuccess }: NovedadFormMod
 
           {/* Imagen (Subida o URL) */}
           <div className="space-y-3 p-4 bg-black/30 border border-white/5 rounded-2xl">
-            <label className="block text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
-              <ImageIcon size={16} />
-              <span>Imagen de la Novedad</span>
-            </label>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+              <label className="block text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
+                <ImageIcon size={16} />
+                <span>Imagen de la Novedad</span>
+              </label>
+              <span className="text-[11px] text-amber-300/90 font-semibold">
+                📐 Recomendado: 1200 × 630 px (proporción 16:9)
+              </span>
+            </div>
 
             {imagePreview && (
               <div className="relative w-full h-44 rounded-xl overflow-hidden bg-zinc-900 border border-white/10 mb-3">

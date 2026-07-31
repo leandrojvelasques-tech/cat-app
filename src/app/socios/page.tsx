@@ -158,15 +158,20 @@ export default async function PortalSocioPage() {
         attendedMilongas={attendedMilongas} 
       />
 
-      {/* 3. Control de Morosidad y Pago de Cuotas con Comprobante */}
-      <SocioDuesPaymentSection
-        memberId={member.id}
-        debtMonths={debtData.months}
-        totalDebt={debtData.total}
-        calculatedStatus={calculatedStatus}
-      />
+      {/* 3. Control de Morosidad y Pago de Cuotas (Solo si registra deuda) */}
+      {debtData.total > 0 && (
+        <SocioDuesPaymentSection
+          memberId={member.id}
+          debtMonths={debtData.months}
+          totalDebt={debtData.total}
+          calculatedStatus={calculatedStatus}
+        />
+      )}
 
-      {/* 4. Agenda de Milongas & Eventos (Mes Actual + Próximo Mes) */}
+      {/* 4. Novedades & Comunicados CAT */}
+      <SocioNovedadesSection novedades={novedadesForSocio} />
+
+      {/* 5. Agenda de Milongas & Eventos (Mes Actual + Próximo Mes) */}
       <div className="bg-white/5 border border-white/10 p-8 md:p-10 rounded-[48px] backdrop-blur-md shadow-2xl space-y-8">
          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
@@ -318,9 +323,6 @@ export default async function PortalSocioPage() {
             </div>
          </div>
       </div>
-
-      {/* Novedades & Comunicados CAT */}
-      <SocioNovedadesSection novedades={novedadesForSocio} />
 
       {/* 5. Historial de Pagos y Ficha de Socio en Desplegables */}
       <SocioAccordionSections member={member} isAlDia={isAlDia} />
