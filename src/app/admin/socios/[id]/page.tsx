@@ -11,6 +11,7 @@ import { deleteBoardHistory } from "@/app/actions/board-history"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { calculateMemberStatus, getStatusBadgeStyles, getMemberBajaReason, getBajaReasonStyles, formatDNI } from "@/lib/member-utils"
+import { ApproveFeePaymentButton } from "../../cuotas/ApproveFeePaymentButton"
 
 
 
@@ -296,9 +297,9 @@ export default async function FichaSocioPage(props: any) {
                   <p className="text-center py-10 text-zinc-600 italic">No hay pagos registrados aún.</p>
                 ) : (
                   (member as any).fees?.map((fee: any) => (
-                    <div key={fee.id} className="flex justify-between items-center bg-black/20 p-5 rounded-[24px] border border-white/5 hover:border-white/10 transition-all group">
+                    <div key={fee.id} className="flex justify-between items-center bg-black/20 p-5 rounded-[24px] border border-white/5 hover:border-white/10 transition-all group gap-4 flex-wrap">
                        <div className="flex items-center gap-4">
-                          <div className={`p-3 rounded-xl ${fee.paymentStatus === 'PAID' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-500'}`}>
+                          <div className={`p-3 rounded-xl ${fee.paymentStatus === 'PAID' ? 'bg-emerald-500/10 text-emerald-400' : fee.paymentStatus === 'PENDING' ? 'bg-amber-500/10 text-amber-400 animate-pulse' : 'bg-red-500/10 text-red-500'}`}>
                              <CreditCard size={18} />
                           </div>
                           <div>
@@ -306,15 +307,25 @@ export default async function FichaSocioPage(props: any) {
                                 {format(new Date(2024, fee.periodMonth-1, 1), 'MMMM', { locale: es })} {fee.periodYear}
                              </p>
                              <p className="text-[10px] text-zinc-600 font-black uppercase tracking-widest">
-                                Registrado el {format(new Date(fee.paymentDate), 'dd/MM/yyyy')}
+                                {fee.paymentStatus === 'PENDING' ? "Comprobante subido por el socio — Pendiente de Aprobación" : `Registrado el ${format(new Date(fee.paymentDate), 'dd/MM/yyyy')}`}
                              </p>
                           </div>
                        </div>
-                       <div className="text-right">
-                          <p className="text-white font-black">${fee.amountPaid.toLocaleString()}</p>
-                          <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${fee.paymentStatus === 'PAID' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
-                             {fee.paymentStatus === 'PAID' ? 'COBRADO' : 'PENDIENTE'}
-                          </span>
+                       <div className="flex items-center gap-4 text-right ml-auto">
+                          <div>
+                            <p className="text-white font-black">${fee.amountPaid.toLocaleString()}</p>
+                            <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${fee.paymentStatus === 'PAID' ? 'bg-emerald-500/20 text-emerald-400' : fee.paymentStatus === 'PENDING' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>
+                               {fee.paymentStatus === 'PAID' ? 'COBRADO' : fee.paymentStatus === 'PENDING' ? 'EN VERIFICACIÓN' : 'PENDIENTE'}
+                            </span>
+                          </div>
+                          {fee.paymentStatus === 'PENDING' && (
+                            <ApproveFeePaymentButton
+                              feeId={fee.id}
+                              amount={fee.amountPaid}
+                              notes={fee.notes}
+                              currentStatus={fee.paymentStatus}
+                            />
+                          )}
                        </div>
                     </div>
                    ))

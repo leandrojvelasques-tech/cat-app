@@ -5,6 +5,7 @@ import { EstadoSociosFilters } from "./EstadoSociosFilters"
 import { calculateMemberStatus, getStatusBadgeStyles } from "@/lib/member-utils"
 import { SolicitudesList } from "../solicitudes/SolicitudesList"
 import { EstadoSociosTable } from "./EstadoSociosTable"
+import { ApproveFeePaymentButton } from "../cuotas/ApproveFeePaymentButton"
 
 export default async function EstadoSociosPage({
   searchParams,
@@ -23,6 +24,13 @@ export default async function EstadoSociosPage({
   const pendingRequests = await db.enrollmentRequest.findMany({
     where: { status: "PENDING" },
     orderBy: { createdAt: "desc" }
+  })
+
+  // Buscar comprobantes de cuotas pendientes de aprobación
+  const pendingFees = await db.membershipFee.findMany({
+    where: { paymentStatus: "PENDING" },
+    include: { member: true },
+    orderBy: { paymentDate: "desc" }
   })
 
   let membersData = []
@@ -165,6 +173,40 @@ export default async function EstadoSociosPage({
           </Link>
         </div>
       </div>
+
+      {/* Alert Banner: Fee Payment Approvals */}
+      {pendingFees.length > 0 && (
+        <div className="space-y-4 bg-amber-500/10 border border-amber-500/30 p-6 rounded-[32px] backdrop-blur-md">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-amber-400 flex items-center gap-2 font-serif">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping"></span>
+              <span>Comprobantes de Cuotas Pendientes de Aprobación ({pendingFees.length})</span>
+            </h2>
+            <Link href="/admin/cuotas" className="text-xs font-bold text-amber-400 hover:underline">
+              Ir a Cobranzas →
+            </Link>
+          </div>
+          <p className="text-xs text-zinc-300">
+            Socios enviaron comprobantes de pago de cuotas desde el portal. Revisá los comprobantes y aprobá para acreditar en caja:
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+            {pendingFees.map((fee: any) => (
+              <div key={fee.id} className="bg-black/40 border border-white/5 p-4 rounded-2xl flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold text-white">{fee.member.lastName}, {fee.member.firstName} (Socio N° #{fee.member.memberNumber})</p>
+                  <p className="text-[10px] text-amber-500 font-medium">Cuota {fee.periodMonth}/{fee.periodYear} — ${fee.amountPaid.toLocaleString("es-AR")}</p>
+                </div>
+                <ApproveFeePaymentButton
+                  feeId={fee.id}
+                  amount={fee.amountPaid}
+                  notes={fee.notes}
+                  currentStatus={fee.paymentStatus}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {pendingRequests.length > 0 && (
         <div className="space-y-4 bg-amber-500/5 border border-amber-500/20 p-6 rounded-[32px] backdrop-blur-md">
