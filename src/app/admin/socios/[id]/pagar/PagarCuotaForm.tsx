@@ -167,9 +167,8 @@ export function PagarCuotaForm({
             name="paymentMethod"
             className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50 appearance-none"
           >
-            <option value="EFECTIVO" className="bg-zinc-900">Efectivo</option>
             <option value="TRANSFERENCIA" className="bg-zinc-900">Transferencia Bancaria</option>
-            <option value="MERCADOPAGO" className="bg-zinc-900">Mercado Pago</option>
+            <option value="EFECTIVO" className="bg-zinc-900">Efectivo</option>
           </select>
       </div>
 

@@ -56,7 +56,7 @@ export default function CobrarWizard() {
   })
 
   // Final Step
-  const [paymentMethod, setPaymentMethod] = useState("EFECTIVO")
+  const [paymentMethod, setPaymentMethod] = useState("TRANSFERENCIA")
   const [notes, setNotes] = useState("")
   const [paymentProof, setPaymentProof] = useState<File | null>(null)
   // Default to today formatted as YYYY-MM-DD for the date input
@@ -591,7 +591,7 @@ export default function CobrarWizard() {
                     <div className="space-y-4">
                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest block ml-1">Medio de Pago</label>
                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                          {['EFECTIVO', 'MERCADO PAGO', 'TRANSFERENCIA'].map(method => (
+                          {['TRANSFERENCIA', 'EFECTIVO'].map(method => (
                             <button
                               key={method}
                               onClick={() => setPaymentMethod(method)}
