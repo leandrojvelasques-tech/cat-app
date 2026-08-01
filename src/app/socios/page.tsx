@@ -1,7 +1,8 @@
 import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import { redirect } from "next/navigation"
-import { Calendar, MapPin, User, AlertCircle, Sparkles, ShieldCheck, Repeat, Music } from "lucide-react"
+import Link from "next/link"
+import { Calendar, MapPin, User, AlertCircle, Sparkles, ShieldCheck, Repeat, Music, Gift } from "lucide-react"
 import { calculateMemberStatus, getStatusBadgeStyles } from "@/lib/member-utils"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -136,20 +137,31 @@ export default async function PortalSocioPage() {
               Bienvenido a su portal personal del Centro Amigos del Tango.
            </p>
            
-           <div className="flex gap-4">
-              <div className="flex flex-col">
-                 <span className="text-[10px] uppercase font-black tracking-widest text-zinc-600 mb-1">Estado Administrativo</span>
-                 <span className={`px-4 py-1 text-[10px] font-black uppercase rounded-lg border shadow-sm ${getStatusBadgeStyles(calculatedStatus)}`}>
-                   {calculatedStatus}
-                 </span>
+           <div className="flex flex-wrap items-center justify-between gap-4 mt-2">
+              <div className="flex gap-4">
+                 <div className="flex flex-col">
+                    <span className="text-[10px] uppercase font-black tracking-widest text-zinc-600 mb-1">Estado Administrativo</span>
+                    <span className={`px-4 py-1 text-[10px] font-black uppercase rounded-lg border shadow-sm ${getStatusBadgeStyles(calculatedStatus)}`}>
+                      {calculatedStatus}
+                    </span>
+                 </div>
+                 <div className="flex flex-col">
+                    <span className="text-[10px] uppercase font-black tracking-widest text-zinc-600 mb-1">Socio Desde</span>
+                    <span className="text-white font-bold text-sm">{format(new Date(member.joinDate), "yyyy")}</span>
+                 </div>
               </div>
-              <div className="flex flex-col">
-                 <span className="text-[10px] uppercase font-black tracking-widest text-zinc-600 mb-1">Socio Desde</span>
-                 <span className="text-white font-bold text-sm">{format(new Date(member.joinDate), "yyyy")}</span>
-              </div>
+
+              <Link
+                href="/socios/beneficios"
+                className="flex items-center gap-2 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-zinc-950 px-5 py-2.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-900/30 transition-all hover:scale-105 active:scale-95 group cursor-pointer"
+              >
+                <Gift size={18} className="group-hover:rotate-12 transition-transform" />
+                <span>Beneficios Socios</span>
+              </Link>
            </div>
          </div>
       </div>
+
 
       {/* 2. Carnet Digital Plegable ("Ver Carnet") */}
       <SocioCarnetToggle 

@@ -1,5 +1,5 @@
+import { Shield, Mail, Calendar, Bell, Users, Save, ShieldCheck, Crown, User, Key, ShoppingBag, Pencil, Plus, Trash2, BadgeInfo, TrendingUp, Gift } from "lucide-react"
 import { db } from "@/lib/db"
-import { Shield, Mail, Calendar, Bell, Users, Save, ShieldCheck, Crown, User, Key, ShoppingBag, Pencil, Plus, Trash2, BadgeInfo, TrendingUp } from "lucide-react"
 import { revalidatePath } from "next/cache"
 import Link from "next/link"
 import { auth } from "@/auth"
@@ -7,6 +7,8 @@ import { redirect } from "next/navigation"
 import { addBoardMember, removeBoardMember } from "@/app/actions/comision"
 import { getFeeHistory, FeePeriod } from "@/lib/fee-utils"
 import { getAuditLogs, recordAuditLog } from "@/lib/audit-utils"
+import { seedDefaultBenefitsIfEmpty } from "@/app/actions/beneficios"
+
 
 async function getSetting(key: string, defaultValue: string = "") {
   const setting = await db.setting.findUnique({ where: { key } })
@@ -240,12 +242,53 @@ export default async function SettingsPage() {
     take: 10
   })
 
+  await seedDefaultBenefitsIfEmpty()
+  const activeBenefitsCount = await db.memberBenefit.count({ where: { isActive: true } })
+
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight text-white/90">Ajustes del Sistema</h1>
-        <p className="text-zinc-400 mt-1">Configure parámetros, permisos y comunicaciones automáticas.</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight text-white/90">Ajustes del Sistema</h1>
+          <p className="text-zinc-400 mt-1">Configure parámetros, permisos, comunicaciones y beneficios para socios.</p>
+        </div>
+
+        <Link
+          href="/admin/configuracion/beneficios"
+          className="flex items-center gap-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-zinc-950 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-900/30 transition-all cursor-pointer active:scale-95 group shrink-0"
+        >
+          <Gift size={20} className="group-hover:rotate-12 transition-transform" />
+          <span>Beneficios Socios ({activeBenefitsCount})</span>
+        </Link>
       </div>
+
+      {/* Banner rápido Beneficios Socios */}
+      <div className="bg-gradient-to-r from-amber-950/40 via-zinc-900/80 to-zinc-950 border border-amber-500/30 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-md shadow-xl">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+            <Gift size={28} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold text-white tracking-tight">Menú Beneficios Socios</h2>
+              <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                Exclusivo App Socio
+              </span>
+            </div>
+            <p className="text-xs text-zinc-400 mt-1 max-w-2xl leading-relaxed">
+              Redacte, edite o elimine los beneficios institucionales y descuentos que reciben los socios. Esta información se publica únicamente en el Portal de Socios.
+            </p>
+          </div>
+        </div>
+
+        <Link
+          href="/admin/configuracion/beneficios"
+          className="px-5 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-xl font-bold text-xs transition-all shrink-0"
+        >
+          Gestionar Beneficios →
+        </Link>
+      </div>
+
 
       <form action={updateSetting} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
