@@ -110,66 +110,79 @@ export function ApproveFeePaymentButton({
         )}
       </div>
 
-      {/* Modal Previewer */}
+      {/* Modal Previewer - High Viewport Safe & Spacious */}
       {isPreviewOpen && proofUrl && (
         <div
-          className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200"
+          className="fixed inset-0 z-[1100] flex items-center justify-center p-3 sm:p-6 bg-black/90 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto"
           onClick={(e) => {
             if (e.target === e.currentTarget) setIsPreviewOpen(false)
           }}
         >
-          <div className="bg-zinc-900 border border-white/10 rounded-3xl max-w-2xl w-full flex flex-col overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center bg-zinc-950 p-4 px-6 border-b border-white/10">
+          <div className="bg-zinc-900 border border-white/10 rounded-3xl max-w-4xl w-full flex flex-col overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 my-auto max-h-[92vh]">
+            {/* Fixed Header */}
+            <div className="flex justify-between items-center bg-zinc-950 p-4 px-6 border-b border-white/10 shrink-0">
               <div className="flex items-center gap-2">
                 <ShieldCheck size={18} className="text-emerald-400" />
                 <span className="text-xs font-bold uppercase tracking-wider text-white">
                   Comprobante de Pago de Cuota — Verificación
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsPreviewOpen(false)}
-                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                <X size={18} />
-              </button>
+              <div className="flex items-center gap-2">
+                <a
+                  href={proofUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hidden sm:flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
+                  title="Abrir comprobante en nueva pestaña"
+                >
+                  <ExternalLink size={13} />
+                  <span>Pantalla Completa</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setIsPreviewOpen(false)}
+                  className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
 
-            <div className="p-6 flex flex-col items-center justify-center bg-black/60 max-h-[70vh] overflow-auto">
+            {/* Scrollable Content Viewport */}
+            <div className="p-4 sm:p-6 flex flex-col items-center justify-center bg-black/60 overflow-y-auto flex-1 min-h-[350px]">
               {isPdf ? (
-                <div className="w-full text-center space-y-4">
+                <div className="w-full flex flex-col items-center gap-3">
                   <object
                     data={proofUrl}
                     type="application/pdf"
-                    className="w-full h-[450px] rounded-xl border border-white/10 hidden md:block"
+                    className="w-full h-[58vh] min-h-[400px] rounded-xl border border-white/10"
                   >
-                    <p className="text-xs text-zinc-400">Su navegador no soporta vista previa directa de PDF.</p>
+                    <div className="p-8 text-center flex flex-col items-center gap-3">
+                      <FileText size={40} className="text-amber-400" />
+                      <p className="text-xs text-zinc-300 font-medium">Documento PDF listo para visualizar</p>
+                      <a
+                        href={proofUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all"
+                      >
+                        <ExternalLink size={14} /> Abrir PDF en Pantalla Completa
+                      </a>
+                    </div>
                   </object>
-                  <div className="p-6 bg-white/5 border border-white/10 rounded-2xl flex flex-col items-center gap-3">
-                    <FileText size={40} className="text-amber-400" />
-                    <p className="text-xs text-zinc-300 font-medium">Comprobante enviado en formato documento PDF</p>
-                    <a
-                      href={proofUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all"
-                    >
-                      <ExternalLink size={14} /> Abrir PDF en Ventana Nueva
-                    </a>
-                  </div>
                 </div>
               ) : (isImage && !imgError) ? (
                 <img
                   src={proofUrl}
                   alt="Comprobante de pago"
-                  className="max-w-full max-h-[60vh] object-contain rounded-xl border border-white/10 shadow-lg"
+                  className="max-w-full max-h-[62vh] object-contain rounded-xl border border-white/10 shadow-lg"
                   onError={() => setImgError(true)}
                 />
               ) : (
                 <div className="p-8 text-center flex flex-col items-center gap-4">
                   <FileText size={48} className="text-amber-400" />
                   <p className="text-zinc-300 text-xs font-medium max-w-sm">
-                    No se puede previsualizar directamente en pantalla o el formato es un enlace externo.
+                    Visualización directa no soportada o el formato es un enlace externo.
                   </p>
                   <a
                     href={proofUrl}
@@ -183,16 +196,27 @@ export function ApproveFeePaymentButton({
               )}
             </div>
 
-            <div className="p-4 bg-zinc-950 border-t border-white/10 flex justify-between items-center gap-4 flex-wrap">
-              <a
-                href={proofUrl}
-                download="comprobante-cuota"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white font-medium"
-              >
-                <Download size={14} /> Descargar Archivo
-              </a>
+            {/* Fixed Bottom Toolbar */}
+            <div className="p-4 bg-zinc-950 border-t border-white/10 flex justify-between items-center gap-4 shrink-0 flex-wrap">
+              <div className="flex items-center gap-3">
+                <a
+                  href={proofUrl}
+                  download="comprobante-cuota"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white font-medium"
+                >
+                  <Download size={14} /> Descargar
+                </a>
+                <a
+                  href={proofUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="sm:hidden flex items-center gap-1 text-xs text-amber-400 font-medium"
+                >
+                  <ExternalLink size={13} /> Pantalla Completa
+                </a>
+              </div>
 
               {currentStatus !== "PAID" && (
                 <div className="flex items-center gap-2 ml-auto">

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { approveEnrollmentRequest, rejectEnrollmentRequest } from "@/app/actions/enrollment"
-import { Check, X, FileText, User, Phone, Mail, Calendar, Loader2 } from "lucide-react"
+import { Check, X, FileText, User, Phone, Mail, Calendar, Loader2, ExternalLink } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
@@ -153,46 +153,57 @@ export function SolicitudesList({ initialSolicitudes }: { initialSolicitudes: Re
       {/* Modal Previsualizador de Comprobante Segura */}
       {previewUrl && (
         <div 
-          className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200"
+          className="fixed inset-0 z-[1100] flex items-center justify-center p-3 sm:p-6 bg-black/90 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto"
           onClick={(e) => {
             if (e.target === e.currentTarget) setPreviewUrl(null)
           }}
         >
-          <div className="bg-zinc-900 border border-white/10 rounded-3xl max-w-2xl w-full flex flex-col overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center bg-zinc-950 p-4 px-6 border-b border-white/10">
+          <div className="bg-zinc-900 border border-white/10 rounded-3xl max-w-4xl w-full flex flex-col overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 my-auto max-h-[92vh]">
+            <div className="flex justify-between items-center bg-zinc-950 p-4 px-6 border-b border-white/10 shrink-0">
               <span className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
                 <FileText size={16} className="text-amber-500" /> Vista Previa del Comprobante
               </span>
-              <button
-                type="button"
-                onClick={() => setPreviewUrl(null)}
-                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                <X size={18} />
-              </button>
+              <div className="flex items-center gap-2">
+                <a
+                  href={previewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hidden sm:flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
+                  title="Abrir comprobante en nueva pestaña"
+                >
+                  <ExternalLink size={13} />
+                  <span>Pantalla Completa</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setPreviewUrl(null)}
+                  className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
-            <div className="p-6 flex flex-col items-center justify-center bg-black/60 max-h-[75vh] overflow-auto">
+            <div className="p-4 sm:p-6 flex flex-col items-center justify-center bg-black/60 overflow-y-auto flex-1 min-h-[350px]">
               {previewUrl.startsWith("data:application/pdf") || previewUrl.toLowerCase().endsWith(".pdf") ? (
-                <div className="w-full text-center space-y-4">
+                <div className="w-full flex flex-col items-center gap-3">
                   <object
                     data={previewUrl}
                     type="application/pdf"
-                    className="w-full h-[450px] rounded-xl border border-white/10 hidden md:block"
+                    className="w-full h-[58vh] min-h-[400px] rounded-xl border border-white/10"
                   >
-                    <p className="text-xs text-zinc-400">Su navegador no soporta vista previa directa de PDF.</p>
+                    <div className="p-6 bg-white/5 border border-white/10 rounded-2xl flex flex-col items-center gap-3">
+                      <FileText size={40} className="text-amber-400" />
+                      <p className="text-xs text-zinc-300 font-medium">Comprobante enviado en formato documento PDF</p>
+                      <a
+                        href={previewUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all"
+                      >
+                        <ExternalLink size={14} /> Abrir PDF en Ventana Nueva
+                      </a>
+                    </div>
                   </object>
-                  <div className="p-6 bg-white/5 border border-white/10 rounded-2xl flex flex-col items-center gap-3">
-                    <FileText size={40} className="text-amber-400" />
-                    <p className="text-xs text-zinc-300 font-medium">Comprobante enviado en formato documento PDF</p>
-                    <a
-                      href={previewUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all"
-                    >
-                      Abrir PDF en Ventana Nueva
-                    </a>
-                  </div>
                 </div>
               ) : (
                 <img
