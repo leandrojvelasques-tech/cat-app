@@ -68,7 +68,8 @@ export default async function EstadoSociosPage({
         fees: {
           orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }]
         },
-        eventRegistrations: true
+        eventRegistrations: true,
+        user: { select: { email: true } }
       },
       orderBy: { memberNumber: "asc" },
       take: 50 // Limit to avoid massive renders on short queries
@@ -90,7 +91,8 @@ export default async function EstadoSociosPage({
         fees: {
           orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }]
         },
-        eventRegistrations: true
+        eventRegistrations: true,
+        user: { select: { email: true } }
       },
       orderBy: { memberNumber: "asc" }
     } as any) as any[]

@@ -5,6 +5,7 @@ import { Users, Mail, X, Loader2, Square, CheckSquare, Send, CheckCircle, Downlo
 import Link from "next/link"
 import { sendBatchEmail } from "@/app/actions/batch-emails"
 import { getStatusBadgeStyles } from "@/lib/member-utils"
+import { SendMemberAccessButton } from "../socios/components/SendMemberAccessButton"
 
 interface EstadoSociosTableProps {
   initialMembers: any[]
@@ -484,6 +485,12 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
                       </td>
                       <td className="py-4 pr-6 text-right">
                         <div className="flex justify-end gap-2">
+                          <SendMemberAccessButton
+                            memberId={member.id}
+                            memberName={`${member.firstName} ${member.lastName}`}
+                            memberEmail={member.email}
+                            username={member.user?.email || null}
+                          />
                           <Link 
                             href={`/admin/socios/${member.id}`}
                             className="inline-flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5"

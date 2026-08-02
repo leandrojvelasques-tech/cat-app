@@ -3,6 +3,7 @@ import { UserPlus, UserCheck, UserX, Clock, Users } from "lucide-react"
 import Link from "next/link"
 import { SociosFilters } from "./SociosFilters"
 import { calculateMemberStatus, getStatusBadgeStyles, getMemberBajaReason, getBajaReasonStyles, formatDNI } from "@/lib/member-utils"
+import { SendMemberAccessButton } from "./components/SendMemberAccessButton"
 
 export default async function SociosPage({
   searchParams,
@@ -61,7 +62,8 @@ export default async function SociosPage({
       fees: {
         orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }]
       },
-      eventRegistrations: true
+      eventRegistrations: true,
+      user: { select: { email: true } }
     }
   } as any) as any[]
 
@@ -209,12 +211,20 @@ export default async function SociosPage({
                         </div>
                       </td>
                       <td className="py-4 pr-6 text-right">
-                        <Link 
-                          href={`/admin/socios/${member.id}`}
-                          className="inline-flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5"
-                        >
-                          Ver ficha
-                        </Link>
+                        <div className="flex justify-end gap-2">
+                          <SendMemberAccessButton
+                            memberId={member.id}
+                            memberName={`${member.firstName} ${member.lastName}`}
+                            memberEmail={member.email}
+                            username={member.user?.email || null}
+                          />
+                          <Link
+                            href={`/admin/socios/${member.id}`}
+                            className="inline-flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5"
+                          >
+                            Ver ficha
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   )

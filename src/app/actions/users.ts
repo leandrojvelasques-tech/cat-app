@@ -4,6 +4,33 @@ import { db } from "@/lib/db"
 import { auth } from "@/auth"
 import bcrypt from "bcrypt"
 import { revalidatePath } from "next/cache"
+import crypto from "crypto"
+import { sendTemporaryMemberAccessEmail } from "@/lib/emails"
+
+const ACCESS_MANAGEMENT_ROLES = ["ADMIN", "BOARD", "SUPERADMIN", "COLLABORATOR"]
+
+function generateTemporaryPassword() {
+  const uppercase = "ABCDEFGHJKLMNPQRSTUVWXYZ"
+  const lowercase = "abcdefghijkmnopqrstuvwxyz"
+  const numbers = "23456789"
+  const allCharacters = `${uppercase}${lowercase}${numbers}`
+  const requiredCharacters = [
+    uppercase[crypto.randomInt(uppercase.length)],
+    lowercase[crypto.randomInt(lowercase.length)],
+    numbers[crypto.randomInt(numbers.length)],
+  ]
+  const remainingCharacters = Array.from({ length: 9 }, () => allCharacters[crypto.randomInt(allCharacters.length)])
+
+  const passwordCharacters = [...requiredCharacters, ...remainingCharacters]
+  for (let index = passwordCharacters.length - 1; index > 0; index--) {
+    const swapIndex = crypto.randomInt(index + 1)
+    const currentCharacter = passwordCharacters[index]
+    passwordCharacters[index] = passwordCharacters[swapIndex]
+    passwordCharacters[swapIndex] = currentCharacter
+  }
+
+  return passwordCharacters.join("")
+}
 
 export async function updateUserPassword(userId: string, newPassword: string) {
   const session = await auth()
@@ -56,7 +83,12 @@ export async function deleteUser(userId: string) {
 // Reset a member's portal password by their memberId (not their admin user ID)
 export async function resetMemberPassword(memberId: string, newPassword: string) {
   const session = await auth()
-  if (!session) throw new Error("No autorizado")
+  if (!session?.user || !ACCESS_MANAGEMENT_ROLES.includes(session.user.role)) {
+    throw new Error("No autorizado")
+  }
+  if (!newPassword || newPassword.length < 6) {
+    throw new Error("La clave debe tener al menos 6 caracteres")
+  }
 
   // Find the User record linked to this member
   const user = await db.user.findFirst({ where: { member: { id: memberId } } })
@@ -73,6 +105,65 @@ export async function resetMemberPassword(memberId: string, newPassword: string)
   })
 
   revalidatePath(`/admin/socios/${memberId}`)
+}
+
+export async function sendTemporaryMemberAccess(memberId: string) {
+  const session = await auth()
+  if (!session?.user || !ACCESS_MANAGEMENT_ROLES.includes(session.user.role)) {
+    return { success: false, error: "No tenés permisos para reiniciar accesos de socios." }
+  }
+
+  if (!memberId || typeof memberId !== "string") {
+    return { success: false, error: "El socio indicado no es válido." }
+  }
+
+  const member = await db.member.findUnique({
+    where: { id: memberId },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      user: { select: { id: true, email: true } },
+    },
+  })
+
+  if (!member) return { success: false, error: "No se encontró el socio." }
+  if (!member.email) return { success: false, error: "El socio no tiene un correo registrado." }
+  if (!member.user) return { success: false, error: "El socio no tiene una cuenta de acceso al portal." }
+
+  const temporaryPassword = generateTemporaryPassword()
+  const passwordHash = await bcrypt.hash(temporaryPassword, 12)
+
+  await db.user.update({
+    where: { id: member.user.id },
+    data: {
+      passwordHash,
+      mustChangePassword: true,
+      resetToken: null,
+      resetTokenExpires: null,
+    },
+  })
+
+  const emailSent = await sendTemporaryMemberAccessEmail(
+    { ...member, email: member.email },
+    member.user,
+    temporaryPassword,
+    session.user.email || session.user.id
+  )
+
+  revalidatePath("/admin/socios")
+  revalidatePath(`/admin/socios/${memberId}`)
+
+  if (!emailSent) {
+    return {
+      success: false,
+      passwordChanged: true,
+      error: "La clave fue reiniciada, pero el correo no pudo enviarse. Intentá nuevamente para generar otra clave.",
+    }
+  }
+
+  return { success: true }
 }
 
 export async function updateUser(userId: string, formData: FormData) {

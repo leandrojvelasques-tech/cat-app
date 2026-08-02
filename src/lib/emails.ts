@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
 
 export const EMAIL_FROM_COBRANZAS = "Cobranzas - Centro Amigos del Tango <cobranzas@centroamigosdeltango.com>"
+export const EMAIL_FROM_SOCIOS = "Socios - Centro Amigos del Tango <socios@centroamigosdeltango.com>"
 export const EMAIL_MAIN_INFO = "info@centroamigosdeltango.com"
 export const EMAIL_COBRANZAS = "cobranzas@centroamigosdeltango.com"
 
@@ -13,13 +14,15 @@ interface SendEmailParams {
   from?: string
   bcc?: string | string[]
   cc?: string | string[]
+  historyContent?: string
+  sentBy?: string
 }
 
 /**
  * Función principal para enviar correos usando la API de Resend.
  * Si no está configurada la API KEY, escribe en consola y crea un registro de Communication "FAILED".
  */
-export async function sendEmail({ to, subject, html, memberId, type, from, bcc, cc }: SendEmailParams) {
+export async function sendEmail({ to, subject, html, memberId, type, from, bcc, cc, historyContent, sentBy }: SendEmailParams) {
   const apiKey = process.env.RESEND_API_KEY
   let status = "SENT"
   
@@ -33,7 +36,14 @@ export async function sendEmail({ to, subject, html, memberId, type, from, bcc, 
     status = "FAILED"
   } else {
     try {
-      const payload: Record<string, any> = {
+      const payload: {
+        from: string
+        to: string[]
+        subject: string
+        html: string
+        bcc?: string[]
+        cc?: string[]
+      } = {
         from: fromEmail,
         to: recipientList,
         subject: subject,
@@ -76,8 +86,8 @@ export async function sendEmail({ to, subject, html, memberId, type, from, bcc, 
           memberId,
           type,
           subject,
-          content: html, // Guardamos el HTML enviado
-          sentBy: "SYSTEM",
+          content: historyContent || html,
+          sentBy: sentBy || "SYSTEM",
           status,
           channel: "EMAIL",
         },
@@ -100,7 +110,6 @@ export function getBaseUrl(): string {
 
 // Helper para convertir texto plano de plantillas en un correo HTML institucional elegante
 function buildEmailLayout(contentHtml: string) {
-  const baseUrl = getBaseUrl()
   return `
     <div style="background-color: #f4f4f5; padding: 30px 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
       <div style="max-width: 600px; margin: 0 auto; bg-color: #ffffff; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #e4e4e7;">
@@ -147,6 +156,16 @@ function processTemplateText(text: string, variables: Record<string, string>): s
     .join("")
 
   return paragraphs
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>'"]/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "'": "&#039;",
+    '"': "&quot;",
+  })[character] || character)
 }
 
 // 1. Solicitud de Inscripción Recibida (Agradecimiento al solicitante)
@@ -616,6 +635,43 @@ export async function sendPasswordResetEmail(
     html,
     memberId,
     type: "PASSWORD_RESET",
+  })
+}
+
+export async function sendTemporaryMemberAccessEmail(
+  member: { id: string; firstName: string; lastName: string; email: string },
+  user: { email: string },
+  temporaryPassword: string,
+  sentBy: string
+) {
+  const loginUrl = `${getBaseUrl()}/login`
+  const memberName = escapeHtml(`${member.firstName} ${member.lastName}`)
+  const username = escapeHtml(user.email)
+  const password = escapeHtml(temporaryPassword)
+  const subject = "Datos de acceso al Portal de Socios — Centro Amigos del Tango"
+  const content = `
+    <p>Estimado/a <strong>${memberName}</strong>:</p>
+    <p>A continuación te enviamos la información para acceder al Portal de Socios del Centro Amigos del Tango.</p>
+    <div style="background-color: #fafafa; border: 1px solid #e4e4e7; border-left: 4px solid #F2A81D; padding: 16px 20px; border-radius: 12px; margin: 20px 0;">
+      <p style="margin: 4px 0;"><strong>Usuario:</strong> ${username}</p>
+      <p style="margin: 4px 0;"><strong>Clave temporal:</strong> <code style="background: #e4e4e7; padding: 3px 7px; border-radius: 4px; font-family: monospace;">${password}</code></p>
+    </div>
+    <p>Al ingresar, el sistema te solicitará crear una nueva contraseña personal.</p>
+    <div style="margin: 24px 0; text-align: center;">
+      <a href="${loginUrl}" style="background-color: #A6702E; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block;">Ingresar al Portal de Socios</a>
+    </div>
+    <p style="font-size: 12px; color: #71717a;">Si no solicitaste estos datos, comunicate con la administración del Centro.</p>
+  `
+
+  return sendEmail({
+    to: member.email,
+    from: EMAIL_FROM_SOCIOS,
+    subject,
+    html: buildEmailLayout(content),
+    memberId: member.id,
+    type: "TEMPORARY_ACCESS",
+    sentBy,
+    historyContent: "Se generó una nueva clave temporal y se enviaron los datos de acceso al Portal de Socios. La clave no se conserva en el historial.",
   })
 }
 
