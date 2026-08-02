@@ -4,33 +4,10 @@ import { db } from "@/lib/db"
 import { auth } from "@/auth"
 import bcrypt from "bcrypt"
 import { revalidatePath } from "next/cache"
-import crypto from "crypto"
 import { sendTemporaryMemberAccessEmail } from "@/lib/emails"
+import { generateTemporaryPassword } from "@/lib/temporary-password"
 
 const ACCESS_MANAGEMENT_ROLES = ["ADMIN", "BOARD", "SUPERADMIN", "COLLABORATOR"]
-
-function generateTemporaryPassword() {
-  const uppercase = "ABCDEFGHJKLMNPQRSTUVWXYZ"
-  const lowercase = "abcdefghijkmnopqrstuvwxyz"
-  const numbers = "23456789"
-  const allCharacters = `${uppercase}${lowercase}${numbers}`
-  const requiredCharacters = [
-    uppercase[crypto.randomInt(uppercase.length)],
-    lowercase[crypto.randomInt(lowercase.length)],
-    numbers[crypto.randomInt(numbers.length)],
-  ]
-  const remainingCharacters = Array.from({ length: 9 }, () => allCharacters[crypto.randomInt(allCharacters.length)])
-
-  const passwordCharacters = [...requiredCharacters, ...remainingCharacters]
-  for (let index = passwordCharacters.length - 1; index > 0; index--) {
-    const swapIndex = crypto.randomInt(index + 1)
-    const currentCharacter = passwordCharacters[index]
-    passwordCharacters[index] = passwordCharacters[swapIndex]
-    passwordCharacters[swapIndex] = currentCharacter
-  }
-
-  return passwordCharacters.join("")
-}
 
 export async function updateUserPassword(userId: string, newPassword: string) {
   const session = await auth()
@@ -129,25 +106,58 @@ export async function sendTemporaryMemberAccess(memberId: string) {
   })
 
   if (!member) return { success: false, error: "No se encontró el socio." }
-  if (!member.email) return { success: false, error: "El socio no tiene un correo registrado." }
-  if (!member.user) return { success: false, error: "El socio no tiene una cuenta de acceso al portal." }
+  if (!member.email) return { success: false, error: "El socio no tiene un correo registrado. Cargalo en la ficha antes de generar el acceso." }
 
   const temporaryPassword = generateTemporaryPassword()
   const passwordHash = await bcrypt.hash(temporaryPassword, 12)
+  const accountEmail = member.email.trim().toLowerCase()
+  let portalUser = member.user
 
-  await db.user.update({
-    where: { id: member.user.id },
-    data: {
-      passwordHash,
-      mustChangePassword: true,
-      resetToken: null,
-      resetTokenExpires: null,
-    },
-  })
+  if (portalUser) {
+    portalUser = await db.user.update({
+      where: { id: portalUser.id },
+      data: {
+        passwordHash,
+        mustChangePassword: true,
+        resetToken: null,
+        resetTokenExpires: null,
+      },
+      select: { id: true, email: true },
+    })
+  } else {
+    const existingUser = await db.user.findUnique({
+      where: { email: accountEmail },
+      select: { id: true, email: true, member: { select: { id: true } } },
+    })
+
+    if (existingUser) {
+      return { success: false, error: "Ya existe otra cuenta con este email. Revisá su vinculación antes de generar el acceso." }
+    }
+
+    portalUser = await db.$transaction(async (tx) => {
+      const createdUser = await tx.user.create({
+        data: {
+          email: accountEmail,
+          name: `${member.firstName} ${member.lastName}`,
+          passwordHash,
+          role: "MEMBER",
+          mustChangePassword: true,
+        },
+        select: { id: true, email: true },
+      })
+
+      await tx.member.update({
+        where: { id: member.id },
+        data: { userId: createdUser.id },
+      })
+
+      return createdUser
+    })
+  }
 
   const emailSent = await sendTemporaryMemberAccessEmail(
     { ...member, email: member.email },
-    member.user,
+    portalUser,
     temporaryPassword,
     session.user.email || session.user.id
   )

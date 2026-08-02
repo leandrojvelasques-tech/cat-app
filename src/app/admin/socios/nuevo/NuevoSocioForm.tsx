@@ -196,6 +196,7 @@ export function NuevoSocioForm() {
             }`}
             placeholder="juan@ejemplo.com"
           />
+          <p className="text-[10px] text-zinc-500">Si se informa un email, se crea el acceso al Portal de Socios y se envía una clave temporal.</p>
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-zinc-300">Teléfono</label>
