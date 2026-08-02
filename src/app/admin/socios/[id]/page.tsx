@@ -13,6 +13,15 @@ import { es } from "date-fns/locale"
 import { calculateMemberStatus, getStatusBadgeStyles, getMemberBajaReason, getBajaReasonStyles, formatDNI } from "@/lib/member-utils"
 import { ApproveFeePaymentButton } from "../../cuotas/ApproveFeePaymentButton"
 
+interface CommunicationSummary {
+  id: string
+  type: string
+  subject: string
+  sentBy: string | null
+  sentAt: Date
+  status: string
+  channel: string
+}
 
 
 export default async function FichaSocioPage(props: any) {
@@ -39,6 +48,8 @@ export default async function FichaSocioPage(props: any) {
   }) as any
 
   if (!member) return notFound()
+
+  const communications = member.communications as CommunicationSummary[]
 
   const otherMembers = await db.member.findMany({
     where: { id: { not: id }, status: { notIn: ["INACTIVE", "DECEASED", "RESIGNED", "DUPLICATE", "MOROSIDAD", "ADMINISTRATIVE", "ARCHIVED"] } },
@@ -330,6 +341,51 @@ export default async function FichaSocioPage(props: any) {
                     </div>
                    ))
                  )}
+              </div>
+           </div>
+
+           {/* Communication History */}
+           <div className="bg-white/5 border border-white/10 rounded-[40px] p-10 backdrop-blur-md shadow-2xl">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="p-3 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                  <History size={18} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Historial de comunicaciones</h3>
+                  <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">Correos e interacciones registradas</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {communications.length === 0 ? (
+                  <p className="text-center py-10 text-zinc-600 italic">No hay comunicaciones registradas.</p>
+                ) : (
+                  communications.map((communication) => (
+                    <div key={communication.id} className="flex items-start gap-4 bg-black/20 p-5 rounded-[24px] border border-white/5">
+                      <div className={`p-3 rounded-xl shrink-0 ${communication.status === "SENT" ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
+                        <Mail size={17} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-4 flex-wrap">
+                          <div>
+                            <p className="text-sm font-bold text-zinc-200">{communication.subject}</p>
+                            <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-zinc-600">
+                              {communication.type === "TEMPORARY_ACCESS" ? "Acceso temporal" : communication.type.replaceAll("_", " ")}
+                            </p>
+                          </div>
+                          <span className={`px-2.5 py-1 rounded-lg border text-[9px] font-black uppercase ${communication.status === "SENT" ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" : "border-red-500/20 bg-red-500/10 text-red-400"}`}>
+                            {communication.status === "SENT" ? "Enviado" : "Fallido"}
+                          </span>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[10px] text-zinc-500">
+                          <span>{format(new Date(communication.sentAt), "dd/MM/yyyy 'a las' HH:mm", { locale: es })}</span>
+                          <span>Canal: {communication.channel}</span>
+                          <span>Realizado por: {communication.sentBy || "SYSTEM"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
            </div>
 
