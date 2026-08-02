@@ -3,6 +3,12 @@ import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { cleanDNI } from "@/lib/member-utils"
+import { auth } from "@/auth"
+import bcrypt from "bcrypt"
+import { sendTemporaryMemberAccessEmail } from "@/lib/emails"
+import { generateTemporaryPassword } from "@/lib/temporary-password"
+
+const MEMBER_MANAGEMENT_ROLES = ["ADMIN", "BOARD", "SUPERADMIN", "COLLABORATOR"]
 
 export async function getNextMemberNumberInfo() {
   const allMembers = await db.member.findMany({ select: { memberNumber: true } })
@@ -59,6 +65,11 @@ export async function checkMemberDuplicate(dniRaw?: string, emailRaw?: string, e
 }
 
 export async function createMember(formData: FormData) {
+  const session = await auth()
+  if (!session?.user || !MEMBER_MANAGEMENT_ROLES.includes(session.user.role)) {
+    throw new Error("No autorizado")
+  }
+
   const firstNameRaw = formData.get("firstName") as string
   const lastNameRaw = formData.get("lastName") as string
   const dniRaw = formData.get("dni") as string
@@ -76,6 +87,7 @@ export async function createMember(formData: FormData) {
   const firstName = firstNameRaw ? firstNameRaw.trim().toUpperCase() : ""
   const lastName = lastNameRaw ? lastNameRaw.trim().toUpperCase() : ""
   const dni = cleanDNI(dniRaw)
+  const normalizedEmail = email ? email.trim().toLowerCase() : ""
 
   // Dates
   const birthDate = birthDateStr ? new Date(birthDateStr) : null
@@ -98,33 +110,66 @@ export async function createMember(formData: FormData) {
     }
   }
 
-  if (email && email.trim().length > 0) {
-    const existingEmail = await db.member.findFirst({ where: { email: email.trim().toLowerCase() } })
+  if (normalizedEmail) {
+    const existingEmail = await db.member.findFirst({ where: { email: normalizedEmail } })
     if (existingEmail) {
       throw new Error("Ya existe un socio registrado con este correo electrónico.")
     }
+
+    const existingUser = await db.user.findUnique({ where: { email: normalizedEmail } })
+    if (existingUser) {
+      throw new Error("Ya existe una cuenta de acceso con este correo electrónico.")
+    }
   }
 
-  await db.member.create({
-    data: {
-      memberNumber: nextMemberNumber,
-      firstName,
-      lastName,
-      dni,
-      email: email ? email.trim().toLowerCase() : null,
-      phone: phone || null,
-      city: city || null,
-      address: address || null,
-      status: status || "ACTIVE",
-      type,
-      notes,
-      birthDate,
-      joinDate,
-      wantsMailing
-    }
+  const temporaryPassword = normalizedEmail ? generateTemporaryPassword() : null
+  const passwordHash = temporaryPassword ? await bcrypt.hash(temporaryPassword, 12) : null
+
+  const { member, user } = await db.$transaction(async (tx) => {
+    const createdUser = normalizedEmail && passwordHash
+      ? await tx.user.create({
+          data: {
+            email: normalizedEmail,
+            name: `${firstName} ${lastName}`,
+            passwordHash,
+            role: "MEMBER",
+            mustChangePassword: true,
+          },
+          select: { id: true, email: true },
+        })
+      : null
+
+    const createdMember = await tx.member.create({
+      data: {
+        memberNumber: nextMemberNumber,
+        firstName,
+        lastName,
+        dni,
+        email: normalizedEmail || null,
+        phone: phone || null,
+        city: city || null,
+        address: address || null,
+        status: status || "ACTIVE",
+        type,
+        notes,
+        birthDate,
+        joinDate,
+        wantsMailing,
+        userId: createdUser?.id || null,
+      },
+      select: { id: true, firstName: true, lastName: true, email: true, memberNumber: true },
+    })
+
+    return { member: createdMember, user: createdUser }
   })
 
+  if (user && temporaryPassword && member.email) {
+    await sendTemporaryMemberAccessEmail({ ...member, email: member.email }, user, temporaryPassword, session.user.email || session.user.id)
+      .catch((error) => console.error("No se pudo enviar el acceso inicial del socio:", error))
+  }
+
   revalidatePath("/admin/socios")
+  revalidatePath("/admin/estado-socios")
   redirect("/admin/socios")
 }
 
@@ -304,10 +349,6 @@ export async function updateMember(id: string, formData: FormData) {
   revalidatePath("/admin/socios")
   redirect(`/admin/socios/${id}`)
 }
-import { auth } from "@/auth"
-
-import bcrypt from "bcrypt"
-
 export async function updateMemberProfile(memberId: string, formData: FormData) {
   const session = await auth()
   if (!session || !session.user || !session.user.id) throw new Error("No autorizado")
@@ -394,4 +435,3 @@ export async function nombrarSocioHonorario(memberId: string, reason: string, ho
   revalidatePath("/admin/socios")
   return { success: true }
 }
-
