@@ -66,8 +66,8 @@ export function SendMemberAccessButton({
           aria-modal="true"
           aria-labelledby={`access-title-${memberId}`}
         >
-          <div className="w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-zinc-900 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/5 p-6">
+          <div className="flex max-h-[calc(100dvh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-zinc-900 shadow-2xl">
+            <div className="flex shrink-0 items-center justify-between border-b border-white/5 p-6">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-500/20 bg-amber-500/10 text-amber-400">
                   <KeyRound size={19} />
@@ -82,7 +82,7 @@ export function SendMemberAccessButton({
               </button>
             </div>
 
-            <div className="space-y-5 p-6">
+            <div className="space-y-5 overflow-y-auto p-6">
               <div className="rounded-2xl border border-white/5 bg-black/25 p-4 text-sm">
                 <p className="font-bold text-zinc-100">{memberName}</p>
                 <p className="mt-1 text-zinc-400">Destino: {memberEmail}</p>
