@@ -22,9 +22,7 @@ export function SendMemberAccessButton({
   const [isPending, startTransition] = useTransition()
   const unavailableReason = !memberEmail
     ? "El socio no tiene un correo registrado"
-    : !username
-      ? "El socio no tiene una cuenta de acceso al portal"
-      : null
+    : null
 
   function closeModal() {
     if (isPending) return
@@ -88,7 +86,7 @@ export function SendMemberAccessButton({
               <div className="rounded-2xl border border-white/5 bg-black/25 p-4 text-sm">
                 <p className="font-bold text-zinc-100">{memberName}</p>
                 <p className="mt-1 text-zinc-400">Destino: {memberEmail}</p>
-                <p className="text-zinc-400">Usuario: {username}</p>
+                <p className="text-zinc-400">Usuario: {username || memberEmail}</p>
               </div>
 
               <div className="flex gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs leading-relaxed text-amber-200">
