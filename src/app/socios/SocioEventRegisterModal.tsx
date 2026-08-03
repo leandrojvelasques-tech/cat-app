@@ -7,6 +7,14 @@ import { AvatarFormInput } from "@/components/AvatarFormInput"
 import { getEffectiveEventPrices } from "@/lib/event-utils"
 import Link from "next/link"
 
+interface EventClassData {
+  id: string
+  title: string
+  classDate?: Date | string | null
+  startTime?: string | null
+  endTime?: string | null
+}
+
 interface EventData {
   id: string
   title: string
@@ -29,6 +37,7 @@ interface EventData {
   priceSocioComboEarlyBird?: number | null
   priceNonSocioComboEarlyBird?: number | null
   isFree?: boolean
+  classes?: EventClassData[]
 }
 
 interface MemberData {
@@ -59,7 +68,8 @@ export function SocioEventRegisterModal({ event, member, registration }: SocioEv
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   const defaultRegType = registration?.registrationType || (event.hasClasses ? "COMBO_CLASES" : "MILONGA")
-  const [registrationType, setRegistrationType] = useState<string>(defaultRegType)
+  const [registrationType, setRegistrationType] = useState<string>(defaultRegType.startsWith("CLASE_SUELTA") ? "CLASE_SUELTA" : defaultRegType)
+  const [selectedClassId, setSelectedClassId] = useState<string>(event.classes?.[0]?.id || "")
   const [paymentMethod, setPaymentMethod] = useState<"CASH" | "TRANSFER">("CASH")
   const [proofUrl, setProofUrl] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
@@ -85,8 +95,16 @@ export function SocioEventRegisterModal({ event, member, registration }: SocioEv
     setIsSubmitting(true)
     setSuccessMsg(null)
 
+    let finalRegType = registrationType
+    if (registrationType === "CLASE_SUELTA") {
+      const selectedCls = event.classes?.find(c => c.id === selectedClassId) || event.classes?.[0]
+      if (selectedCls?.title) {
+        finalRegType = `CLASE_SUELTA (${selectedCls.title})`
+      }
+    }
+
     const formData = new FormData()
-    formData.append("registrationType", registrationType)
+    formData.append("registrationType", finalRegType)
     formData.append("paymentMethod", paymentMethod)
     if (proofUrl) {
       formData.append("paymentProof", proofUrl)
@@ -215,24 +233,62 @@ export function SocioEventRegisterModal({ event, member, registration }: SocioEv
                                 <span className="font-black text-sm text-amber-400">${(event.priceSocioCombo || 33000).toLocaleString()}</span>
                               </button>
 
-                              <button
-                                type="button"
-                                onClick={() => setRegistrationType("CLASE_SUELTA")}
-                                className={`p-4 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${
-                                  registrationType === "CLASE_SUELTA"
-                                    ? "bg-cyan-500/10 border-cyan-500 text-white shadow-lg"
-                                    : "bg-black/30 border-white/10 text-zinc-400 hover:border-white/20"
-                                }`}
-                              >
-                                <div className="flex items-center gap-3">
-                                  <BookOpen size={18} className={registrationType === "CLASE_SUELTA" ? "text-cyan-400" : "text-zinc-500"} />
-                                  <div>
-                                    <p className="text-xs font-bold uppercase">Clase Suelta</p>
-                                    <p className="text-[10px] text-zinc-500">Valor por una clase individual</p>
+                              <div className="space-y-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setRegistrationType("CLASE_SUELTA")}
+                                  className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                                    registrationType === "CLASE_SUELTA"
+                                      ? "bg-cyan-500/10 border-cyan-500 text-white shadow-lg"
+                                      : "bg-black/30 border-white/10 text-zinc-400 hover:border-white/20"
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <BookOpen size={18} className={registrationType === "CLASE_SUELTA" ? "text-cyan-400" : "text-zinc-500"} />
+                                    <div>
+                                      <p className="text-xs font-bold uppercase">Clase Suelta</p>
+                                      <p className="text-[10px] text-zinc-500">Valor por una clase individual</p>
+                                    </div>
                                   </div>
-                                </div>
-                                <span className="font-black text-sm text-amber-400">${(event.priceSocioClassLoose || 11000).toLocaleString()}</span>
-                              </button>
+                                  <span className="font-black text-sm text-amber-400">${(event.priceSocioClassLoose || 11000).toLocaleString()}</span>
+                                </button>
+
+                                {registrationType === "CLASE_SUELTA" && event.classes && event.classes.length > 0 && (
+                                  <div className="pl-4 border-l-2 border-cyan-500/40 space-y-2 pt-1 animate-in fade-in duration-200">
+                                    <label className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block">
+                                      Seleccioná cuál clase vas a realizar:
+                                    </label>
+                                    <div className="space-y-1.5">
+                                      {event.classes.map((cls, idx) => (
+                                        <label
+                                          key={cls.id || idx}
+                                          className={`flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
+                                            (selectedClassId === cls.id || (!selectedClassId && idx === 0))
+                                              ? "bg-cyan-500/20 border-cyan-400 text-white font-bold"
+                                              : "bg-black/40 border-white/10 text-zinc-400 hover:border-white/20"
+                                          }`}
+                                        >
+                                          <div className="flex items-center gap-2">
+                                            <input
+                                              type="radio"
+                                              name="socioSelectedClass"
+                                              checked={selectedClassId === cls.id || (!selectedClassId && idx === 0)}
+                                              onChange={() => setSelectedClassId(cls.id)}
+                                              className="accent-cyan-400"
+                                            />
+                                            <span>{cls.title}</span>
+                                          </div>
+                                          {(cls.startTime || cls.classDate) && (
+                                            <span className="text-[9px] text-amber-300/80 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                                              {cls.startTime ? `${cls.startTime} hs` : ''}
+                                            </span>
+                                          )}
+                                        </label>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             </>
                           )}
 

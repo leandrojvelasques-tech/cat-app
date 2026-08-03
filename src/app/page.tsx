@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 import { EscuelitaCarousel } from "./EscuelitaCarousel"
 import { NovedadesHomeSection } from "./NovedadesHomeSection"
+import { OfficialLogo } from "@/components/OfficialLogo"
 
 import { getNextEventDate, getDayName, isExternalEvent } from "@/lib/event-utils"
 import { Repeat, Sparkles as SparklesIcon } from "lucide-react"
@@ -129,10 +130,10 @@ export default async function Home() {
       <header className="fixed top-0 w-full z-50 bg-[#1b2621]/80 backdrop-blur-xl border-b border-white/5 transition-all duration-300">
         <nav className="flex justify-between items-center px-6 md:px-16 py-4 max-w-7xl mx-auto">
           <Link href="/" className="flex items-center gap-3 active:scale-95 transition-transform">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cat-gold to-cat-bronze flex items-center justify-center shadow-lg shadow-cat-gold/20">
-              <span className="font-black text-lg text-zinc-950">C</span>
-            </div>
-            <span className="font-bold text-lg tracking-wider text-white">CAT</span>
+            <OfficialLogo
+              className="h-10 md:h-12 w-auto rounded-sm"
+              priority
+            />
           </Link>
           
           <div className="hidden md:flex items-center gap-8">

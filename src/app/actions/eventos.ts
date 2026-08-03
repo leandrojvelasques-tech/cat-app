@@ -382,7 +382,7 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
     })
 
     // Disparar alertas por correo a la directiva y mails adicionales
-    sendEventRegistrationAlertToBoard(event, {
+    await sendEventRegistrationAlertToBoard(event, {
       firstName: member.firstName,
       lastName: member.lastName,
       dni: member.dni,
@@ -420,7 +420,7 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
   })
 
   // Disparar alertas por correo a la directiva y mails adicionales
-  sendEventRegistrationAlertToBoard(event, {
+  await sendEventRegistrationAlertToBoard(event, {
     firstName: member.firstName,
     lastName: member.lastName,
     dni: member.dni,

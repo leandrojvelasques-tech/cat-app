@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
-import Link from "next/arrow-left" // wait lucide-react ArrowLeft
+import Link from "next/link"
 import { ArrowLeft, Gift } from "lucide-react"
 import { getBenefits, seedDefaultBenefitsIfEmpty } from "@/app/actions/beneficios"
 import { BenefitManagementClient } from "./BenefitFormModal"

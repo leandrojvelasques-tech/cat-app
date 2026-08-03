@@ -21,6 +21,7 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [loading, setLoading] = useState(false)
   const [confirmedDuplicate, setConfirmedDuplicate] = useState(false)
+  const [selectedClassId, setSelectedClassId] = useState<string>(event.classes?.[0]?.id || "")
   
   const prices = getEffectiveEventPrices(event)
 
@@ -225,13 +226,83 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
           {/* Options */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
              <div className="space-y-4">
-                <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-widest">Inscripción</label>
-                 <div className="space-y-2">
-                    <div className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-amber-600/40 bg-amber-600/10 text-amber-500 text-xs font-bold">
-                       ENTRADA MILONGA
-                       <CheckCircle2 size={14} />
-                    </div>
-                    <input type="hidden" name="registrationType" value="MILONGA" />
+                <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-widest">Tipo de Inscripción</label>
+                <div className="space-y-2">
+                   {event.hasMilonga && (
+                     <button
+                       type="button"
+                       onClick={() => handleTypeChange("MILONGA")}
+                       className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                         formData.registrationType === "MILONGA"
+                           ? "border-red-500/50 bg-red-500/10 text-red-400"
+                           : "border-white/10 bg-black/40 text-zinc-400 hover:border-white/20"
+                       }`}
+                     >
+                       <span>ENTRADA MILONGA</span>
+                       {formData.registrationType === "MILONGA" && <CheckCircle2 size={14} />}
+                     </button>
+                   )}
+
+                   {event.hasClasses && (
+                     <>
+                       <button
+                         type="button"
+                         onClick={() => handleTypeChange("COMBO_CLASES")}
+                         className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                           formData.registrationType === "COMBO_CLASES"
+                             ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400"
+                             : "border-white/10 bg-black/40 text-zinc-400 hover:border-white/20"
+                         }`}
+                       >
+                         <span>{event.comboTitle || "COMBO DE CLASES"}</span>
+                         {formData.registrationType === "COMBO_CLASES" && <CheckCircle2 size={14} />}
+                       </button>
+
+                       <button
+                         type="button"
+                         onClick={() => handleTypeChange("CLASE_SUELTA")}
+                         className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                           formData.registrationType === "CLASE_SUELTA"
+                             ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400"
+                             : "border-white/10 bg-black/40 text-zinc-400 hover:border-white/20"
+                         }`}
+                       >
+                         <span>CLASE SUELTA</span>
+                         {formData.registrationType === "CLASE_SUELTA" && <CheckCircle2 size={14} />}
+                       </button>
+
+                       {formData.registrationType === "CLASE_SUELTA" && event.classes && event.classes.length > 0 && (
+                         <div className="pl-3 border-l-2 border-cyan-500/40 space-y-1.5 pt-1 animate-in fade-in duration-200">
+                           <label className="text-[9px] font-bold text-cyan-400 uppercase tracking-wider block">
+                             Clase Elegida:
+                           </label>
+                           <select
+                             value={selectedClassId}
+                             onChange={(e) => setSelectedClassId(e.target.value)}
+                             className="w-full bg-zinc-900 border border-cyan-500/30 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-cyan-400"
+                           >
+                             {event.classes.map((cls: any, idx: number) => (
+                               <option key={cls.id || idx} value={cls.id} className="bg-zinc-900 text-white">
+                                 {cls.title} {cls.startTime ? `(${cls.startTime} hs)` : ''}
+                               </option>
+                             ))}
+                           </select>
+                         </div>
+                       )}
+                     </>
+                   )}
+
+                   <input
+                     type="hidden"
+                     name="registrationType"
+                     value={
+                       formData.registrationType === "CLASE_SUELTA"
+                         ? (event.classes?.find((c: any) => c.id === selectedClassId)?.title
+                             ? `CLASE_SUELTA (${event.classes.find((c: any) => c.id === selectedClassId).title})`
+                             : "CLASE_SUELTA")
+                         : formData.registrationType
+                     }
+                   />
                 </div>
              </div>
 

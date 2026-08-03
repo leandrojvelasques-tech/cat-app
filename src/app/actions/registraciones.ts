@@ -70,7 +70,7 @@ export async function registerAttendee(formData: FormData) {
 
     const event = await db.event.findUnique({ where: { id: eventId } })
     if (event) {
-      sendEventRegistrationAlertToBoard(event, {
+      await sendEventRegistrationAlertToBoard(event, {
         firstName,
         lastName,
         dni,
@@ -134,20 +134,19 @@ export async function registerPublicAttendee(formData: FormData) {
         }
       })
 
-      // Email de confirmación automática al asistente si está habilitado
+      // Notificaciones por correo
+      const emailPromises: Promise<any>[] = []
       if (event.sendAttendeeConfirmation !== false) {
-        sendAttendeeFreeEventConfirmationEmail({
+        emailPromises.push(sendAttendeeFreeEventConfirmationEmail({
           firstName,
           email,
           eventTitle: event.title,
           registrationType,
           eventDate: event.startDate,
           location: event.location
-        }).catch(err => console.error("Error enviando email de confirmacion de evento gratuito:", err))
+        }))
       }
-
-      // Notificación a la directiva
-      sendEventRegistrationAlertToBoard(event, {
+      emailPromises.push(sendEventRegistrationAlertToBoard(event, {
         firstName,
         lastName,
         dni,
@@ -156,7 +155,9 @@ export async function registerPublicAttendee(formData: FormData) {
         registrationType,
         amountPaid: 0,
         paymentMethod: "GRATUITO"
-      }).catch(err => console.error("Error notificando a la directiva sobre evento gratuito:", err))
+      }))
+
+      await Promise.allSettled(emailPromises).catch(err => console.error("Error enviando notificaciones de evento gratuito:", err))
 
       revalidatePath("/admin")
       revalidatePath("/admin/eventos")
@@ -212,27 +213,27 @@ export async function registerPublicAttendee(formData: FormData) {
       }
     })
 
-    // Enviar acuse de recibo al cliente avisando que su comprobante está en verificación
-    sendAttendeePendingProofEmail({
-      firstName,
-      email,
-      eventTitle: event.title,
-      registrationType,
-      amountPaid
-    }).catch(err => console.error("Error al enviar acuse de recibo de comprobante al cliente:", err))
-
-    // Disparar alertas por email a la directiva y mails adicionales
-    sendEventRegistrationAlertToBoard(event, {
-      firstName,
-      lastName,
-      dni,
-      email,
-      phone,
-      registrationType,
-      amountPaid,
-      paymentMethod,
-      paymentProof: paymentProofUrl
-    }).catch(err => console.error("Error al enviar alerta por email a la directiva:", err))
+    // Enviar notificaciones por correo al cliente y directiva
+    await Promise.allSettled([
+      sendAttendeePendingProofEmail({
+        firstName,
+        email,
+        eventTitle: event.title,
+        registrationType,
+        amountPaid
+      }),
+      sendEventRegistrationAlertToBoard(event, {
+        firstName,
+        lastName,
+        dni,
+        email,
+        phone,
+        registrationType,
+        amountPaid,
+        paymentMethod,
+        paymentProof: paymentProofUrl
+      })
+    ]).catch(err => console.error("Error al enviar notificaciones de comprobante de evento:", err))
 
     revalidatePath("/admin")
     revalidatePath("/admin/eventos")
@@ -263,7 +264,7 @@ export async function updatePaymentStatus(regId: string, eventId: string, status
 
   // Si el estado pasa a "PAID", enviar correo de confirmación de aprobación al asistente
   if (status === "PAID" && updatedReg.email) {
-    sendAttendeeRegistrationApprovedEmail({
+    await sendAttendeeRegistrationApprovedEmail({
       firstName: updatedReg.firstName,
       email: updatedReg.email,
       eventTitle: updatedReg.event.title,

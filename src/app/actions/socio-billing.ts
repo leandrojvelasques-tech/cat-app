@@ -119,7 +119,7 @@ export async function submitSocioPaymentProof(formData: FormData) {
         select: { id: true, firstName: true, lastName: true, email: true }
       })
       if (fullMember && fullMember.email) {
-        sendFeePaymentPendingEmail(fullMember, selectedMonths.length)
+        await sendFeePaymentPendingEmail(fullMember, selectedMonths.length)
           .catch(err => console.error("Error al enviar acuse de recibo de cuota al socio:", err))
       }
     } catch (emailErr) {
