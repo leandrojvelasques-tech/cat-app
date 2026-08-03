@@ -6,6 +6,9 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { sendEventRegistrationAlertToBoard, sendAttendeePendingProofEmail } from "@/lib/emails"
 import { getEffectiveEventPrices } from "@/lib/event-utils"
+import { validateAndSanitizeFile } from "@/lib/security-utils"
+import { writeFileSync, existsSync, mkdirSync } from "fs"
+import { join } from "path"
 
 async function parseBannerField(formData: FormData): Promise<string | null> {
   const fileOrString = formData.get("eventBanner")
@@ -350,7 +353,31 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
 
   const registrationType = (formData.get("registrationType") as string) || "MILONGA"
   const paymentMethod = (formData.get("paymentMethod") as string) || "CASH"
-  const paymentProof = (formData.get("avatarUrl") as string) || (formData.get("paymentProof") as string) || null
+  const proofFile = formData.get("paymentProof") as File | string | null
+
+  let paymentProofUrl: string | null = null
+  if (proofFile && typeof proofFile !== "string" && proofFile.size > 0) {
+    const arrayBuffer = await proofFile.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+
+    const validation = await validateAndSanitizeFile(buffer, proofFile.type)
+    if (!validation.isValid) {
+      return { success: false, error: validation.error || "Formato de comprobante no permitido por seguridad." }
+    }
+
+    const uploadDir = join(process.cwd(), "public", "uploads")
+    if (!existsSync(uploadDir)) {
+      mkdirSync(uploadDir, { recursive: true })
+    }
+
+    const safeName = validation.safeFileName || `evento-${Date.now()}.${validation.extension || "png"}`
+    const filepath = join(uploadDir, safeName)
+    writeFileSync(filepath, buffer)
+
+    paymentProofUrl = `/uploads/${safeName}`
+  } else if (typeof proofFile === "string" && proofFile.length > 0) {
+    paymentProofUrl = proofFile
+  }
 
   const prices = getEffectiveEventPrices(event)
   let amountPaid = prices.milongaSocio
@@ -376,7 +403,7 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
         registrationType,
         amountPaid,
         paymentMethod,
-        paymentProof: paymentProof || existing.paymentProof,
+        paymentProof: paymentProofUrl || existing.paymentProof,
         paymentStatus: "PENDING"
       }
     })
@@ -392,11 +419,11 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
         registrationType,
         amountPaid,
         paymentMethod,
-        paymentProof: paymentProof || existing.paymentProof
+        paymentProof: paymentProofUrl || existing.paymentProof
       })
     ]
 
-    if (member.email && (paymentProof || paymentMethod === "TRANSFER")) {
+    if (member.email && (paymentProofUrl || paymentMethod === "TRANSFER")) {
       emailPromises.push(
         sendAttendeePendingProofEmail({
           firstName: member.firstName,
@@ -431,7 +458,7 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
       amountPaid,
       paymentStatus: paymentStatus,
       paymentMethod: paymentMethod,
-      paymentProof: paymentProof
+      paymentProof: paymentProofUrl
     }
   })
 
@@ -446,11 +473,11 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
       registrationType,
       amountPaid,
       paymentMethod,
-      paymentProof
+      paymentProof: paymentProofUrl
     })
   ]
 
-  if (member.email && (paymentProof || paymentMethod === "TRANSFER")) {
+  if (member.email && (paymentProofUrl || paymentMethod === "TRANSFER")) {
     emailPromises.push(
       sendAttendeePendingProofEmail({
         firstName: member.firstName,

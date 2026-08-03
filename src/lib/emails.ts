@@ -184,7 +184,6 @@ export async function sendEnrollmentSubmittedEmail(request: { firstName: string;
   return sendEmail({
     to: request.email,
     from: EMAIL_FROM_COBRANZAS,
-    bcc: [EMAIL_MAIN_INFO],
     subject,
     html,
     type: "WELCOME",
@@ -212,6 +211,7 @@ export async function sendNewEnrollmentAlertToBoard(request: { firstName: string
 
   return sendEmail({
     to,
+    from: EMAIL_FROM_COBRANZAS,
     subject,
     html: buildEmailLayout(content),
     type: "GENERAL",
@@ -281,6 +281,7 @@ export async function sendEventRegistrationAlertToBoard(
   for (const toEmail of recipients) {
     await sendEmail({
       to: toEmail,
+      from: EMAIL_FROM_COBRANZAS,
       subject,
       html: buildEmailLayout(content),
       type: "EVENT_INFO",
@@ -331,7 +332,6 @@ export async function sendEnrollmentApprovedEmail(
   return sendEmail({
     to: member.email,
     from: EMAIL_FROM_COBRANZAS,
-    bcc: [EMAIL_MAIN_INFO],
     subject,
     html: finalHtml,
     memberId: member.id,
@@ -381,7 +381,6 @@ export async function sendFeeReminderEmail(
   return sendEmail({
     to: member.email,
     from: EMAIL_FROM_COBRANZAS,
-    bcc: [EMAIL_MAIN_INFO],
     subject,
     html: body,
     memberId: member.id,
@@ -420,7 +419,6 @@ export async function sendSocioEnMoraEmail(
   return sendEmail({
     to: member.email,
     from: EMAIL_FROM_COBRANZAS,
-    bcc: [EMAIL_MAIN_INFO],
     subject,
     html: body,
     memberId: member.id,
@@ -481,7 +479,6 @@ export async function sendPaymentValidatedEmail(
   return sendEmail({
     to: member.email,
     from: EMAIL_FROM_COBRANZAS,
-    bcc: [EMAIL_MAIN_INFO],
     subject,
     html: body,
     memberId: member.id,
@@ -513,7 +510,6 @@ export async function sendFeePaymentPendingEmail(
   return sendEmail({
     to: member.email,
     from: EMAIL_FROM_COBRANZAS,
-    bcc: [EMAIL_MAIN_INFO],
     subject,
     html: buildEmailLayout(contentHtml),
     memberId: member.id,
@@ -697,7 +693,6 @@ export async function sendAttendeePendingProofEmail(registration: {
   return sendEmail({
     to: registration.email,
     from: EMAIL_FROM_COBRANZAS,
-    bcc: [EMAIL_MAIN_INFO],
     subject,
     html: buildEmailLayout(formattedContent),
     type: "EVENT_INFO",
@@ -732,7 +727,6 @@ export async function sendAttendeeRegistrationApprovedEmail(registration: {
   return sendEmail({
     to: registration.email,
     from: EMAIL_FROM_COBRANZAS,
-    bcc: [EMAIL_MAIN_INFO],
     subject,
     html: buildEmailLayout(formattedContent),
     type: "EVENT_INFO",
@@ -770,6 +764,7 @@ export async function sendAttendeeFreeEventConfirmationEmail(registration: {
 
   return sendEmail({
     to: registration.email,
+    from: EMAIL_FROM_COBRANZAS,
     subject,
     html: buildEmailLayout(contentHtml),
     type: "EVENT_INFO",
