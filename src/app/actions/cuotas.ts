@@ -122,7 +122,8 @@ export async function createPayment(memberId: string, formData: FormData) {
 
 export async function approvePendingFeePayment(feeId: string) {
   const session = await auth()
-  if (!session?.user || session.user.role !== "ADMIN") {
+  const role = session?.user?.role
+  if (!session?.user || (role !== "ADMIN" && role !== "BOARD" && role !== "SUPERADMIN")) {
     throw new Error("No autorizado")
   }
 
@@ -160,7 +161,8 @@ export async function approvePendingFeePayment(feeId: string) {
 
 export async function rejectPendingFeePayment(feeId: string) {
   const session = await auth()
-  if (!session?.user || session.user.role !== "ADMIN") {
+  const role = session?.user?.role
+  if (!session?.user || (role !== "ADMIN" && role !== "BOARD" && role !== "SUPERADMIN")) {
     throw new Error("No autorizado")
   }
 
