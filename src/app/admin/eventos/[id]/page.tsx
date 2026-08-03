@@ -6,6 +6,7 @@ import { RegistrationModal } from "../components/RegistrationModal"
 import { EventDetailsClient } from "./EventDetailsClient"
 import { DeleteEventButton } from "../components/DeleteEventButton"
 import { ApproveRegistrationButton } from "../components/ApproveRegistrationButton"
+import { DeleteRegistrationButton } from "../components/DeleteRegistrationButton"
 import { EventPreviewModal } from "../components/EventPreviewModal"
 import { PresenceButton } from "@/app/admin/components/PresenceButton"
 import { getEffectiveEventPrices } from "@/lib/event-utils"
@@ -273,13 +274,20 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                           />
                         </td>
                         <td className="px-6 py-4 text-center">
-                          <ApproveRegistrationButton
-                            registrationId={reg.id}
-                            eventId={event.id}
-                            amount={reg.amountPaid}
-                            paymentProof={reg.paymentProof}
-                            currentStatus={reg.paymentStatus}
-                          />
+                          <div className="flex items-center justify-center gap-2">
+                            <ApproveRegistrationButton
+                              registrationId={reg.id}
+                              eventId={event.id}
+                              amount={reg.amountPaid}
+                              paymentProof={reg.paymentProof}
+                              currentStatus={reg.paymentStatus}
+                            />
+                            <DeleteRegistrationButton
+                              registrationId={reg.id}
+                              eventId={event.id}
+                              attendeeName={`${reg.firstName} ${reg.lastName}`}
+                            />
+                          </div>
                         </td>
                         <td className="px-6 py-4 text-right">
                            <span className="text-[10px] text-zinc-500 font-bold">{new Date(reg.createdAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>
