@@ -3,6 +3,7 @@
 import { LogOut } from "lucide-react"
 import { AdminNav } from "./AdminNav"
 import { logout } from "@/app/actions/logout"
+import { OfficialLogo } from "@/components/OfficialLogo"
 
 interface User {
   email?: string | null
@@ -18,14 +19,9 @@ export function SidebarContent({ user, onNavigate }: SidebarContentProps) {
   return (
     <div className="flex flex-col gap-6 w-full">
       <div className="space-y-8">
-        <div className="hidden md:flex items-center gap-4 px-2">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500 flex items-center justify-center shadow-xl shadow-amber-900/40 shrink-0">
-            <span className="font-black text-2xl text-zinc-950">C</span>
-          </div>
-          <div className="flex flex-col">
-            <h1 className="font-black text-2xl tracking-tighter text-white m-0 uppercase italic leading-none whitespace-nowrap">Amigos del Tango</h1>
-            <p className="text-[10px] text-amber-500 uppercase font-black tracking-[0.2em] m-0">Admin Panel</p>
-          </div>
+        <div className="hidden md:flex flex-col items-start gap-2 px-2">
+          <OfficialLogo className="h-auto w-full max-w-[220px] rounded-sm" priority />
+          <p className="text-[10px] text-amber-500 uppercase font-black tracking-[0.2em] m-0">Panel administrativo</p>
         </div>
         
         <div onClick={onNavigate} className="w-full">

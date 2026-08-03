@@ -6,6 +6,7 @@ import { RegistrationModal } from "../components/RegistrationModal"
 import { EventDetailsClient } from "./EventDetailsClient"
 import { DeleteEventButton } from "../components/DeleteEventButton"
 import { ApproveRegistrationButton } from "../components/ApproveRegistrationButton"
+import { DeleteRegistrationButton } from "../components/DeleteRegistrationButton"
 import { EventPreviewModal } from "../components/EventPreviewModal"
 import { PresenceButton } from "@/app/admin/components/PresenceButton"
 import { getEffectiveEventPrices } from "@/lib/event-utils"
@@ -206,6 +207,16 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             </section>
           )}
 
+          {/* Banner de Comprobantes Pendientes */}
+          {event.registrations.some(r => r.paymentStatus === 'PENDING') && (
+            <div className="bg-gradient-to-r from-amber-950/70 via-zinc-900 to-amber-950/70 border border-amber-500/30 p-4 rounded-2xl flex items-center justify-between text-amber-300 animate-in fade-in duration-200">
+              <div className="flex items-center gap-2 text-xs font-bold">
+                <Tag size={18} className="text-amber-400 shrink-0" />
+                <span>Hay {event.registrations.filter(r => r.paymentStatus === 'PENDING').length} registración(es) / comprobante(s) pendiente(s) de validación por Tesorería.</span>
+              </div>
+            </div>
+          )}
+
           {/* List of Attendees */}
           <section className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden backdrop-blur-md">
             <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
@@ -262,7 +273,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                                  {reg.paymentStatus === 'PAID' ? <CheckCircle2 size={12} className="text-emerald-500" /> : <XCircle size={12} className="text-amber-500" />}
                                  <span className="text-xs font-bold text-white/80">${reg.amountPaid.toLocaleString()}</span>
                               </div>
-                              <span className="text-[9px] text-zinc-600 uppercase font-medium">{reg.paymentMethod || "Efectivo"}</span>
+                              {reg.paymentStatus === 'PENDING' ? (
+                                <span className="text-[9px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 max-w-fit">
+                                  ⏳ Pendiente de Validación
+                                </span>
+                              ) : (
+                                <span className="text-[9px] text-zinc-600 uppercase font-medium">{reg.paymentMethod || "Efectivo"}</span>
+                              )}
                            </div>
                         </td>
                         <td className="px-6 py-4 text-center">
@@ -273,13 +290,20 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                           />
                         </td>
                         <td className="px-6 py-4 text-center">
-                          <ApproveRegistrationButton
-                            registrationId={reg.id}
-                            eventId={event.id}
-                            amount={reg.amountPaid}
-                            paymentProof={reg.paymentProof}
-                            currentStatus={reg.paymentStatus}
-                          />
+                          <div className="flex items-center justify-center gap-2">
+                            <ApproveRegistrationButton
+                              registrationId={reg.id}
+                              eventId={event.id}
+                              amount={reg.amountPaid}
+                              paymentProof={reg.paymentProof}
+                              currentStatus={reg.paymentStatus}
+                            />
+                            <DeleteRegistrationButton
+                              registrationId={reg.id}
+                              eventId={event.id}
+                              attendeeName={`${reg.firstName} ${reg.lastName}`}
+                            />
+                          </div>
                         </td>
                         <td className="px-6 py-4 text-right">
                            <span className="text-[10px] text-zinc-500 font-bold">{new Date(reg.createdAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>

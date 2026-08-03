@@ -69,20 +69,19 @@ export async function submitEnrollmentRequest(formData: FormData) {
       }
     })
 
-    // 6. Enviar notificaciones por correo de forma asíncrona (sin bloquear respuesta)
-    // Confirmación al solicitante
-    sendEnrollmentSubmittedEmail({
-      firstName,
-      lastName,
-      email
-    }).catch(err => console.error("Error al enviar email de confirmación de solicitud:", err))
-
-    // Alerta al tesorero
-    sendNewEnrollmentAlertToBoard({
-      firstName,
-      lastName,
-      DNI: dni
-    }).catch(err => console.error("Error al enviar alerta de solicitud al tesorero:", err))
+    // 6. Enviar notificaciones por correo (await para asegurar entrega en entornos serverless/Vercel)
+    await Promise.allSettled([
+      sendEnrollmentSubmittedEmail({
+        firstName,
+        lastName,
+        email
+      }),
+      sendNewEnrollmentAlertToBoard({
+        firstName,
+        lastName,
+        DNI: dni
+      })
+    ]).catch(err => console.error("Error al enviar notificaciones de solicitud de inscripción:", err))
 
     return { success: true }
 
@@ -210,9 +209,9 @@ export async function approveEnrollmentRequest(requestId: string) {
       createdUser = user
     })
 
-    // Enviar email de bienvenida al nuevo socio de forma asíncrona (fuera de la transacción)
+    // Enviar email de bienvenida al nuevo socio (await para asegurar entrega en entornos serverless/Vercel)
     if (createdMember && createdUser) {
-      sendEnrollmentApprovedEmail(createdMember, createdUser, tempPassword)
+      await sendEnrollmentApprovedEmail(createdMember, createdUser, tempPassword)
         .catch(err => console.error("Error al enviar email de alta de socio:", err))
     }
 

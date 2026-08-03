@@ -1080,6 +1080,20 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
                      </div>
                    </div>
                  </div>
+
+                 <div className="space-y-2 pt-2 border-t border-cyan-500/10">
+                   <span className="text-[10px] font-bold text-zinc-300 uppercase">Clase Suelta</span>
+                   <div className="grid grid-cols-2 gap-2">
+                     <div>
+                       <label className="text-[9px] text-zinc-400 font-bold uppercase">Socio ($)</label>
+                       <input name="priceSocioClassLoose" type="number" defaultValue={initialData?.priceSocioClassLoose ?? 11000} placeholder="11000" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-cyan-400" />
+                     </div>
+                     <div>
+                       <label className="text-[9px] text-zinc-400 font-bold uppercase">No Socio ($)</label>
+                       <input name="priceNonSocioClassLoose" type="number" defaultValue={initialData?.priceNonSocioClassLoose ?? 17000} placeholder="17000" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-cyan-400" />
+                     </div>
+                   </div>
+                 </div>
               </div>
             )}
 

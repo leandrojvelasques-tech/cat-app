@@ -5,6 +5,14 @@ import { Calendar, X, Ticket, CheckCircle2, Upload, Loader2, DollarSign, ShieldA
 import { registerPublicAttendee } from "@/app/actions/registraciones"
 import { getEffectiveEventPrices } from "@/lib/event-utils"
 
+interface EventClassData {
+  id: string
+  title: string
+  classDate?: Date | string | null
+  startTime?: string | null
+  endTime?: string | null
+}
+
 interface EventData {
   id: string
   title: string
@@ -27,6 +35,7 @@ interface EventData {
   priceSocioComboEarlyBird?: number | null
   priceNonSocioComboEarlyBird?: number | null
   isFree?: boolean
+  classes?: EventClassData[]
 }
 
 interface PublicEventCheckoutModalProps {
@@ -51,6 +60,7 @@ export function PublicEventCheckoutModal({ event }: PublicEventCheckoutModalProp
   const [includeMilonga, setIncludeMilonga] = useState(event.hasMilonga ?? true)
   const [includeCombo, setIncludeCombo] = useState(event.hasClasses ?? false)
   const [includeLooseClass, setIncludeLooseClass] = useState(false)
+  const [selectedClassId, setSelectedClassId] = useState<string>(event.classes?.[0]?.id || "")
 
   // Form Fields
   const [firstName, setFirstName] = useState("")
@@ -76,8 +86,16 @@ export function PublicEventCheckoutModal({ event }: PublicEventCheckoutModalProp
 
   const getSelectedTypeString = () => {
     const types: string[] = []
-    if (includeCombo) types.push(event.comboTitle || "COMBO_CLASES")
-    else if (includeLooseClass) types.push("CLASE_SUELTA")
+    if (includeCombo) {
+      types.push(event.comboTitle || "COMBO_CLASES")
+    } else if (includeLooseClass) {
+      const selectedCls = event.classes?.find(c => c.id === selectedClassId) || event.classes?.[0]
+      if (selectedCls?.title) {
+        types.push(`CLASE_SUELTA (${selectedCls.title})`)
+      } else {
+        types.push("CLASE_SUELTA")
+      }
+    }
     if (includeMilonga) types.push("MILONGA")
     return types.join(" + ") || "ENTRADA_GENERAL"
   }
@@ -263,27 +281,65 @@ export function PublicEventCheckoutModal({ event }: PublicEventCheckoutModalProp
 
                             {/* Option Clase Suelta */}
                             {event.hasClasses && !includeCombo && (
-                              <label
-                                className={`p-4 rounded-2xl border flex items-center justify-between transition-all cursor-pointer ${
-                                  includeLooseClass
-                                    ? "bg-cyan-500/10 border-cyan-500 text-white shadow-lg"
-                                    : "bg-black/30 border-white/10 text-zinc-400 hover:border-white/20"
-                                }`}
-                              >
-                                <div className="flex items-center gap-3">
-                                  <input
-                                    type="checkbox"
-                                    checked={includeLooseClass}
-                                    onChange={(e) => setIncludeLooseClass(e.target.checked)}
-                                    className="accent-cyan-500 w-4 h-4"
-                                  />
-                                  <div>
-                                    <p className="text-xs font-bold uppercase text-white">Clase Suelta (Individual)</p>
-                                    <p className="text-[10px] text-zinc-400">Valor por una clase a elección</p>
+                              <div className="space-y-2">
+                                <label
+                                  className={`p-4 rounded-2xl border flex items-center justify-between transition-all cursor-pointer ${
+                                    includeLooseClass
+                                      ? "bg-cyan-500/10 border-cyan-500 text-white shadow-lg"
+                                      : "bg-black/30 border-white/10 text-zinc-400 hover:border-white/20"
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <input
+                                      type="checkbox"
+                                      checked={includeLooseClass}
+                                      onChange={(e) => setIncludeLooseClass(e.target.checked)}
+                                      className="accent-cyan-500 w-4 h-4"
+                                    />
+                                    <div>
+                                      <p className="text-xs font-bold uppercase text-white">Clase Suelta (Individual)</p>
+                                      <p className="text-[10px] text-zinc-400">Valor por una clase a elección</p>
+                                    </div>
                                   </div>
-                                </div>
-                                <span className="font-black text-sm text-cyan-400">${looseClassPrice.toLocaleString()}</span>
-                              </label>
+                                  <span className="font-black text-sm text-cyan-400">${looseClassPrice.toLocaleString()}</span>
+                                </label>
+
+                                {includeLooseClass && event.classes && event.classes.length > 0 && (
+                                  <div className="pl-4 border-l-2 border-cyan-500/40 space-y-2 pt-1 animate-in fade-in duration-200">
+                                    <label className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block">
+                                      Elegí cuál clase vas a realizar:
+                                    </label>
+                                    <div className="space-y-1.5">
+                                      {event.classes.map((cls, idx) => (
+                                        <label
+                                          key={cls.id || idx}
+                                          className={`flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
+                                            (selectedClassId === cls.id || (!selectedClassId && idx === 0))
+                                              ? "bg-cyan-500/20 border-cyan-400 text-white font-bold"
+                                              : "bg-black/40 border-white/10 text-zinc-400 hover:border-white/20"
+                                          }`}
+                                        >
+                                          <div className="flex items-center gap-2">
+                                            <input
+                                              type="radio"
+                                              name="publicSelectedClass"
+                                              checked={selectedClassId === cls.id || (!selectedClassId && idx === 0)}
+                                              onChange={() => setSelectedClassId(cls.id)}
+                                              className="accent-cyan-400"
+                                            />
+                                            <span>{cls.title}</span>
+                                          </div>
+                                          {(cls.startTime || cls.classDate) && (
+                                            <span className="text-[9px] text-cyan-300/80 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+                                              {cls.startTime ? `${cls.startTime} hs` : ''}
+                                            </span>
+                                          )}
+                                        </label>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             )}
 
                             {/* Option Entrada Milonga */}

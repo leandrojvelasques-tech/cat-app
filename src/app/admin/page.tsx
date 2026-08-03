@@ -1,9 +1,9 @@
 import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import Link from "next/link"
-import { Users, TrendingUp, CreditCard, AlertTriangle, Activity, UserPlus, FileText, ArrowRight, UserCheck, AlertCircle, GraduationCap } from "lucide-react"
+import { ArrowRight, GraduationCap, CreditCard } from "lucide-react"
 import { calculateMemberStatus, CalculatedStatus } from "@/lib/member-utils"
-import { ApproveFeePaymentButton } from "./cuotas/ApproveFeePaymentButton"
+import { PendingApprovalsSection } from "./components/PendingApprovalsSection"
 
 export default async function AdminDashboard() {
   const session = await auth()
@@ -58,7 +58,7 @@ export default async function AdminDashboard() {
     }
   } as any)
 
-  // Group by our new calculated status
+  // Group by calculated status
   const stats: Record<CalculatedStatus, number> = {
     'AL DIA': 0,
     'EN MORA': 0,
@@ -80,45 +80,93 @@ export default async function AdminDashboard() {
   const sociosSuspendidos = stats['SUSPENDIDO']
   const sociosInactivos = stats['INACTIVO']
   const sociosBaja = stats['BAJA']
-  
-  const cuotaSetting = await db.setting.findUnique({ where: { key: 'cuota_mensual' } })
-  const cuotaMensual = parseFloat(cuotaSetting?.value || "6000")
 
-  // 1. Revenue Last 12 Months (Mixed Real + Fake for demo)
-  const revenueData = []
-  const currentMonthDate = new Date()
-  for (let i = 11; i >= 0; i--) {
-    const d = new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() - i, 1)
-    const monthLabel = d.toLocaleString('es-ES', { month: 'short' })
-    
-    // Try to get real data for this month
-    const realRev = await db.membershipFee.aggregate({
-      where: { 
-        periodMonth: d.getMonth() + 1,
-        periodYear: d.getFullYear()
+  // 1. GESTIONES PENDIENTES DE APROBACIÓN (Centralizadas)
+  const pendingEnrollments = await db.enrollmentRequest.findMany({
+    where: { status: "PENDING" },
+    orderBy: { createdAt: "desc" }
+  })
+
+  const pendingFeePayments = await db.membershipFee.findMany({
+    where: { paymentStatus: "PENDING" },
+    include: { member: true },
+    orderBy: { createdAt: "desc" }
+  })
+
+  const pendingEventRegistrations = await db.eventRegistration.findMany({
+    where: { paymentStatus: "PENDING" },
+    include: { event: true },
+    orderBy: { createdAt: "desc" }
+  })
+
+  // 2. SERIES HISTÓRICAS (ESTRICTAMENTE DESDE JULIO DE 2026 EN ADELANTE)
+  const startYear = 2026
+  const startMonth = 6 // 6 = Julio (0-indexed)
+
+  const revenueData: { month: string; total: number }[] = []
+  const activeSeries: { month: string; active: number }[] = []
+
+  let iterDate = new Date(startYear, startMonth, 1)
+  const endDate = new Date(now.getFullYear(), now.getMonth(), 1)
+  if (endDate < iterDate) {
+    endDate.setTime(iterDate.getTime())
+  }
+
+  while (iterDate <= endDate) {
+    const y = iterDate.getFullYear()
+    const m = iterDate.getMonth()
+    const monthNum = m + 1
+    const monthLabel = iterDate.toLocaleString('es-ES', { month: 'short' })
+    const label = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1).replace('.', '')
+
+    const startOfMonth = new Date(y, m, 1)
+    const endOfMonth = new Date(y, m + 1, 0, 23, 59, 59, 999)
+
+    // Recaudación cuotas
+    const feeRev = await db.membershipFee.aggregate({
+      where: {
+        periodYear: y,
+        periodMonth: monthNum,
+        paymentStatus: "PAID"
       },
       _sum: { amountPaid: true }
     })
-    
-    // Default to some plausible fake data if real is 0 or less than 1000
-    let total = realRev._sum.amountPaid || 0
-    if (total < 1000) {
-      // Fake amount between 85,000 and 145,000
-      total = Math.floor(Math.random() * (145000 - 85000 + 1)) + 85000
-    }
-    
-    revenueData.push({ month: monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1).replace('.', ''), total })
-  }
-  const maxRevenue = Math.max(...revenueData.map(d => d.total as number), 1)
 
-  // 2. Member Variation (Simulated between 20 and 60)
-  const activeSeries = revenueData.map(r => ({
-    month: r.month,
-    active: Math.floor(Math.random() * (60 - 20 + 1)) + 20
-  }))
+    // Recaudación eventos en ese mes
+    const eventRev = await db.eventRegistration.aggregate({
+      where: {
+        paymentStatus: "PAID",
+        createdAt: { gte: startOfMonth, lte: endOfMonth }
+      },
+      _sum: { amountPaid: true }
+    })
+
+    // Recaudación buffet en ese mes
+    const buffetRev = await db.buffetSale.aggregate({
+      where: {
+        createdAt: { gte: startOfMonth, lte: endOfMonth }
+      },
+      _sum: { amountPaid: true }
+    })
+
+    const monthTotal = (feeRev._sum.amountPaid || 0) + (eventRev._sum.amountPaid || 0) + (buffetRev._sum.amountPaid || 0)
+    revenueData.push({ month: label, total: monthTotal })
+
+    // Socios activos al cierre del mes
+    const activeMembersInMonth = allMembers.filter(m => {
+      const memberJoin = new Date(m.createdAt || m.joinDate)
+      return memberJoin <= endOfMonth && (m.status === "ACTIVE" || m.status === "AL DIA" || m.status === "EN MORA")
+    }).length
+
+    activeSeries.push({ month: label, active: activeMembersInMonth })
+
+    iterDate.setMonth(iterDate.getMonth() + 1)
+  }
+
+  const maxRevenue = Math.max(...revenueData.map(d => d.total as number), 1000)
   const maxActive = Math.max(...activeSeries.map(s => s.active), 1)
 
-  // 3. Upcoming Events Registrations
+  // 3. Próximos Eventos
   const upcomingEvents = await db.event.findMany({
     where: { 
       startDate: { gte: new Date(new Date().setHours(0,0,0,0)) },
@@ -129,7 +177,7 @@ export default async function AdminDashboard() {
     take: 4
   })
 
-  // 4. Milonga Attendance (Previous finalized events)
+  // 4. Milonga Attendance History
   const milongas = await db.event.findMany({
     where: { type: { in: ['MILONGA', 'BOTH'] }, status: 'FINALIZADO' },
     include: { _count: { select: { registrations: true } } },
@@ -150,33 +198,13 @@ export default async function AdminDashboard() {
   
   const escuelita3MonthsAgo = new Date()
   escuelita3MonthsAgo.setMonth(now.getMonth() - 2)
-  escuelita3MonthsAgo.setDate(1) // from 1st day of month 3 months ago
+  escuelita3MonthsAgo.setDate(1)
   const recentEscuelitaClasses = await db.escuelitaClass.findMany({
     where: { date: { gte: escuelita3MonthsAgo } },
     include: { _count: { select: { attendances: true } } },
     orderBy: { date: 'asc' }
   })
   const maxEscuelita = Math.max(...recentEscuelitaClasses.map(c => c._count.attendances), 1, 10)
-
-  // 6. Pending Event Approvals
-  const pendingEventRegistrations = await db.eventRegistration.findMany({
-    where: {
-      paymentStatus: "PENDING"
-    },
-    include: { event: true },
-    orderBy: { createdAt: 'desc' },
-    take: 5
-  })
-
-  // 6b. Pending Fee Payment Approvals
-  const pendingFeePayments = await db.membershipFee.findMany({
-    where: {
-      paymentStatus: "PENDING"
-    },
-    include: { member: true },
-    orderBy: { createdAt: 'desc' },
-    take: 10
-  })
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
@@ -191,79 +219,14 @@ export default async function AdminDashboard() {
         </div>
       </div>
 
-      {/* Alert Banner: Fee Payment Approvals */}
-      {pendingFeePayments.length > 0 && (
-        <div className="bg-amber-500/10 border border-amber-500/30 p-6 rounded-3xl backdrop-blur-md space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="w-3 h-3 rounded-full bg-amber-500 animate-ping shrink-0" />
-              <h3 className="text-sm font-black text-amber-400 uppercase tracking-wider">
-                Se requiere aprobación — Cuotas Sociales ({pendingFeePayments.length} pendiente(s))
-              </h3>
-            </div>
-            <Link href="/admin/cuotas" className="text-xs font-bold text-amber-400 hover:underline">
-              Ir a Cobranzas →
-            </Link>
-          </div>
-          <p className="text-xs text-zinc-300">
-            Socios registraron comprobantes de pago de cuotas desde el portal. Revisá y aprobá para acreditar en caja y emitir el recibo digital:
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-            {pendingFeePayments.map(fee => (
-              <div key={fee.id} className="bg-black/40 border border-white/5 p-3 rounded-2xl flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-white">{fee.member.lastName}, {fee.member.firstName} (Socio N° #{fee.member.memberNumber})</p>
-                  <p className="text-[10px] text-amber-500 font-medium truncate">Cuota {fee.periodMonth}/{fee.periodYear} — ${fee.amountPaid.toLocaleString("es-AR")}</p>
-                </div>
-                <ApproveFeePaymentButton
-                  feeId={fee.id}
-                  amount={fee.amountPaid}
-                  notes={fee.notes}
-                  currentStatus={fee.paymentStatus}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* SECCIÓN CENTRALIZADA DE GESTIONES PENDIENTES DE APROBACIÓN */}
+      <PendingApprovalsSection
+        enrollmentRequests={pendingEnrollments}
+        feePayments={pendingFeePayments}
+        eventRegistrations={pendingEventRegistrations}
+      />
 
-      {/* Alert Banner: Event Registrations Requiring Approval */}
-      {pendingEventRegistrations.length > 0 && (
-        <div className="bg-amber-500/10 border border-amber-500/30 p-6 rounded-3xl backdrop-blur-md space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="w-3 h-3 rounded-full bg-amber-500 animate-ping shrink-0" />
-              <h3 className="text-sm font-black text-amber-400 uppercase tracking-wider">
-                Se requiere aprobación — Eventos ({pendingEventRegistrations.length} pendiente(s))
-              </h3>
-            </div>
-            <Link href="/admin/eventos" className="text-xs font-bold text-amber-400 hover:underline">
-              Ver todos los eventos →
-            </Link>
-          </div>
-          <p className="text-xs text-zinc-300">
-            Se registraron inscripciones con comprobante de pago o pendientes de confirmación en los eventos. Revisá y aprobá los pagos desde el panel:
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-            {pendingEventRegistrations.map(reg => (
-              <div key={reg.id} className="bg-black/40 border border-white/5 p-3 rounded-2xl flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-white">{reg.firstName} {reg.lastName} ({reg.registrationType})</p>
-                  <p className="text-[10px] text-amber-500 font-medium truncate">Evento: {reg.event.title}</p>
-                </div>
-                <Link
-                  href={`/admin/eventos/${reg.eventId}`}
-                  className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-zinc-950 text-[10px] font-black uppercase rounded-lg transition-all"
-                >
-                  Aprobar
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Main Stats */}
+      {/* Tarjetas de Métricas Principales */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md relative overflow-hidden group shadow-xl">
            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-none mb-2">Socios Registrados</p>
@@ -292,13 +255,15 @@ export default async function AdminDashboard() {
         </div>
       </div>
 
+      {/* GRÁFICOS INICIANDO ESTRICTAMENTE DESDE JULIO 2026 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-         {/* 1. Recaudación Chart */}
+         {/* 1. Recaudación Histórica (Julio 2026 en adelante) */}
          <div className="bg-white/5 border border-white/10 rounded-[40px] p-8 backdrop-blur-md shadow-2xl">
-            <h3 className="text-lg font-bold text-white mb-8 flex items-center gap-2">
+            <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
               <div className="w-1 h-6 bg-amber-500 rounded-full"></div>
-              Recaudación Histórica (Últimos 12 meses)
+              Recaudación Histórica
             </h3>
+            <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest mb-6">Desde Julio 2026 en adelante</p>
             
             <div className="flex h-64 gap-1">
                {/* Y-Axis Labels */}
@@ -308,18 +273,18 @@ export default async function AdminDashboard() {
                   <span>$0</span>
                </div>
                
-               <div className="flex-1 flex items-end justify-between gap-1 md:gap-2 h-52 border-l border-b border-white/5 pb-0 pl-2">
+               <div className="flex-1 flex items-end justify-between gap-2 h-52 border-l border-b border-white/5 pb-0 pl-2">
                   {revenueData.map((d, i) => {
                     const height = ((d.total as number) / maxRevenue) * 90
                     return (
                       <div key={i} className="flex-1 flex flex-col items-center gap-2 group/bar h-full justify-end relative">
                          <div 
-                            className="bg-amber-500/20 group-hover/bar:bg-amber-500 transition-all duration-300 rounded-t-lg w-full min-h-[2px]"
-                            style={{ height: `${height || 2}%` }}
+                            className="bg-amber-500/30 group-hover/bar:bg-amber-500 transition-all duration-300 rounded-t-lg w-full min-h-[4px]"
+                            style={{ height: `${height || 4}%` }}
                          ></div>
                          {/* Hover info */}
-                         <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-black px-2 py-1 rounded-md opacity-0 group-hover/bar:opacity-100 transition-opacity z-20 pointer-events-none shadow-xl">
-                            ${(d.total as number).toLocaleString()}
+                         <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-black px-2 py-1 rounded-md opacity-0 group-hover/bar:opacity-100 transition-opacity z-20 pointer-events-none shadow-xl whitespace-nowrap">
+                            ${(d.total as number).toLocaleString("es-AR")}
                          </div>
                       </div>
                     )
@@ -327,16 +292,17 @@ export default async function AdminDashboard() {
                </div>
             </div>
             <div className="flex justify-between pl-8 pr-2 mt-4">
-               {revenueData.map((d, i) => <span key={i} className="text-[10px] text-zinc-600 font-mono italic">{d.month}</span>)}
+               {revenueData.map((d, i) => <span key={i} className="text-[10px] text-zinc-400 font-mono font-bold uppercase">{d.month}</span>)}
             </div>
          </div>
 
-         {/* 2. Variación de Socios Chart */}
+         {/* 2. Socios Activos (Julio 2026 en adelante) */}
          <div className="bg-white/5 border border-white/10 rounded-[40px] p-8 backdrop-blur-md shadow-2xl">
-            <h3 className="text-lg font-bold text-white mb-8 flex items-center gap-2">
+            <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
               <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
-              Socios Activos (Nuevos/Mes)
+              Socios Activos
             </h3>
+            <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest mb-6">Desde Julio 2026 en adelante</p>
             
             <div className="flex h-64 gap-1">
                {/* Y-Axis */}
@@ -346,16 +312,16 @@ export default async function AdminDashboard() {
                   <span>0</span>
                </div>
                
-               <div className="flex-1 flex items-end justify-between gap-1 md:gap-2 h-52 border-l border-b border-white/5 pb-0 pl-2">
+               <div className="flex-1 flex items-end justify-between gap-2 h-52 border-l border-b border-white/5 pb-0 pl-2">
                   {activeSeries.map((d, i) => {
                     const height = (d.active / maxActive) * 90
                     return (
                       <div key={i} className="flex-1 flex flex-col items-center gap-2 group/bar h-full justify-end relative">
                          <div 
-                            className="bg-blue-500/20 group-hover/bar:bg-blue-500 transition-all duration-300 rounded-t-lg w-full min-h-[2px]"
-                            style={{ height: `${height || 2}%` }}
+                            className="bg-blue-500/30 group-hover/bar:bg-blue-500 transition-all duration-300 rounded-t-lg w-full min-h-[4px]"
+                            style={{ height: `${height || 4}%` }}
                          ></div>
-                         <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-[10px] font-black px-2 py-1 rounded-md opacity-0 group-hover/bar:opacity-100 transition-opacity z-20 pointer-events-none shadow-xl">
+                         <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-[10px] font-black px-2 py-1 rounded-md opacity-0 group-hover/bar:opacity-100 transition-opacity z-20 pointer-events-none shadow-xl whitespace-nowrap">
                             {d.active} socios
                          </div>
                       </div>
@@ -364,7 +330,7 @@ export default async function AdminDashboard() {
                </div>
             </div>
             <div className="flex justify-between pl-10 pr-2 mt-4">
-               {activeSeries.map((d, i) => <span key={i} className="text-[10px] text-zinc-600 font-mono italic">{d.month}</span>)}
+               {activeSeries.map((d, i) => <span key={i} className="text-[10px] text-zinc-400 font-mono font-bold uppercase">{d.month}</span>)}
             </div>
          </div>
       </div>
@@ -512,4 +478,3 @@ export default async function AdminDashboard() {
     </div>
   )
 }
-

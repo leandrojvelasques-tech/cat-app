@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { SidebarContent } from "./SidebarContent"
 import { MobileMenu } from "./MobileMenu"
 import { CreditCard } from "lucide-react"
+import { OfficialLogo } from "@/components/OfficialLogo"
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const session = await auth()
@@ -34,13 +35,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         {/* Topbar Mobile */}
         <header className="md:hidden flex items-center justify-between p-3 px-4 border-b border-white/10 bg-zinc-900 backdrop-blur-md sticky top-0 z-10 shrink-0 shadow-lg shadow-black/20">
           <div className="flex items-center gap-3">
-             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-600 to-red-800 flex items-center justify-center shadow-lg shadow-red-900/40">
-                <span className="font-bold text-sm">C</span>
-             </div>
-             <div className="flex flex-col">
-                <span className="font-bold text-xs tracking-tight text-white/90 leading-tight">CAT Admin</span>
-                <span className="text-[9px] text-zinc-500 uppercase font-black tracking-widest leading-none">Club Amigos</span>
-             </div>
+             <OfficialLogo className="h-8 w-auto rounded-sm" priority />
           </div>
           <div className="flex items-center gap-3">
              <Link 

@@ -35,7 +35,7 @@ export function ApproveRegistrationButton({
     })
   }
 
-  const isPdf = paymentProof?.startsWith("data:application/pdf")
+  const isPdf = paymentProof?.startsWith("data:application/pdf") || paymentProof?.toLowerCase().endsWith(".pdf") || paymentProof?.toLowerCase().includes(".pdf")
 
   return (
     <>
