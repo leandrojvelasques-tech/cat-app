@@ -684,27 +684,22 @@ export async function sendAttendeePendingProofEmail(registration: {
   amountPaid: number
 }) {
   const subject = `Recibimos tu solicitud de inscripción — ${registration.eventTitle}`
-  const contentHtml = `
-    <h2 style="color: #A6702E; margin-top: 0;">¡Hola ${registration.firstName}!</h2>
-    <p>Confirmamos que hemos recibido tu solicitud de inscripción y el comprobante de pago para el evento <strong>${registration.eventTitle}</strong>.</p>
-    
-    <div style="background-color: #fafafa; border: 1px solid #e4e4e7; border-left: 4px solid #F2A81D; padding: 16px 20px; border-radius: 12px; margin: 20px 0;">
-      <p style="margin: 4px 0;"><strong>Evento:</strong> ${registration.eventTitle}</p>
-      <p style="margin: 4px 0;"><strong>Opción:</strong> ${registration.registrationType}</p>
-      <p style="margin: 4px 0;"><strong>Monto Registrado:</strong> $${registration.amountPaid.toLocaleString("es-AR")}</p>
-      <p style="margin: 4px 0; color: #d97706; font-weight: bold;"><strong>Estado:</strong> En proceso de verificación por Tesorería</p>
-    </div>
+  const setting = await db.setting.findUnique({ where: { key: "msg_pago_pendiente_evento" } })
+  const rawTemplate = setting?.value || `¡Hola {nombre}!\n\nConfirmamos que hemos recibido tu solicitud de inscripción y el comprobante de pago para el evento "{evento}".\n\nOpción: {opcion}\nMonto registrado: \${monto}\nEstado: En proceso de verificación por Tesorería\n\nNuestra área de Tesorería verificará la información a la brevedad. Una vez aprobada tu transferencia, recibirás la confirmación definitiva de tu lugar.`
 
-    <p>Nuestra área de Tesorería verificará la información a la brevedad. Una vez aprobada tu transferencia, recibirás un nuevo correo electrónico con la confirmación definitiva de tu lugar.</p>
-    <p>¡Gracias por acompañarnos!</p>
-  `
+  const formattedContent = processTemplateText(rawTemplate, {
+    nombre: registration.firstName,
+    evento: registration.eventTitle,
+    opcion: registration.registrationType,
+    monto: registration.amountPaid.toLocaleString("es-AR")
+  })
 
   return sendEmail({
     to: registration.email,
     from: EMAIL_FROM_COBRANZAS,
     bcc: [EMAIL_MAIN_INFO],
     subject,
-    html: buildEmailLayout(contentHtml),
+    html: buildEmailLayout(formattedContent),
     type: "EVENT_INFO",
   })
 }
@@ -722,29 +717,24 @@ export async function sendAttendeeRegistrationApprovedEmail(registration: {
   const subject = `¡Inscripción Confirmada! — ${registration.eventTitle}`
   const dateStr = registration.eventDate ? new Date(registration.eventDate).toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" }) : ""
 
-  const contentHtml = `
-    <h2 style="color: #10b981; margin-top: 0;">¡Tu pago ha sido verificado! 🎉</h2>
-    <p>Estimado/a <strong>${registration.firstName}</strong>,</p>
-    <p>Nos alegra informarte que hemos acreditado tu pago y tu inscripción para el evento <strong>${registration.eventTitle}</strong> ha sido <strong>APROBADA EXITOSAMENTE</strong>.</p>
-    
-    <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; border-left: 4px solid #10b981; padding: 16px 20px; border-radius: 12px; margin: 20px 0;">
-      <p style="margin: 4px 0;"><strong>Evento:</strong> ${registration.eventTitle}</p>
-      ${dateStr ? `<p style="margin: 4px 0;"><strong>Fecha:</strong> ${dateStr}</p>` : ""}
-      ${registration.location ? `<p style="margin: 4px 0;"><strong>Lugar:</strong> ${registration.location}</p>` : ""}
-      <p style="margin: 4px 0;"><strong>Entrada/Opción:</strong> ${registration.registrationType}</p>
-      <p style="margin: 4px 0;"><strong>Monto Acreditado:</strong> $${registration.amountPaid.toLocaleString("es-AR")}</p>
-      <p style="margin: 4px 0; color: #047857; font-weight: bold;"><strong>Estado:</strong> COMPROBANTE APROBADO ✓</p>
-    </div>
+  const setting = await db.setting.findUnique({ where: { key: "msg_pago_confirmado_evento" } })
+  const rawTemplate = setting?.value || `¡Hola {nombre}!\n\nNos alegra informarte que hemos verificado tu pago y tu inscripción para el evento "{evento}" ha sido APROBADA EXITOSAMENTE. 🎉\n\nOpción: {opcion}\nMonto acreditado: \${monto}\nFecha: {fecha}\nLugar: {lugar}\n\n¡Te esperamos en la pista!`
 
-    <p>Te esperamos en la pista para disfrutar de este gran evento. Guardá este correo como comprobante de tu entrada.</p>
-  `
+  const formattedContent = processTemplateText(rawTemplate, {
+    nombre: registration.firstName,
+    evento: registration.eventTitle,
+    opcion: registration.registrationType,
+    monto: registration.amountPaid.toLocaleString("es-AR"),
+    fecha: dateStr,
+    lugar: registration.location || "Sede CAT"
+  })
 
   return sendEmail({
     to: registration.email,
     from: EMAIL_FROM_COBRANZAS,
     bcc: [EMAIL_MAIN_INFO],
     subject,
-    html: buildEmailLayout(contentHtml),
+    html: buildEmailLayout(formattedContent),
     type: "EVENT_INFO",
   })
 }

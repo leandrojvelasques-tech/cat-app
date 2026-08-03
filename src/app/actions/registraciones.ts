@@ -259,14 +259,16 @@ export async function updatePaymentStatus(regId: string, eventId: string, status
   const updatedReg = await db.eventRegistration.update({
     where: { id: regId },
     data: { paymentStatus: status, amountPaid: amount },
-    include: { event: true }
+    include: { event: true, member: true }
   })
 
-  // Si el estado pasa a "PAID", enviar correo de confirmación de aprobación al asistente
-  if (status === "PAID" && updatedReg.email) {
+  const targetEmail = updatedReg.email || updatedReg.member?.email
+
+  // Si el estado pasa a "PAID", enviar correo de confirmación de aprobación al asistente desde cobranzas
+  if (status === "PAID" && targetEmail) {
     await sendAttendeeRegistrationApprovedEmail({
       firstName: updatedReg.firstName,
-      email: updatedReg.email,
+      email: targetEmail,
       eventTitle: updatedReg.event.title,
       registrationType: updatedReg.registrationType,
       amountPaid: amount,

@@ -197,7 +197,8 @@ export default async function SettingsPage() {
   const msgVencida = await getSetting("msg_vencida", "Estimado socio, su cuota registra una demora. Le agradeceríamos regularizar su situación para seguir apoyando al Centro.")
   
   const msgPagoCuota = await getSetting("msg_pago_confirmado_cuota", "¡Gracias por su pago! Su comprobante ha sido registrado. Estado de cuenta: {estado}.")
-  const msgPagoEvento = await getSetting("msg_pago_confirmado_evento", "¡Gracias por acompañarnos! Confirmamos la recepción de su pago para el evento: {evento}.")
+  const msgPagoPendienteEvento = await getSetting("msg_pago_pendiente_evento", "¡Hola {nombre}!\n\nConfirmamos que hemos recibido tu solicitud de inscripción y el comprobante de pago para el evento \"{evento}\".\n\nOpción: {opcion}\nMonto registrado: ${monto}\nEstado: En proceso de verificación por Tesorería\n\nNuestra área de Tesorería verificará la información a la brevedad. Una vez aprobada tu transferencia, recibirás la confirmación definitiva de tu lugar.")
+  const msgPagoEvento = await getSetting("msg_pago_confirmado_evento", "¡Hola {nombre}!\n\nNos alegra informarte que hemos verificado tu pago y tu inscripción para el evento \"{evento}\" ha sido APROBADA EXITOSAMENTE. 🎉\n\nOpción: {opcion}\nMonto acreditado: ${monto}\nFecha: {fecha}\nLugar: {lugar}\n\n¡Te esperamos en la pista!")
   const msgBienvenida = await getSetting("msg_bienvenida", "¡Bienvenido/a {nombre} al Centro Amigos del Tango! 💃\n\n📌 Tu número de socio es: #{socio}\n\nUsuario de acceso: {username}\nClave temporal: {password}\n\n¡Nos vemos pronto en la pista!")
   const msgSolicitudInscripcion = await getSetting("msg_solicitud_inscripcion", "¡Hola {nombre}!\n\nAgradecemos tu interés en formar parte del Centro Amigos del Tango.\n\nQueremos confirmarte que hemos recibido tu solicitud de inscripción y el comprobante de pago de tu primera cuota social.\n\nNuestra área de Tesorería verificará la información a la brevedad. Una vez aprobada tu alta, recibirás un nuevo correo electrónico con tu número de socio asignado y tus datos de acceso al Portal de Socios.\n\n¡Esperamos vernos pronto en la pista!")
   const msgMora = await getSetting("msg_mora", "Lamentamos informarle que su cuenta registra una deuda de 3 o más períodos impagos y sus beneficios han quedado suspendidos.")
@@ -590,13 +591,24 @@ export default async function SettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs text-zinc-500 uppercase tracking-wider">Pago Confirmado (Evento)</label>
+                <label className="text-xs text-zinc-500 uppercase tracking-wider">Comprobante de Evento Recibido (Pendiente de Verificación)</label>
+                <textarea 
+                  name="msg_pago_pendiente_evento"
+                  defaultValue={msgPagoPendienteEvento}
+                  rows={4}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 focus:border-amber-500/50 outline-none text-sm"
+                />
+                <p className="text-[9px] text-zinc-600 uppercase font-black italic">Variables: {'{nombre}'}, {'{evento}'}, {'{opcion}'}, {'{monto}'}</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-zinc-500 uppercase tracking-wider">Inscripción a Evento Aprobada (Pago Verificado)</label>
                 <textarea 
                   name="msg_pago_confirmado_evento"
                   defaultValue={msgPagoEvento}
-                  rows={3}
+                  rows={4}
                   className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 focus:border-amber-500/50 outline-none text-sm"
                 />
+                <p className="text-[9px] text-zinc-600 uppercase font-black italic">Variables: {'{nombre}'}, {'{evento}'}, {'{opcion}'}, {'{monto}'}, {'{fecha}'}, {'{lugar}'}</p>
               </div>
               <div className="space-y-2">
                 <label className="text-xs text-zinc-500 uppercase tracking-wider">Notificación de Morosidad (3 Impagos)</label>

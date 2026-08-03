@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
-import { sendEventRegistrationAlertToBoard } from "@/lib/emails"
+import { sendEventRegistrationAlertToBoard, sendAttendeePendingProofEmail } from "@/lib/emails"
 import { getEffectiveEventPrices } from "@/lib/event-utils"
 
 async function parseBannerField(formData: FormData): Promise<string | null> {
@@ -367,7 +367,7 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
     }
   })
 
-  const paymentStatus = paymentProof ? "PAID" : "PENDING"
+  const paymentStatus = "PENDING"
 
   if (existing) {
     await db.eventRegistration.update({
@@ -377,29 +377,45 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
         amountPaid,
         paymentMethod,
         paymentProof: paymentProof || existing.paymentProof,
-        paymentStatus: paymentProof ? "PAID" : existing.paymentStatus
+        paymentStatus: "PENDING"
       }
     })
 
-    // Disparar alertas por correo a la directiva y mails adicionales
-    await sendEventRegistrationAlertToBoard(event, {
-      firstName: member.firstName,
-      lastName: member.lastName,
-      dni: member.dni,
-      email: member.email,
-      phone: member.phone,
-      registrationType,
-      amountPaid,
-      paymentMethod,
-      paymentProof: paymentProof || existing.paymentProof
-    }).catch(err => console.error("Error sending event registration alert email:", err))
+    // Disparar alertas por correo al socio, directiva y mails adicionales
+    const emailPromises: Promise<any>[] = [
+      sendEventRegistrationAlertToBoard(event, {
+        firstName: member.firstName,
+        lastName: member.lastName,
+        dni: member.dni,
+        email: member.email,
+        phone: member.phone,
+        registrationType,
+        amountPaid,
+        paymentMethod,
+        paymentProof: paymentProof || existing.paymentProof
+      })
+    ]
+
+    if (member.email && (paymentProof || paymentMethod === "TRANSFER")) {
+      emailPromises.push(
+        sendAttendeePendingProofEmail({
+          firstName: member.firstName,
+          email: member.email,
+          eventTitle: event.title,
+          registrationType,
+          amountPaid
+        })
+      )
+    }
+
+    await Promise.allSettled(emailPromises).catch(err => console.error("Error sending event registration emails:", err))
 
     revalidatePath("/admin")
     revalidatePath("/admin/eventos")
     revalidatePath(`/admin/eventos/${eventId}`)
     revalidatePath("/socios")
     revalidatePath(`/eventos/${eventId}`)
-    return { success: true, message: "Inscripción actualizada correctamente" }
+    return { success: true, message: "Inscripción actualizada correctamente. Tu comprobante está en verificación por Tesorería." }
   }
 
   await db.eventRegistration.create({
@@ -419,18 +435,34 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
     }
   })
 
-  // Disparar alertas por correo a la directiva y mails adicionales
-  await sendEventRegistrationAlertToBoard(event, {
-    firstName: member.firstName,
-    lastName: member.lastName,
-    dni: member.dni,
-    email: member.email,
-    phone: member.phone,
-    registrationType,
-    amountPaid,
-    paymentMethod,
-    paymentProof
-  }).catch(err => console.error("Error sending event registration alert email:", err))
+  // Disparar alertas por correo al socio, directiva y mails adicionales
+  const emailPromises: Promise<any>[] = [
+    sendEventRegistrationAlertToBoard(event, {
+      firstName: member.firstName,
+      lastName: member.lastName,
+      dni: member.dni,
+      email: member.email,
+      phone: member.phone,
+      registrationType,
+      amountPaid,
+      paymentMethod,
+      paymentProof
+    })
+  ]
+
+  if (member.email && (paymentProof || paymentMethod === "TRANSFER")) {
+    emailPromises.push(
+      sendAttendeePendingProofEmail({
+        firstName: member.firstName,
+        email: member.email,
+        eventTitle: event.title,
+        registrationType,
+        amountPaid
+      })
+    )
+  }
+
+  await Promise.allSettled(emailPromises).catch(err => console.error("Error sending event registration emails:", err))
 
   revalidatePath("/admin")
   revalidatePath("/admin/eventos")

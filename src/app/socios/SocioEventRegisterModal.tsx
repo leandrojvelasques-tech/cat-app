@@ -143,12 +143,18 @@ export function SocioEventRegisterModal({ event, member, registration }: SocioEv
         <button
           onClick={() => setIsOpen(true)}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
-            isRegistered 
+            isRegistered && registration?.paymentStatus === "PENDING"
+              ? "bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:bg-amber-500/20"
+              : isRegistered
               ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
               : "bg-amber-500 hover:bg-amber-400 text-zinc-950 shadow-lg shadow-amber-500/10 active:scale-95 cursor-pointer"
           }`}
         >
-          {isRegistered ? (
+          {isRegistered && registration?.paymentStatus === "PENDING" ? (
+            <>
+              ⏳ Pendiente de Validación
+            </>
+          ) : isRegistered ? (
             <>
               <CheckCircle2 size={13} /> Inscripto
             </>
@@ -207,6 +213,20 @@ export function SocioEventRegisterModal({ event, member, registration }: SocioEv
                   </div>
                 ) : (
                   <>
+                    {registration?.paymentStatus === "PENDING" && (
+                      <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-start gap-3 text-amber-300 animate-in fade-in duration-200">
+                        <Tag className="shrink-0 mt-0.5 text-amber-400" size={18} />
+                        <div className="space-y-1">
+                          <p className="text-xs font-extrabold uppercase tracking-wider text-amber-400">
+                            Comprobante Pendiente de Validación por Tesorería
+                          </p>
+                          <p className="text-[11px] text-zinc-300 font-light leading-relaxed">
+                            Hemos recibido tu comprobante de pago. Nuestra área de Tesorería verificará la información y te enviaremos la confirmación oficial a tu correo electrónico.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Select Item to Reserve if Event has both classes and milonga */}
                     {(event.hasClasses || event.hasMilonga) && (
                       <div className="space-y-3">
