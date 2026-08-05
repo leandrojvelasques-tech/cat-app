@@ -13,10 +13,11 @@ interface Props {
   currentType: string
   currentEventType: string
   currentEventId: string
+  currentPaymentMethod?: string
   events?: any[]
 }
 
-export function CobranzasFilters({ currentMonth, currentYear, currentQuery, currentType, currentEventType, currentEventId, events = [] }: Props) {
+export function CobranzasFilters({ currentMonth, currentYear, currentQuery, currentType, currentEventType, currentEventId, currentPaymentMethod = "all", events = [] }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
@@ -69,6 +70,22 @@ export function CobranzasFilters({ currentMonth, currentYear, currentQuery, curr
              <option value="all" className="bg-zinc-900">Todos los ingresos</option>
              <option value="fee" className="bg-zinc-900">Cuotas Sociales</option>
              <option value="event" className="bg-zinc-900">Eventos / Milongas</option>
+           </select>
+        </div>
+
+        {/* Payment Method Filter */}
+        <div className="flex flex-col gap-2">
+           <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-4 flex items-center gap-2">
+             <CreditCard size={10} /> Forma de Pago
+           </label>
+           <select 
+             value={currentPaymentMethod}
+             onChange={(e) => updateParams({ paymentMethod: e.target.value })}
+             className="bg-white/5 border border-white/10 text-white px-6 py-4 rounded-[24px] text-xs font-black uppercase tracking-widest focus:outline-none cursor-pointer hover:bg-white/10 transition-all min-w-[160px] appearance-none"
+           >
+             <option value="all" className="bg-zinc-900">Todos los medios</option>
+             <option value="TRANSFERENCIA" className="bg-zinc-900">Transferencia / MP</option>
+             <option value="EFECTIVO" className="bg-zinc-900">Efectivo</option>
            </select>
         </div>
 

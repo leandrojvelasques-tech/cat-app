@@ -60,7 +60,7 @@ export function PublicEventCheckoutModal({ event }: PublicEventCheckoutModalProp
   const [includeMilonga, setIncludeMilonga] = useState(event.hasMilonga ?? true)
   const [includeCombo, setIncludeCombo] = useState(event.hasClasses ?? false)
   const [includeLooseClass, setIncludeLooseClass] = useState(false)
-  const [selectedClassId, setSelectedClassId] = useState<string>(event.classes?.[0]?.id || "")
+  const [selectedClassIds, setSelectedClassIds] = useState<string[]>([])
 
   // Form Fields
   const [firstName, setFirstName] = useState("")
@@ -78,23 +78,28 @@ export function PublicEventCheckoutModal({ event }: PublicEventCheckoutModalProp
     let total = 0
     if (includeMilonga && event.hasMilonga) total += milongaPrice
     if (includeCombo && event.hasClasses) total += comboPrice
-    if (includeLooseClass && event.hasClasses && !includeCombo) total += looseClassPrice
+    if (includeLooseClass && event.hasClasses && !includeCombo) total += selectedClassIds.length * looseClassPrice
     return total
   }
 
   const totalPrice = calculateTotal()
 
-  const getSelectedTypeString = () => {
+  const toggleLooseClass = (classId: string) => {
+    setSelectedClassIds((currentIds) =>
+      currentIds.includes(classId)
+        ? currentIds.filter((id) => id !== classId)
+        : [...currentIds, classId]
+    )
+  }
+
+  const getSelectedTypeLabel = () => {
     const types: string[] = []
-    if (includeCombo) {
-      types.push(event.comboTitle || "COMBO_CLASES")
-    } else if (includeLooseClass) {
-      const selectedCls = event.classes?.find(c => c.id === selectedClassId) || event.classes?.[0]
-      if (selectedCls?.title) {
-        types.push(`CLASE_SUELTA (${selectedCls.title})`)
-      } else {
-        types.push("CLASE_SUELTA")
-      }
+    if (includeCombo) types.push(event.comboTitle || "COMBO_CLASES")
+    if (includeLooseClass && selectedClassIds.length > 0) {
+      const classTitles = event.classes
+        ?.filter((eventClass) => selectedClassIds.includes(eventClass.id))
+        .map((eventClass) => eventClass.title)
+      types.push(`CLASES_SUELTAS: ${classTitles?.join(", ") || "seleccionadas"}`)
     }
     if (includeMilonga) types.push("MILONGA")
     return types.join(" + ") || "ENTRADA_GENERAL"
@@ -134,6 +139,12 @@ export function PublicEventCheckoutModal({ event }: PublicEventCheckoutModalProp
       return
     }
 
+    if (includeLooseClass && selectedClassIds.length === 0) {
+      setErrorMessage("Elegí al menos una clase del temario.")
+      setIsSubmitting(false)
+      return
+    }
+
     const formData = new FormData()
     formData.append("eventId", event.id)
     formData.append("firstName", firstName)
@@ -141,8 +152,9 @@ export function PublicEventCheckoutModal({ event }: PublicEventCheckoutModalProp
     formData.append("dni", dni)
     formData.append("email", email)
     formData.append("phone", phone)
-    formData.append("registrationType", getSelectedTypeString())
-    formData.append("amountPaid", totalPrice.toString())
+    formData.append("includeCombo", includeCombo.toString())
+    formData.append("includeMilonga", includeMilonga.toString())
+    formData.append("selectedClassIds", JSON.stringify(includeLooseClass ? selectedClassIds : []))
     formData.append("paymentMethod", paymentMethod)
     if (file) {
       formData.append("paymentProof", file)
@@ -266,7 +278,10 @@ export function PublicEventCheckoutModal({ event }: PublicEventCheckoutModalProp
                                     checked={includeCombo}
                                     onChange={(e) => {
                                       setIncludeCombo(e.target.checked)
-                                      if (e.target.checked) setIncludeLooseClass(false)
+                                      if (e.target.checked) {
+                                        setIncludeLooseClass(false)
+                                        setSelectedClassIds([])
+                                      }
                                     }}
                                     className="accent-cyan-500 w-4 h-4"
                                   />
@@ -293,12 +308,15 @@ export function PublicEventCheckoutModal({ event }: PublicEventCheckoutModalProp
                                     <input
                                       type="checkbox"
                                       checked={includeLooseClass}
-                                      onChange={(e) => setIncludeLooseClass(e.target.checked)}
+                                      onChange={(e) => {
+                                        setIncludeLooseClass(e.target.checked)
+                                        if (!e.target.checked) setSelectedClassIds([])
+                                      }}
                                       className="accent-cyan-500 w-4 h-4"
                                     />
                                     <div>
                                       <p className="text-xs font-bold uppercase text-white">Clase Suelta (Individual)</p>
-                                      <p className="text-[10px] text-zinc-400">Valor por una clase a elección</p>
+                                      <p className="text-[10px] text-zinc-400">Elegí una o varias clases del temario</p>
                                     </div>
                                   </div>
                                   <span className="font-black text-sm text-cyan-400">${looseClassPrice.toLocaleString()}</span>
@@ -307,24 +325,23 @@ export function PublicEventCheckoutModal({ event }: PublicEventCheckoutModalProp
                                 {includeLooseClass && event.classes && event.classes.length > 0 && (
                                   <div className="pl-4 border-l-2 border-cyan-500/40 space-y-2 pt-1 animate-in fade-in duration-200">
                                     <label className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block">
-                                      Elegí cuál clase vas a realizar:
+                                      Elegí las clases que vas a realizar:
                                     </label>
                                     <div className="space-y-1.5">
                                       {event.classes.map((cls, idx) => (
                                         <label
                                           key={cls.id || idx}
                                           className={`flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
-                                            (selectedClassId === cls.id || (!selectedClassId && idx === 0))
+                                            selectedClassIds.includes(cls.id)
                                               ? "bg-cyan-500/20 border-cyan-400 text-white font-bold"
                                               : "bg-black/40 border-white/10 text-zinc-400 hover:border-white/20"
                                           }`}
                                         >
                                           <div className="flex items-center gap-2">
                                             <input
-                                              type="radio"
-                                              name="publicSelectedClass"
-                                              checked={selectedClassId === cls.id || (!selectedClassId && idx === 0)}
-                                              onChange={() => setSelectedClassId(cls.id)}
+                                              type="checkbox"
+                                              checked={selectedClassIds.includes(cls.id)}
+                                              onChange={() => toggleLooseClass(cls.id)}
                                               className="accent-cyan-400"
                                             />
                                             <span>{cls.title}</span>
@@ -402,7 +419,7 @@ export function PublicEventCheckoutModal({ event }: PublicEventCheckoutModalProp
 
                         {/* Summary Pill */}
                         <div className="bg-red-500/10 border border-red-500/20 p-3.5 rounded-2xl flex justify-between items-center text-xs">
-                          <span className="text-zinc-300 font-bold truncate max-w-[200px]">{getSelectedTypeString()}</span>
+                          <span className="text-zinc-300 font-bold truncate max-w-[200px]">{getSelectedTypeLabel()}</span>
                           <span className="text-red-400 font-black text-sm">${totalPrice.toLocaleString()}</span>
                         </div>
 

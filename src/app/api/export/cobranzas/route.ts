@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
   const type = searchParams.get("type") || "all"
   const eventId = searchParams.get("eventId") || ""
   const eventType = searchParams.get("eventType") || "all"
+  const paymentMethod = searchParams.get("paymentMethod") || "all"
 
   const now = new Date()
   const currentMonth = month ? parseInt(month) : now.getMonth() + 1
@@ -117,7 +118,19 @@ export async function GET(req: NextRequest) {
     return dateB - dateA
   })
 
-  const csv = toCSV(rows)
+  const filteredRows = rows.filter((r) => {
+    if (paymentMethod === "all") return true
+    const m = String(r["Método de Pago"] || "EFECTIVO").toUpperCase()
+    if (paymentMethod === "TRANSFERENCIA") {
+      return m.includes("TRANSFER") || m.includes("MERCADO") || m.includes("MP")
+    }
+    if (paymentMethod === "EFECTIVO") {
+      return m.includes("EFECTIVO") || m.includes("CASH") || m === ""
+    }
+    return m.includes(paymentMethod.toUpperCase())
+  })
+
+  const csv = toCSV(filteredRows)
   const filename = `cobranzas_${currentYear}-${String(currentMonth).padStart(2, "0")}.csv`
 
   return new NextResponse(csv, {

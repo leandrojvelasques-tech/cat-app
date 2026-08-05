@@ -11,6 +11,10 @@ import {
 import { validateAndSanitizeFile } from "@/lib/security-utils"
 import { writeFileSync, existsSync, mkdirSync } from "fs"
 import { join } from "path"
+import {
+  parseSelectedClassIds,
+  resolveEventRegistrationSelection,
+} from "@/lib/event-registration-selection"
 
 export async function registerAttendee(formData: FormData) {
   try {
@@ -101,8 +105,6 @@ export async function registerPublicAttendee(formData: FormData) {
     const dni = (formData.get("dni") as string || "").trim()
     const email = (formData.get("email") as string || "").trim().toLowerCase()
     const phone = (formData.get("phone") as string || "").trim()
-    const registrationType = (formData.get("registrationType") as string || "ENTRADA_GENERAL").trim()
-    let amountPaid = parseFloat(formData.get("amountPaid") as string) || 0
     const paymentMethod = (formData.get("paymentMethod") as string || "CASH").trim()
     const file = formData.get("paymentProof") as File | null
 
@@ -110,14 +112,26 @@ export async function registerPublicAttendee(formData: FormData) {
       return { success: false, error: "Por favor completá todos los campos obligatorios (*)." }
     }
 
-    const event = await db.event.findUnique({ where: { id: eventId } })
+    const event = await db.event.findUnique({
+      where: { id: eventId },
+      include: { classes: { select: { id: true, title: true } } },
+    })
     if (!event || !event.isPublic) {
       return { success: false, error: "El evento no existe o ya no está disponible." }
     }
 
+    const { amountPaid, registrationType, selectedClassIds } = resolveEventRegistrationSelection(
+      event,
+      {
+        includeCombo: formData.get("includeCombo") === "true",
+        includeMilonga: formData.get("includeMilonga") === "true",
+        selectedClassIds: parseSelectedClassIds(formData.get("selectedClassIds")),
+      },
+      false
+    )
+
     // 1. Manejo de Eventos 100% Gratuitos ($0)
     if (event.isFree) {
-      amountPaid = 0
       const registration = await db.eventRegistration.create({
         data: {
           eventId: event.id,
@@ -127,6 +141,7 @@ export async function registerPublicAttendee(formData: FormData) {
           email,
           phone,
           registrationType,
+          selectedClassIds,
           amountPaid: 0,
           paymentStatus: "PAID", // Aprobado instantáneo
           paymentMethod: "FREE",
@@ -205,6 +220,7 @@ export async function registerPublicAttendee(formData: FormData) {
         email,
         phone,
         registrationType,
+        selectedClassIds,
         amountPaid,
         paymentStatus,
         paymentMethod,

@@ -147,6 +147,7 @@ export async function createTangoClass(data: {
     })
 
     revalidatePath("/admin/clases-comodoro")
+    revalidatePath("/clases")
     revalidatePath("/clases-comodoro")
     revalidatePath("/eventos")
     return { success: true, data: newClass }
@@ -185,6 +186,7 @@ export async function updateTangoClass(
     })
 
     revalidatePath("/admin/clases-comodoro")
+    revalidatePath("/clases")
     revalidatePath("/clases-comodoro")
     revalidatePath("/eventos")
     return { success: true, data: updated }
@@ -204,6 +206,7 @@ export async function toggleTangoClassVisibility(id: string, isPublished: boolea
     })
 
     revalidatePath("/admin/clases-comodoro")
+    revalidatePath("/clases")
     revalidatePath("/clases-comodoro")
     revalidatePath("/eventos")
     return { success: true, data: updated }
@@ -221,6 +224,7 @@ export async function deleteTangoClass(id: string) {
     })
 
     revalidatePath("/admin/clases-comodoro")
+    revalidatePath("/clases")
     revalidatePath("/clases-comodoro")
     revalidatePath("/eventos")
     return { success: true }
@@ -274,6 +278,7 @@ export async function createTangoTeacher(data: {
     })
 
     revalidatePath("/admin/clases-comodoro")
+    revalidatePath("/clases")
     revalidatePath("/clases-comodoro")
     return { success: true, data: teacher }
   } catch (error: any) {
@@ -303,6 +308,7 @@ export async function updateTangoTeacher(
     })
 
     revalidatePath("/admin/clases-comodoro")
+    revalidatePath("/clases")
     revalidatePath("/clases-comodoro")
     return { success: true, data: updated }
   } catch (error: any) {
@@ -319,6 +325,7 @@ export async function deleteTangoTeacher(id: string) {
     })
 
     revalidatePath("/admin/clases-comodoro")
+    revalidatePath("/clases")
     revalidatePath("/clases-comodoro")
     return { success: true }
   } catch (error: any) {

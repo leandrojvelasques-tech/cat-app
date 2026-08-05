@@ -14,7 +14,8 @@ import {
   Eye,
   ChevronRight,
   Info,
-  Download
+  Download,
+  FileText
 } from "lucide-react"
 import Link from "next/link"
 import { format } from "date-fns"
@@ -26,9 +27,9 @@ import { ApproveFeePaymentButton } from "./ApproveFeePaymentButton"
 export default async function CobranzasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; year?: string; query?: string; type?: string; eventId?: string; eventType?: string }>
+  searchParams: Promise<{ month?: string; year?: string; query?: string; type?: string; eventId?: string; eventType?: string; paymentMethod?: string }>
 }) {
-  const { month, year, query = "", type = "all", eventId = "", eventType = "all" } = await searchParams
+  const { month, year, query = "", type = "all", eventId = "", eventType = "all", paymentMethod = "all" } = await searchParams
   
   const now = new Date()
   const currentMonth = month ? parseInt(month) : now.getMonth() + 1
@@ -100,41 +101,67 @@ export default async function CobranzasPage({
 
   // 3. Unify and Map Data
   const unifiedHistory = [
-    ...fees.map(f => ({
-      id: f.id,
-      paymentId: f.id,
-      type: 'CUOTA',
-      date: f.paymentDate,            // Fecha de registro
-      realDate: f.realPaymentDate ?? f.paymentDate,  // Fecha real de pago
-      amount: f.amountPaid,
-      method: f.paymentMethod || 'EFECTIVO',
-      reason: `Cuota Social - ${format(new Date(f.periodYear, f.periodMonth - 1, 1), 'MMMM yyyy', { locale: es })}`,
-      payerName: `${f.member.lastName}, ${f.member.firstName}`,
-      memberId: f.member.id,
-      isMember: true,
-      recordedBy: f.recordedBy?.name || 'Sistema',
-      fullData: f
-    })),
-    ...registrations.map(r => ({
-      id: r.id,
-      paymentId: r.id,
-      type: 'EVENTO',
-      date: r.createdAt,              // Fecha de registro
-      realDate: r.realPaymentDate ?? r.createdAt,    // Fecha real de pago
-      amount: r.amountPaid,
-      method: r.paymentMethod || 'EFECTIVO',
-      reason: `Entrada: ${r.event.title} (${r.registrationType})`,
-      payerName: r.member ? `${r.member.lastName}, ${r.member.firstName}` : `${r.lastName}, ${r.firstName}`,
-      memberId: r.member?.id || null,
-      isMember: !!r.member,
-      recordedBy: r.recordedBy?.name || 'Sistema',
-      fullData: r
-    }))
+    ...fees.map(f => {
+      let proofUrl: string | null = null
+      if (f.notes) {
+        const match = f.notes.match(/\[COMPROBANTE: (.*?)\]/)
+        if (match) proofUrl = match[1]
+      }
+      return {
+        id: f.id,
+        paymentId: f.id,
+        type: 'CUOTA',
+        date: f.paymentDate,            // Fecha de registro
+        realDate: f.realPaymentDate ?? f.paymentDate,  // Fecha real de pago
+        amount: f.amountPaid,
+        method: f.paymentMethod || 'EFECTIVO',
+        proofUrl,
+        reason: `Cuota Social - ${format(new Date(f.periodYear, f.periodMonth - 1, 1), 'MMMM yyyy', { locale: es })}`,
+        payerName: `${f.member.lastName}, ${f.member.firstName}`,
+        memberId: f.member.id,
+        isMember: true,
+        recordedBy: f.recordedBy?.name || 'Sistema',
+        fullData: f
+      }
+    }),
+    ...registrations.map(r => {
+      let proofUrl: string | null = r.paymentProof || null
+      return {
+        id: r.id,
+        paymentId: r.id,
+        type: 'EVENTO',
+        date: r.createdAt,              // Fecha de registro
+        realDate: r.realPaymentDate ?? r.createdAt,    // Fecha real de pago
+        amount: r.amountPaid,
+        method: r.paymentMethod || 'EFECTIVO',
+        proofUrl,
+        reason: `Entrada: ${r.event.title} (${r.registrationType})`,
+        payerName: r.member ? `${r.member.lastName}, ${r.member.firstName}` : `${r.lastName}, ${r.firstName}`,
+        memberId: r.member?.id || null,
+        isMember: !!r.member,
+        recordedBy: r.recordedBy?.name || 'Sistema',
+        fullData: r
+      }
+    })
   ].sort((a, b) => b.realDate.getTime() - a.realDate.getTime())
 
-  const totalCollected = unifiedHistory.reduce((acc, curr) => acc + curr.amount, 0)
-  const feeCount = fees.length
-  const eventCount = registrations.length
+  // Apply Payment Method filter if set
+  const filteredHistory = unifiedHistory.filter(item => {
+    if (paymentMethod === 'all') return true
+    const itemMethod = (item.method || 'EFECTIVO').toUpperCase()
+    if (paymentMethod === 'TRANSFERENCIA') {
+      return itemMethod.includes('TRANSFER') || itemMethod.includes('MERCADO') || itemMethod.includes('MP')
+    }
+    if (paymentMethod === 'EFECTIVO') {
+      return itemMethod.includes('EFECTIVO') || itemMethod.includes('CASH') || itemMethod === ''
+    }
+    return itemMethod.includes(paymentMethod.toUpperCase())
+  })
+
+  const historyToDisplay = filteredHistory
+  const totalCollected = historyToDisplay.reduce((acc, curr) => acc + curr.amount, 0)
+  const feeCount = historyToDisplay.filter(i => i.type === 'CUOTA').length
+  const eventCount = historyToDisplay.filter(i => i.type === 'EVENTO').length
 
   const events = await db.event.findMany({
     orderBy: { startDate: 'desc' },
@@ -149,6 +176,7 @@ export default async function CobranzasPage({
   if (type !== 'all') csvParams.set('type', type)
   if (eventId) csvParams.set('eventId', eventId)
   if (eventType !== 'all') csvParams.set('eventType', eventType)
+  if (paymentMethod !== 'all') csvParams.set('paymentMethod', paymentMethod)
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto">
@@ -205,6 +233,7 @@ export default async function CobranzasPage({
         currentType={type}
         currentEventType={eventType}
         currentEventId={eventId}
+        currentPaymentMethod={paymentMethod}
         events={events}
       />
 
@@ -255,66 +284,100 @@ export default async function CobranzasPage({
                 <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Fecha de Registro</th>
                 <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Pagador</th>
                 <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Categoría</th>
+                <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Forma de Pago</th>
                 <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Concepto</th>
                 <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Monto</th>
-                <th className="py-6 pr-10 text-right text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Detalles</th>
+                <th className="py-6 pr-10 text-right text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {unifiedHistory.map((item: any) => (
-                <tr key={item.id} className="hover:bg-white/[0.03] transition-colors group">
-                  {/* Fecha Real de Pago */}
-                  <td className="py-5 pl-10">
-                    <div className="flex flex-col">
-                      <span className="text-white font-bold text-sm">{format(item.realDate, "dd/MM/yyyy", { locale: es })}</span>
-                      <span className="text-[9px] text-amber-600/70 font-bold uppercase tracking-widest mt-0.5">Fecha de Pago</span>
-                    </div>
-                  </td>
-                  {/* Fecha de Registro en el sistema */}
-                  <td className="py-5">
-                    <div className="flex flex-col">
-                      <span className="text-zinc-400 font-medium text-sm">{format(item.date, "dd/MM/yyyy", { locale: es })}</span>
-                      <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest mt-0.5">{format(item.date, "HH:mm")} hs</span>
-                    </div>
-                  </td>
-                  <td className="py-5">
-                    <div className="flex flex-col">
-                      {item.isMember ? (
-                        <Link href={`/admin/socios/${item.memberId}`} className="text-amber-500 hover:text-amber-400 font-black text-xs uppercase tracking-tight transition-colors flex items-center gap-1 group/link">
-                          {item.payerName} <ChevronRight size={10} className="group-hover/link:translate-x-1 transition-transform" />
-                        </Link>
-                      ) : (
-                        <span className="text-zinc-300 font-black text-xs uppercase tracking-tight">{item.payerName}</span>
-                      )}
-                      <span className={`text-[9px] font-black tracking-widest mt-1 ${item.isMember ? 'text-zinc-600' : 'text-zinc-500 italic'}`}>
-                        {item.isMember ? 'SOCIO ACTIVO' : 'NO SOCIO'}
+              {historyToDisplay.map((item: any) => {
+                const methodUpper = (item.method || 'EFECTIVO').toUpperCase()
+                const isTransfer = methodUpper.includes('TRANSFER') || methodUpper.includes('MERCADO') || methodUpper.includes('MP')
+                
+                return (
+                  <tr key={item.id} className="hover:bg-white/[0.03] transition-colors group">
+                    {/* Fecha Real de Pago */}
+                    <td className="py-5 pl-10">
+                      <div className="flex flex-col">
+                        <span className="text-white font-bold text-sm">{format(item.realDate, "dd/MM/yyyy", { locale: es })}</span>
+                        <span className="text-[9px] text-amber-600/70 font-bold uppercase tracking-widest mt-0.5">Fecha de Pago</span>
+                      </div>
+                    </td>
+                    {/* Fecha de Registro en el sistema */}
+                    <td className="py-5">
+                      <div className="flex flex-col">
+                        <span className="text-zinc-400 font-medium text-sm">{format(item.date, "dd/MM/yyyy", { locale: es })}</span>
+                        <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest mt-0.5">{format(item.date, "HH:mm")} hs</span>
+                      </div>
+                    </td>
+                    <td className="py-5">
+                      <div className="flex flex-col">
+                        {item.isMember ? (
+                          <Link href={`/admin/socios/${item.memberId}`} className="text-amber-500 hover:text-amber-400 font-black text-xs uppercase tracking-tight transition-colors flex items-center gap-1 group/link">
+                            {item.payerName} <ChevronRight size={10} className="group-hover/link:translate-x-1 transition-transform" />
+                          </Link>
+                        ) : (
+                          <span className="text-zinc-300 font-black text-xs uppercase tracking-tight">{item.payerName}</span>
+                        )}
+                        <span className={`text-[9px] font-black tracking-widest mt-1 ${item.isMember ? 'text-zinc-600' : 'text-zinc-500 italic'}`}>
+                          {item.isMember ? 'SOCIO ACTIVO' : 'NO SOCIO'}
+                        </span>
+                      </div>
+                    </td>
+                    {/* Categoría */}
+                    <td className="py-5">
+                      <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+                        item.type === 'CUOTA' 
+                          ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
+                          : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                      }`}>
+                        {item.type}
                       </span>
-                    </div>
-                  </td>
-                  <td className="py-5">
-                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
-                      item.type === 'CUOTA' 
-                        ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
-                        : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                    }`}>
-                      {item.type}
-                    </span>
-                  </td>
-                  <td className="py-5 pr-4">
-                    {/* No truncation — text wraps so full event names are always readable */}
-                    <p className="text-zinc-300 text-[11px] font-medium leading-snug break-words max-w-[230px]">{item.reason}</p>
-                  </td>
-                  <td className="py-5">
-                    <span className="text-white font-black tracking-widest text-sm">${item.amount.toLocaleString()}</span>
-                  </td>
-                  <td className="py-5 pr-10 text-right">
-                    <PaymentDetailModal payment={item} />
-                  </td>
-                </tr>
-              ))}
-              {unifiedHistory.length === 0 && (
+                    </td>
+                    {/* Forma de Pago */}
+                    <td className="py-5">
+                      <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border flex items-center gap-1.5 w-fit ${
+                        isTransfer 
+                          ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' 
+                          : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                      }`}>
+                        <CreditCard size={10} />
+                        {isTransfer ? 'TRANSFERENCIA' : 'EFECTIVO'}
+                      </span>
+                    </td>
+                    <td className="py-5 pr-4">
+                      {/* No truncation — text wraps so full event names are always readable */}
+                      <p className="text-zinc-300 text-[11px] font-medium leading-snug break-words max-w-[230px]">{item.reason}</p>
+                    </td>
+                    <td className="py-5">
+                      <span className="text-white font-black tracking-widest text-sm">${item.amount.toLocaleString()}</span>
+                    </td>
+                    <td className="py-5 pr-10 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        {item.proofUrl && (
+                          <PaymentDetailModal 
+                            payment={item} 
+                            trigger={
+                              <button 
+                                className="flex items-center gap-1 px-2.5 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all"
+                                title="Ver comprobante adjunto"
+                              >
+                                <FileText size={13} />
+                                <span>Comprobante</span>
+                              </button>
+                            }
+                          />
+                        )}
+                        <PaymentDetailModal payment={item} />
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+              {historyToDisplay.length === 0 && (
                 <tr>
-                <td colSpan={7} className="py-32 text-center text-zinc-600 italic">
+                  <td colSpan={8} className="py-32 text-center text-zinc-600 italic">
                     <Info size={40} className="mx-auto mb-4 opacity-10" />
                     <p className="uppercase font-black tracking-widest text-xs">No se encontraron movimientos</p>
                   </td>

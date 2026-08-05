@@ -7,21 +7,29 @@ import { es } from "date-fns/locale"
 
 interface PaymentDetailModalProps {
   payment: any
+  trigger?: React.ReactNode
 }
 
-export function PaymentDetailModal({ payment }: PaymentDetailModalProps) {
+export function PaymentDetailModal({ payment, trigger }: PaymentDetailModalProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   const data = payment.fullData
 
   return (
     <>
-      <button 
-        onClick={() => setIsOpen(true)}
-        className="p-2 hover:bg-white/10 rounded-xl text-zinc-500 hover:text-white transition-all border border-transparent hover:border-white/10 group"
-      >
-        <Eye size={18} className="group-hover:scale-110 transition-transform" />
-      </button>
+      {trigger ? (
+        <div onClick={() => setIsOpen(true)} className="inline-block cursor-pointer">
+          {trigger}
+        </div>
+      ) : (
+        <button 
+          onClick={() => setIsOpen(true)}
+          className="p-2 hover:bg-white/10 rounded-xl text-zinc-500 hover:text-white transition-all border border-transparent hover:border-white/10 group"
+          title="Ver detalles"
+        >
+          <Eye size={18} className="group-hover:scale-110 transition-transform" />
+        </button>
+      )}
 
       {isOpen && (
         <div className="fixed inset-0 z-[1000] flex items-start justify-center p-4 md:p-8 bg-black/95 backdrop-blur-xl animate-in fade-in duration-200 overflow-y-auto no-scrollbar">
@@ -106,17 +114,17 @@ export function PaymentDetailModal({ payment }: PaymentDetailModalProps) {
             </div>
 
             {/* Proof of Payment Section */}
-            {(payment?.fullData?.paymentProof || payment?.fullData?.notes?.includes('[COMPROBANTE:')) && (
+            {(payment?.proofUrl || payment?.fullData?.paymentProof || payment?.fullData?.notes?.includes('[COMPROBANTE:')) && (
               <div className="pt-8 border-t border-white/10 relative z-10 space-y-4">
                  <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 flex items-center gap-2 italic mb-4">
                     <Eye size={12} /> Comprobante de Pago
                  </p>
                  <div className="bg-black/60 rounded-[40px] border border-white/10 overflow-hidden group/img relative min-h-[200px] flex items-center justify-center">
                     {(() => {
-                      let proofUrl = ""
-                      if (payment?.fullData?.paymentProof) {
+                      let proofUrl = payment?.proofUrl || ""
+                      if (!proofUrl && payment?.fullData?.paymentProof) {
                         proofUrl = payment.fullData.paymentProof
-                      } else if (payment?.fullData?.notes) {
+                      } else if (!proofUrl && payment?.fullData?.notes) {
                         // Extract from notes for CUOTAS
                         const match = payment.fullData.notes.match(/\[COMPROBANTE: (.*?)\]/)
                         if (match) proofUrl = match[1]
@@ -124,7 +132,7 @@ export function PaymentDetailModal({ payment }: PaymentDetailModalProps) {
 
                       if (!proofUrl) return <p className="text-zinc-700 italic text-[10px] uppercase font-black">Link no válido</p>
 
-                      if (proofUrl.startsWith('data:')) {
+                      if (proofUrl.startsWith('data:') || proofUrl.startsWith('http://') || proofUrl.startsWith('https://') || proofUrl.startsWith('/')) {
                         return <img src={proofUrl} alt="Comprobante" className="max-w-full h-auto cursor-zoom-in group-hover/img:scale-[1.02] transition-transform duration-700" />
                       }
                       

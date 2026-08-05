@@ -5,7 +5,10 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { sendEventRegistrationAlertToBoard, sendAttendeePendingProofEmail } from "@/lib/emails"
-import { getEffectiveEventPrices } from "@/lib/event-utils"
+import {
+  parseSelectedClassIds,
+  resolveEventRegistrationSelection,
+} from "@/lib/event-registration-selection"
 import { validateAndSanitizeFile } from "@/lib/security-utils"
 import { writeFileSync, existsSync, mkdirSync } from "fs"
 import { join } from "path"
@@ -345,13 +348,15 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
   }
 
   const member = user.member
-  const event = await db.event.findUnique({ where: { id: eventId } })
+  const event = await db.event.findUnique({
+    where: { id: eventId },
+    include: { classes: { select: { id: true, title: true } } },
+  })
 
   if (!event) {
     return { success: false, error: "Evento no encontrado" }
   }
 
-  const registrationType = (formData.get("registrationType") as string) || "MILONGA"
   const paymentMethod = (formData.get("paymentMethod") as string) || "CASH"
   const proofFile = formData.get("paymentProof") as File | string | null
 
@@ -379,13 +384,25 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
     paymentProofUrl = proofFile
   }
 
-  const prices = getEffectiveEventPrices(event)
-  let amountPaid = prices.milongaSocio
-  if (registrationType === "COMBO_CLASES") {
-    amountPaid = prices.comboSocio
-  } else if (registrationType === "CLASE_SUELTA") {
-    amountPaid = prices.classLooseSocio
+  let selection
+  try {
+    selection = resolveEventRegistrationSelection(
+      event,
+      {
+        includeCombo: formData.get("includeCombo") === "true",
+        includeMilonga: formData.get("includeMilonga") === "true",
+        selectedClassIds: parseSelectedClassIds(formData.get("selectedClassIds")),
+      },
+      true
+    )
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "No se pudo validar la selección de clases.",
+    }
   }
+
+  const { amountPaid, registrationType, selectedClassIds } = selection
 
   const existing = await db.eventRegistration.findFirst({
     where: {
@@ -401,6 +418,7 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
       where: { id: existing.id },
       data: {
         registrationType,
+        selectedClassIds,
         amountPaid,
         paymentMethod,
         paymentProof: paymentProofUrl || existing.paymentProof,
@@ -455,6 +473,7 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
       email: member.email,
       phone: member.phone,
       registrationType,
+      selectedClassIds,
       amountPaid,
       paymentStatus: paymentStatus,
       paymentMethod: paymentMethod,
@@ -506,6 +525,7 @@ export async function getSocioEventRegistrations(memberId: string) {
       id: true,
       eventId: true,
       registrationType: true,
+      selectedClassIds: true,
       paymentStatus: true,
       paymentMethod: true,
       amountPaid: true

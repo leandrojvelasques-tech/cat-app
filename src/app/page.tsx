@@ -131,8 +131,9 @@ export default async function Home() {
         <nav className="flex justify-between items-center px-6 md:px-16 py-4 max-w-7xl mx-auto">
           <Link href="/" className="flex items-center gap-3 active:scale-95 transition-transform">
             <OfficialLogo
-              className="h-10 md:h-12 w-auto rounded-sm"
+              className="h-10 w-[60px] md:h-12 md:w-[72px]"
               priority
+              compact
             />
           </Link>
           
@@ -141,7 +142,7 @@ export default async function Home() {
             <Link href="#novedades" className="text-zinc-400 hover:text-white text-sm transition-colors">Novedades</Link>
             <Link href="#eventos" className="text-zinc-400 hover:text-white text-sm transition-colors">Agenda Tanguera</Link>
             <Link href="#nosotros" className="text-zinc-400 hover:text-white text-sm transition-colors">Nosotros</Link>
-            <Link href="/clases-comodoro" className="text-amber-400 font-bold hover:text-amber-300 text-sm transition-colors flex items-center gap-1.5 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/20">
+            <Link href="/clases" className="text-amber-400 font-bold hover:text-amber-300 text-sm transition-colors flex items-center gap-1.5 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/20">
               <BookOpen size={14} />
               <span>Clases de Tango</span>
             </Link>

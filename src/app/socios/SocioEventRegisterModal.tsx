@@ -51,6 +51,7 @@ interface RegistrationData {
   id: string
   eventId: string
   registrationType?: string
+  selectedClassIds?: string[]
   paymentStatus: string
   paymentMethod?: string | null
   amountPaid: number
@@ -67,8 +68,8 @@ export function SocioEventRegisterModal({ event, member, registration }: SocioEv
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   const defaultRegType = registration?.registrationType || (event.hasClasses ? "COMBO_CLASES" : "MILONGA")
-  const [registrationType, setRegistrationType] = useState<string>(defaultRegType.startsWith("CLASE_SUELTA") ? "CLASE_SUELTA" : defaultRegType)
-  const [selectedClassId, setSelectedClassId] = useState<string>(event.classes?.[0]?.id || "")
+  const [registrationType, setRegistrationType] = useState<string>(defaultRegType.startsWith("CLASE") ? "CLASE_SUELTA" : defaultRegType)
+  const [selectedClassIds, setSelectedClassIds] = useState<string[]>(registration?.selectedClassIds || [])
   const [paymentMethod, setPaymentMethod] = useState<"CASH" | "TRANSFER">("CASH")
   const [file, setFile] = useState<File | null>(null)
   const [filePreview, setFilePreview] = useState<string | null>(null)
@@ -84,12 +85,20 @@ export function SocioEventRegisterModal({ event, member, registration }: SocioEv
       return prices.comboSocio
     }
     if (registrationType === "CLASE_SUELTA") {
-      return prices.classLooseSocio
+      return selectedClassIds.length * prices.classLooseSocio
     }
     return prices.milongaSocio
   }
 
   const currentPrice = getCurrentPrice()
+
+  const toggleLooseClass = (classId: string) => {
+    setSelectedClassIds((currentIds) =>
+      currentIds.includes(classId)
+        ? currentIds.filter((id) => id !== classId)
+        : [...currentIds, classId]
+    )
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
@@ -119,16 +128,16 @@ export function SocioEventRegisterModal({ event, member, registration }: SocioEv
     setSuccessMsg(null)
     setFileError(null)
 
-    let finalRegType = registrationType
-    if (registrationType === "CLASE_SUELTA") {
-      const selectedCls = event.classes?.find(c => c.id === selectedClassId) || event.classes?.[0]
-      if (selectedCls?.title) {
-        finalRegType = `CLASE_SUELTA (${selectedCls.title})`
-      }
+    if (registrationType === "CLASE_SUELTA" && selectedClassIds.length === 0) {
+      alert("Elegí al menos una clase del temario.")
+      setIsSubmitting(false)
+      return
     }
 
     const formData = new FormData()
-    formData.append("registrationType", finalRegType)
+    formData.append("includeCombo", (registrationType === "COMBO_CLASES").toString())
+    formData.append("includeMilonga", (registrationType === "MILONGA").toString())
+    formData.append("selectedClassIds", JSON.stringify(registrationType === "CLASE_SUELTA" ? selectedClassIds : []))
     formData.append("paymentMethod", paymentMethod)
     if (file) {
       formData.append("paymentProof", file)
@@ -300,24 +309,23 @@ export function SocioEventRegisterModal({ event, member, registration }: SocioEv
                                 {registrationType === "CLASE_SUELTA" && event.classes && event.classes.length > 0 && (
                                   <div className="pl-4 border-l-2 border-cyan-500/40 space-y-2 pt-1 animate-in fade-in duration-200">
                                     <label className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block">
-                                      Seleccioná cuál clase vas a realizar:
+                                      Seleccioná las clases que vas a realizar:
                                     </label>
                                     <div className="space-y-1.5">
                                       {event.classes.map((cls, idx) => (
                                         <label
                                           key={cls.id || idx}
                                           className={`flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
-                                            (selectedClassId === cls.id || (!selectedClassId && idx === 0))
+                                            selectedClassIds.includes(cls.id)
                                               ? "bg-cyan-500/20 border-cyan-400 text-white font-bold"
                                               : "bg-black/40 border-white/10 text-zinc-400 hover:border-white/20"
                                           }`}
                                         >
                                           <div className="flex items-center gap-2">
                                             <input
-                                              type="radio"
-                                              name="socioSelectedClass"
-                                              checked={selectedClassId === cls.id || (!selectedClassId && idx === 0)}
-                                              onChange={() => setSelectedClassId(cls.id)}
+                                              type="checkbox"
+                                              checked={selectedClassIds.includes(cls.id)}
+                                              onChange={() => toggleLooseClass(cls.id)}
                                               className="accent-cyan-400"
                                             />
                                             <span>{cls.title}</span>

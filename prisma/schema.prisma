@@ -245,6 +245,7 @@ model EventRegistration {
   phone     String?
 
   registrationType String @default("MILONGA") // MILONGA
+  selectedClassIds String[] @default([]) // Clases sueltas elegidas dentro del temario
   amountPaid       Float   @default(0)
   paymentStatus    String  @default("PENDING") // PENDING, PAID
   paymentMethod    String? // CASH, TRANSFER, etc
@@ -567,5 +568,4 @@ model MemberBenefit {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
-
 

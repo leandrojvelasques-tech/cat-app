@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { OfficialLogo } from "@/components/OfficialLogo"
 import { 
   BookOpen, 
   MapPin, 
@@ -124,10 +125,7 @@ export function PublicClasesClient({ initialClasses }: { initialClasses: ClassIt
       <header className="fixed top-0 w-full z-50 bg-[#131313]/90 backdrop-blur-xl border-b border-white/5 transition-all duration-300">
         <nav className="flex justify-between items-center px-6 md:px-16 py-4 max-w-7xl mx-auto">
           <Link href="/" className="flex items-center gap-3 active:scale-95 transition-transform">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-700 flex items-center justify-center shadow-lg shadow-amber-500/20">
-              <span className="font-black text-lg text-zinc-950">C</span>
-            </div>
-            <span className="font-bold text-lg tracking-wider text-white">CAT</span>
+            <OfficialLogo className="h-9 w-[54px]" priority compact />
           </Link>
           
           <div>
