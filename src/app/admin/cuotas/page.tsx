@@ -1,21 +1,9 @@
 import { db } from "@/lib/db"
 import { 
   CreditCard, 
-  Search, 
-  Calendar, 
-  UserCheck, 
-  UserX, 
-  AlertCircle, 
-  DollarSign, 
-  Filter, 
-  TrendingUp, 
-  AlertTriangle,
-  History,
-  Eye,
   ChevronRight,
   Info,
-  Download,
-  FileText
+  Download
 } from "lucide-react"
 import Link from "next/link"
 import { format } from "date-fns"
@@ -156,9 +144,6 @@ export default async function CobranzasPage({
   })
 
   const historyToDisplay = filteredHistory
-  const totalCollected = historyToDisplay.reduce((acc, curr) => acc + curr.amount, 0)
-  const feeCount = historyToDisplay.filter(i => i.type === 'CUOTA').length
-  const eventCount = historyToDisplay.filter(i => i.type === 'EVENTO').length
 
   const events = await db.event.findMany({
     orderBy: { startDate: 'desc' },
@@ -234,56 +219,19 @@ export default async function CobranzasPage({
         events={events}
       />
 
-      {/* Stats Summary Panel */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white/5 border border-white/10 rounded-[32px] p-6 backdrop-blur-md relative overflow-hidden group">
-          <div className="absolute right-0 top-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl -mr-12 -mt-12 transition-all group-hover:bg-blue-500/10"></div>
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-400">
-              <TrendingUp size={20} />
-            </div>
-            <span className="text-[10px] font-black text-blue-500/50 uppercase tracking-widest">Total Recaudado</span>
-          </div>
-          <p className="text-3xl font-black text-white">${totalCollected.toLocaleString()}</p>
-          <p className="text-xs text-zinc-500 mt-1 uppercase font-bold tracking-tighter">Período seleccionado</p>
-        </div>
-
-        <div className="bg-white/5 border border-white/10 rounded-[32px] p-6 backdrop-blur-md relative overflow-hidden group">
-          <div className="absolute right-0 top-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl -mr-12 -mt-12 transition-all group-hover:bg-emerald-500/10"></div>
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400">
-              <UserCheck size={20} />
-            </div>
-          </div>
-          <p className="text-3xl font-black text-white">{feeCount}</p>
-          <p className="text-xs text-zinc-500 mt-1 uppercase font-bold tracking-tighter">Cuotas de Socios</p>
-        </div>
-
-        <div className="bg-white/5 border border-white/10 rounded-[32px] p-6 backdrop-blur-md relative overflow-hidden group">
-          <div className="absolute right-0 top-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl -mr-12 -mt-12 transition-all group-hover:bg-amber-500/10"></div>
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 bg-amber-500/10 rounded-2xl text-amber-400">
-              <Calendar size={20} />
-            </div>
-          </div>
-          <p className="text-3xl font-black text-white">{eventCount}</p>
-          <p className="text-xs text-zinc-500 mt-1 uppercase font-bold tracking-tighter">Entradas a Eventos</p>
-        </div>
-      </div>
-
       {/* Unified History table */}
       <div className="bg-white/5 border border-white/10 rounded-[40px] overflow-hidden backdrop-blur-md shadow-2xl pb-4">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="bg-white/[0.02] border-b border-white/10">
-                <th className="py-6 pl-10 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Fecha de Pago</th>
-                <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Fecha de Registro</th>
-                <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Pagador</th>
-                <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Categoría</th>
-                <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Forma de Pago</th>
-                <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Concepto</th>
-                <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Monto</th>
+                <th className="py-6 pl-10 pr-4 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Fecha de Pago</th>
+                <th className="py-6 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Fecha de Registro</th>
+                <th className="py-6 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Pagador</th>
+                <th className="py-6 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Categoría</th>
+                <th className="py-6 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Forma de Pago</th>
+                <th className="py-6 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Concepto</th>
+                <th className="py-6 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Monto</th>
                 <th className="py-6 pr-10 text-right text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Detalles</th>
               </tr>
             </thead>
@@ -295,20 +243,20 @@ export default async function CobranzasPage({
                 return (
                   <tr key={item.id} className="hover:bg-white/[0.03] transition-colors group">
                     {/* Fecha Real de Pago */}
-                    <td className="py-5 pl-10">
+                    <td className="py-5 pl-10 pr-4">
                       <div className="flex flex-col">
                         <span className="text-white font-bold text-sm">{format(item.realDate, "dd/MM/yyyy", { locale: es })}</span>
                         <span className="text-[9px] text-amber-600/70 font-bold uppercase tracking-widest mt-0.5">Fecha de Pago</span>
                       </div>
                     </td>
                     {/* Fecha de Registro en el sistema */}
-                    <td className="py-5">
+                    <td className="py-5 px-4">
                       <div className="flex flex-col">
                         <span className="text-zinc-400 font-medium text-sm">{format(item.date, "dd/MM/yyyy", { locale: es })}</span>
                         <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest mt-0.5">{format(item.date, "HH:mm")} hs</span>
                       </div>
                     </td>
-                    <td className="py-5">
+                    <td className="py-5 px-4">
                       <div className="flex flex-col">
                         {item.isMember ? (
                           <Link href={`/admin/socios/${item.memberId}`} className="text-amber-500 hover:text-amber-400 font-black text-xs uppercase tracking-tight transition-colors flex items-center gap-1 group/link">
@@ -323,7 +271,7 @@ export default async function CobranzasPage({
                       </div>
                     </td>
                     {/* Categoría */}
-                    <td className="py-5">
+                    <td className="py-5 px-4">
                       <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
                         item.type === 'CUOTA' 
                           ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
@@ -333,7 +281,7 @@ export default async function CobranzasPage({
                       </span>
                     </td>
                     {/* Forma de Pago */}
-                    <td className="py-5">
+                    <td className="py-5 px-4">
                       <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border flex items-center gap-1.5 w-fit ${
                         isTransfer 
                           ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' 
@@ -343,11 +291,11 @@ export default async function CobranzasPage({
                         {isTransfer ? 'TRANSFERENCIA' : 'EFECTIVO'}
                       </span>
                     </td>
-                    <td className="py-5 pr-4">
+                    <td className="py-5 px-4">
                       {/* No truncation — text wraps so full event names are always readable */}
                       <p className="text-zinc-300 text-[11px] font-medium leading-snug break-words max-w-[230px]">{item.reason}</p>
                     </td>
-                    <td className="py-5">
+                    <td className="py-5 px-4">
                       <span className="text-white font-black tracking-widest text-sm">${item.amount.toLocaleString()}</span>
                     </td>
                     <td className="py-5 pr-10 text-right">
