@@ -34,7 +34,8 @@ import {
   toggleTangoClassVisibility,
   createTangoTeacher,
   updateTangoTeacher,
-  deleteTangoTeacher
+  deleteTangoTeacher,
+  uploadTeacherPhoto
 } from "@/app/actions/clases-actions"
 
 interface LocalClass {
@@ -259,21 +260,32 @@ export function ClassManagementClient({
   }
 
   // Direct Photo File Upload Handler
-  const handleTeacherPhotoFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTeacherPhotoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (file.size > 3 * 1024 * 1024) {
-      toast.error("La foto es demasiado pesada. Máximo 3MB.")
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("La foto es demasiado pesada. Máximo 5MB.")
       return
     }
 
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      setTeacherForm(prev => ({ ...prev, photoUrl: reader.result as string }))
-      toast.success("Foto cargada con éxito")
+    const formData = new FormData()
+    formData.append("file", file)
+
+    const loadingToast = toast.loading("Subiendo foto al servidor...")
+    try {
+      const res = await uploadTeacherPhoto(formData)
+      toast.dismiss(loadingToast)
+      if (res.success && res.url) {
+        setTeacherForm(prev => ({ ...prev, photoUrl: res.url }))
+        toast.success("Foto cargada y guardada con éxito")
+      } else {
+        toast.error(res.error || "Error al subir la foto")
+      }
+    } catch (err: any) {
+      toast.dismiss(loadingToast)
+      toast.error("Error al subir la foto de perfil")
     }
-    reader.readAsDataURL(file)
   }
 
   const handleSaveTeacher = async (e: React.FormEvent) => {
@@ -655,7 +667,29 @@ export function ClassManagementClient({
             <form onSubmit={handleSaveClass} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-zinc-300">Profesor / Docente *</label>
+                  <div className="flex justify-between items-center">
+                    <label className="text-xs font-bold text-zinc-300">Profesor / Docente *</label>
+                    {teachers.length > 0 && (
+                      <select
+                        onChange={(e) => {
+                          const selected = teachers.find(t => t.id === e.target.value)
+                          if (selected) {
+                            setClassForm(prev => ({
+                              ...prev,
+                              teacherName: selected.fullName,
+                              teacherId: selected.id
+                            }))
+                          }
+                        }}
+                        className="bg-zinc-800 text-[10px] text-amber-400 rounded-lg px-2 py-0.5 border border-amber-500/30 focus:outline-none"
+                      >
+                        <option value="">Seleccionar del directorio...</option>
+                        {teachers.map(t => (
+                          <option key={t.id} value={t.id}>{t.fullName}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
                   <input
                     type="text"
                     placeholder="Ej: Leandro y Camila"

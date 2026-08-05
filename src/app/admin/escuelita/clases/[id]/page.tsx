@@ -33,7 +33,7 @@ export default async function ClassDetail({ params }: { params: Promise<{ id: st
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-semibold tracking-tight text-white/90">Clase del {new Date(escuelitaClass.date).toLocaleDateString('es-ES')}</h1>
-              <span className="px-2 py-0.5 text-[10px] font-bold rounded-lg border bg-blue-500/10 text-blue-400 border-blue-500/20 uppercase">Escuelita</span>
+              <span className="px-2 py-0.5 text-[10px] font-bold rounded-lg border bg-blue-500/10 text-blue-400 border-blue-500/20 uppercase">Escuela del CAT</span>
             </div>
             <p className="text-zinc-500 mt-1 flex items-center gap-2">
               <Users size={14} className="text-zinc-500" /> Profesores: <span className="text-zinc-300 font-medium">{escuelitaClass.teachers}</span>

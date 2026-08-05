@@ -3,6 +3,8 @@
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
+import { writeFileSync, existsSync, mkdirSync } from "fs"
+import { join } from "path"
 
 // ==========================================
 // PUBLIC ACTIONS
@@ -332,3 +334,33 @@ export async function deleteTangoTeacher(id: string) {
     return { success: false, error: error.message || "Error al eliminar profesor" }
   }
 }
+
+export async function uploadTeacherPhoto(formData: FormData) {
+  try {
+    await checkAdminAuth()
+    const file = formData.get("file") as File
+    if (!file || typeof file === "string") {
+      return { success: false, error: "No se proporcionó archivo de imagen" }
+    }
+
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
+
+    const uploadDir = join(process.cwd(), "public", "uploads")
+    if (!existsSync(uploadDir)) {
+      mkdirSync(uploadDir, { recursive: true })
+    }
+
+    const ext = file.name.split('.').pop() || 'jpg'
+    const uniqueName = `teacher_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`
+    const filepath = join(uploadDir, uniqueName)
+
+    writeFileSync(filepath, buffer)
+
+    return { success: true, url: `/uploads/${uniqueName}` }
+  } catch (error: any) {
+    console.error("Error uploading teacher photo:", error)
+    return { success: false, error: error.message || "Error al subir foto" }
+  }
+}
+

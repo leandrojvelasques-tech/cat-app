@@ -26,7 +26,7 @@ export default async function AdminDashboard() {
               <GraduationCap size={24} />
             </div>
             <div className="mt-8">
-              <h3 className="text-xl font-bold text-white group-hover:text-cat-gold transition-colors">Escuelita CAT</h3>
+              <h3 className="text-xl font-bold text-white group-hover:text-cat-gold transition-colors">Escuela del CAT</h3>
               <p className="text-zinc-400 text-xs mt-1.5 font-light">Administre las clases de la escuela, registre alumnos y controle las asistencias diarias.</p>
             </div>
           </Link>
@@ -415,7 +415,7 @@ export default async function AdminDashboard() {
             <div className="relative z-10">
                <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
                  <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
-                 Escuelita CAT
+                 Escuela del CAT
                </h3>
                <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest mb-6">Última Clase Registrada</p>
                
@@ -428,7 +428,7 @@ export default async function AdminDashboard() {
                    href="/admin/escuelita" 
                    className="inline-flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 px-4 py-2 rounded-xl text-xs font-bold transition-all border border-blue-500/30"
                  >
-                   Módulo Escuelita <ArrowRight size={14} />
+                   Módulo Escuela del CAT <ArrowRight size={14} />
                  </Link>
                </div>
             </div>
@@ -438,7 +438,7 @@ export default async function AdminDashboard() {
             <div className="flex justify-between items-center mb-6">
                <h3 className="text-lg font-bold text-white flex items-center gap-2">
                  <div className="w-1 h-6 bg-cyan-500 rounded-full"></div>
-                 Frecuencia Escuelita
+                 Asistencia Escuela del CAT
                </h3>
                <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">Últimos 3 meses</span>
             </div>

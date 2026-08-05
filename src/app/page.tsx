@@ -18,7 +18,6 @@ import {
 import { EscuelitaCarousel } from "./EscuelitaCarousel"
 import { NovedadesHomeSection } from "./NovedadesHomeSection"
 import { OfficialLogo } from "@/components/OfficialLogo"
-
 import { getNextEventDate, getDayName, isExternalEvent } from "@/lib/event-utils"
 import { Repeat, Sparkles as SparklesIcon } from "lucide-react"
 import { getCurrentFeeAmount } from "@/lib/fee-utils"
@@ -60,9 +59,13 @@ export default async function Home() {
   const docentesSetting = await db.setting.findUnique({
     where: { key: "escuelita_docentes_mes" }
   })
+  const docentesJsonSetting = await db.setting.findUnique({
+    where: { key: "escuelita_docentes_mes_json" }
+  })
   const currentDocentes = docentesSetting?.value || "Profesores Rotativos de la Comisión"
+  const monthlyTeachersList = docentesJsonSetting?.value ? JSON.parse(docentesJsonSetting.value) : []
 
-  // Obtener fotos reales de la escuelita
+  // Obtener fotos reales de la escuela
   const escuelitaClasses = await db.escuelitaClass.findMany({
     where: {
       NOT: { photoUrl: null }
@@ -369,7 +372,7 @@ export default async function Home() {
               <div className="w-12 h-12 rounded-2xl bg-cat-gold/10 flex items-center justify-center mb-6 text-cat-gold group-hover:scale-110 transition-transform shadow-lg shadow-cat-gold/5">
                 <GraduationCap size={24} />
               </div>
-              <h3 className="text-lg font-bold text-white mb-3">Escuelita Gratuita</h3>
+              <h3 className="text-lg font-bold text-white mb-3">Escuela del CAT (Gratuita)</h3>
               <p className="text-zinc-400 text-sm font-light leading-relaxed">Formación abierta y accesible para todas las edades, garantizando que el tango siga vivo en las nuevas generaciones.</p>
             </div>
             
@@ -385,7 +388,7 @@ export default async function Home() {
       </section>
 
       {/* Escuelita Section */}
-      <EscuelitaCarousel photos={carouselPhotos} docentes={currentDocentes} />
+      <EscuelitaCarousel photos={carouselPhotos} docentes={currentDocentes} teachersList={monthlyTeachersList} />
 
       {/* Comisión Directiva Section */}
       {sortedBoard.length > 0 && (
@@ -487,7 +490,7 @@ export default async function Home() {
                 </li>
                 <li className="flex items-start gap-4">
                   <div className="mt-1 w-2 h-2 rounded-full bg-cat-gold shrink-0" />
-                  <p className="text-sm md:text-base text-zinc-300 font-light">Ayudás a mantener la "Escuelita del CAT" para que más personas aprendan a bailar tango de forma gratuita.</p>
+                  <p className="text-sm md:text-base text-zinc-300 font-light">Ayudás a mantener la "Escuela del CAT" para que más personas aprendan a bailar tango de forma gratuita.</p>
                 </li>
                 <li className="flex items-start gap-4">
                   <div className="mt-1 w-2 h-2 rounded-full bg-cat-gold shrink-0" />

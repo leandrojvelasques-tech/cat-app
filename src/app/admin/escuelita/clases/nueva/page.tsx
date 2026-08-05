@@ -9,7 +9,7 @@ export default function NuevaClaseEscuelita() {
     <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
         <div className="flex items-center gap-3">
-           <Link href="/admin/escuelita" className="text-zinc-500 hover:text-white transition-colors">Escuelita</Link>
+           <Link href="/admin/escuelita" className="text-zinc-500 hover:text-white transition-colors">Escuela del CAT</Link>
            <span className="text-zinc-700">/</span>
            <span className="text-white">Nueva Clase</span>
         </div>

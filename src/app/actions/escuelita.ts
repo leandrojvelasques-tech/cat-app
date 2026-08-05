@@ -106,6 +106,37 @@ export async function uploadClassPhoto(formData: FormData) {
   revalidatePath(`/admin/escuelita/clases/${classId}`)
 }
 
+import { writeFileSync, existsSync, mkdirSync } from "fs"
+import { join } from "path"
+
+export async function uploadEscuelitaDocentePhoto(formData: FormData) {
+  try {
+    const file = formData.get("file") as File
+    if (!file || typeof file === "string") {
+      return { success: false, error: "No se proporcionó archivo de imagen" }
+    }
+
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
+
+    const uploadDir = join(process.cwd(), "public", "uploads")
+    if (!existsSync(uploadDir)) {
+      mkdirSync(uploadDir, { recursive: true })
+    }
+
+    const ext = file.name.split('.').pop() || 'jpg'
+    const uniqueName = `escuelita_teacher_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`
+    const filepath = join(uploadDir, uniqueName)
+
+    writeFileSync(filepath, buffer)
+
+    return { success: true, url: `/uploads/${uniqueName}` }
+  } catch (error: any) {
+    console.error("Error al subir foto de docente de Escuela del CAT:", error)
+    return { success: false, error: error.message || "Error al subir la foto" }
+  }
+}
+
 export async function updateEscuelitaDocentes(formData: FormData) {
   try {
     const docentes = formData.get("docentes_mes") as string
@@ -119,6 +150,60 @@ export async function updateEscuelitaDocentes(formData: FormData) {
     revalidatePath("/admin/escuelita")
     revalidatePath("/")
   } catch (e: any) {
-    console.error("Error al actualizar docentes del mes de la escuelita:", e)
+    console.error("Error al actualizar docentes del mes de la escuela:", e)
   }
 }
+
+export interface MonthlyTeacher {
+  id: string
+  firstName: string
+  lastName: string
+  photoUrl: string
+  role?: string
+}
+
+export async function updateEscuelitaDocentesStructured(teachers: MonthlyTeacher[]) {
+  try {
+    const jsonValue = JSON.stringify(teachers)
+    
+    // Save structured JSON
+    await db.setting.upsert({
+      where: { key: "escuelita_docentes_mes_json" },
+      update: { value: jsonValue },
+      create: { key: "escuelita_docentes_mes_json", value: jsonValue }
+    })
+
+    // Also update raw string summary for fallback compatibility
+    const namesSummary = teachers.length > 0 
+      ? teachers.map(t => `${t.firstName} ${t.lastName}`).join(" y ") 
+      : "Profesores Rotativos de la Comisión"
+
+    await db.setting.upsert({
+      where: { key: "escuelita_docentes_mes" },
+      update: { value: namesSummary },
+      create: { key: "escuelita_docentes_mes", value: namesSummary }
+    })
+
+    revalidatePath("/admin/escuelita")
+    revalidatePath("/")
+    return { success: true }
+  } catch (e: any) {
+    console.error("Error al actualizar profesores del mes estructurados:", e)
+    return { success: false, error: e.message || "Error al guardar profesores" }
+  }
+}
+
+export async function getEscuelitaDocentesStructured(): Promise<MonthlyTeacher[]> {
+  try {
+    const setting = await db.setting.findUnique({
+      where: { key: "escuelita_docentes_mes_json" }
+    })
+
+    if (!setting?.value) return []
+    return JSON.parse(setting.value) as MonthlyTeacher[]
+  } catch (e) {
+    console.error("Error al obtener profesores del mes estructurados:", e)
+    return []
+  }
+}
+

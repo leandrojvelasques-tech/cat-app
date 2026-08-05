@@ -3,12 +3,21 @@
 import { useState } from "react"
 import { ChevronLeft, ChevronRight, GraduationCap, Clock, MapPin, Sparkles, Heart } from "lucide-react"
 
+import { Users } from "lucide-react"
+
 interface EscuelitaCarouselProps {
   photos: string[]
   docentes: string
+  teachersList?: Array<{
+    id: string
+    firstName: string
+    lastName: string
+    photoUrl: string
+    role?: string
+  }>
 }
 
-export function EscuelitaCarousel({ photos, docentes }: EscuelitaCarouselProps) {
+export function EscuelitaCarousel({ photos, docentes, teachersList = [] }: EscuelitaCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
 
   function nextSlide() {
@@ -27,7 +36,7 @@ export function EscuelitaCarousel({ photos, docentes }: EscuelitaCarouselProps) 
         <div className="lg:col-span-5 space-y-8">
           <div>
             <span className="px-3 py-1 text-[10px] font-black tracking-widest bg-cat-gold/10 text-cat-gold rounded-full border border-cat-gold/20 uppercase">
-              La Escuelita del CAT
+              Escuela del CAT
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-white font-serif mt-4">
               Aprender Tango es <span className="bg-gradient-to-r from-cat-gold to-cat-bronze bg-clip-text text-transparent">Gratuito</span>
@@ -56,10 +65,32 @@ export function EscuelitaCarousel({ photos, docentes }: EscuelitaCarouselProps) 
 
             <div className="flex gap-4 items-start bg-[#59412c]/10 border border-[#59412c]/20 p-4 rounded-2xl">
               <GraduationCap className="text-cat-gold shrink-0 mt-0.5" size={20} />
-              <div>
-                <h4 className="text-sm font-bold text-white">Docentes de este Mes</h4>
-                <p className="text-sm text-cat-gold font-bold mt-1 font-serif">{docentes}</p>
-                <p className="text-[10px] text-zinc-500 font-light mt-0.5">Rotación voluntaria mensual de socios CAT.</p>
+              <div className="w-full">
+                <h4 className="text-sm font-bold text-white mb-1">Docentes de este Mes</h4>
+
+                {teachersList && teachersList.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                    {teachersList.map((t) => (
+                      <div key={t.id} className="flex items-center gap-2.5 bg-black/40 p-2 rounded-xl border border-white/5">
+                        <div className="w-9 h-9 rounded-full overflow-hidden bg-zinc-800 border border-cat-gold/30 shrink-0 flex items-center justify-center">
+                          {t.photoUrl ? (
+                            <img src={t.photoUrl} alt={`${t.firstName} ${t.lastName}`} className="w-full h-full object-cover" />
+                          ) : (
+                            <Users size={16} className="text-zinc-400" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-white truncate">{t.firstName} {t.lastName}</p>
+                          <p className="text-[10px] text-cat-gold/80 font-medium truncate">{t.role || "Docente CAT"}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-cat-gold font-bold mt-1 font-serif">{docentes}</p>
+                )}
+
+                <p className="text-[10px] text-zinc-500 font-light mt-2">Rotación voluntaria mensual de socios CAT.</p>
               </div>
             </div>
           </div>

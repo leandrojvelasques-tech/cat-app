@@ -13,7 +13,7 @@ export function AdminNav({ role }: { role?: string }) {
     { href: "/admin/cuotas", icon: CreditCard, label: "Caja" },
     { href: "/admin/eventos", icon: Calendar, label: "Eventos" },
     { href: "/admin/clases-comodoro", icon: BookOpen, label: "Clases de Tango" },
-    { href: "/admin/escuelita", icon: GraduationCap, label: "Escuelita CAT" },
+    { href: "/admin/escuelita", icon: GraduationCap, label: "Escuela del CAT" },
     { href: "/admin/vientos-de-tango", icon: Trophy, label: "Vientos de Tango" },
     { href: "/admin/juegos", icon: Gamepad2, label: "Juegos" },
     // Usuarios now lives inside Ajustes (configuracion)

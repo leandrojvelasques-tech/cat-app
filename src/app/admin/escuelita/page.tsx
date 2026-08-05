@@ -1,7 +1,8 @@
 import { db } from "@/lib/db"
 import Link from "next/link"
-import { GraduationCap, Users, CalendarDays, Plus, ListChecks, History, UserCheck } from "lucide-react"
-import { updateEscuelitaDocentes } from "@/app/actions/escuelita"
+import { GraduationCap, Users, CalendarDays, Plus, ListChecks, History } from "lucide-react"
+import { getEscuelitaDocentesStructured } from "@/app/actions/escuelita"
+import { MonthlyTeachersManager } from "./MonthlyTeachersManager"
 
 export default async function EscuelitaDashboard() {
   const classes = await db.escuelitaClass.findMany({
@@ -23,13 +24,14 @@ export default async function EscuelitaDashboard() {
     where: { key: "escuelita_docentes_mes" }
   })
   const currentDocentes = docentesSetting?.value || "Profesores Rotativos de la Comisión"
+  const structuredTeachers = await getEscuelitaDocentesStructured()
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-semibold tracking-tight text-white/90">Escuelita CAT</h1>
+            <h1 className="text-3xl font-semibold tracking-tight text-white/90">Escuela del CAT</h1>
             <span className="px-2 py-0.5 text-[10px] font-bold rounded-lg border bg-blue-500/10 text-blue-400 border-blue-500/20 uppercase">Comunidad</span>
           </div>
           <p className="text-zinc-500 mt-1">Gestión de clases gratuitas de tango, asistencia y estadísticas.</p>
@@ -54,7 +56,7 @@ export default async function EscuelitaDashboard() {
         <div className="bg-white/5 border border-white/10 rounded-3xl p-6">
           <h3 className="text-sm font-medium text-zinc-400 flex items-center gap-2"><Users size={16} className="text-emerald-500"/> Alumnos Únicos</h3>
           <p className="text-4xl font-bold text-white mt-4">{totalStudents}</p>
-          <p className="text-xs text-zinc-500 mt-1">Personas que pasaron por la escuelita</p>
+          <p className="text-xs text-zinc-500 mt-1">Personas registradas en la escuela</p>
         </div>
         <div className="bg-white/5 border border-white/10 rounded-3xl p-6">
           <h3 className="text-sm font-medium text-zinc-400 flex items-center gap-2"><History size={16} className="text-amber-500"/> Clases Dictadas</h3>
@@ -124,43 +126,16 @@ export default async function EscuelitaDashboard() {
           </section>
         </div>
 
-        {/* Configuración de Profesores del Mes (Col span 1) */}
+        {/* Configuración de Profesores del Mes con foto (Col span 1) */}
         <div>
-          <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md space-y-6">
-            <div>
-              <h2 className="text-base font-semibold text-white flex items-center gap-2">
-                <UserCheck className="text-blue-500" size={18} />
-                <span>Profesores del Mes</span>
-              </h2>
-              <p className="text-xs text-zinc-500 mt-1">
-                Especifique los docentes a cargo este mes para mostrar en la web pública.
-              </p>
-            </div>
-
-            <form action={updateEscuelitaDocentes} className="space-y-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Docentes a cargo</label>
-                <input 
-                  type="text"
-                  name="docentes_mes"
-                  defaultValue={currentDocentes}
-                  placeholder="Ej: Juan Pérez y María Gómez"
-                  required
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500/50 outline-none"
-                />
-              </div>
-
-              <button 
-                type="submit" 
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs transition-all cursor-pointer shadow-lg shadow-blue-900/20"
-              >
-                Guardar Cambios
-              </button>
-            </form>
-          </div>
+          <MonthlyTeachersManager 
+            initialTeachers={structuredTeachers} 
+            initialDocentesText={currentDocentes} 
+          />
         </div>
 
       </div>
     </div>
   )
 }
+

@@ -91,7 +91,7 @@ export default async function AsociatePage() {
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-cat-gold shrink-0" />
-                  <span className="text-sm text-zinc-300 font-light">Sostenimiento de la "Escuelita del CAT" para dar clases de tango gratuitas.</span>
+                  <span className="text-sm text-zinc-300 font-light">Sostenimiento de la "Escuela del CAT" para dar clases de tango gratuitas.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-cat-gold shrink-0" />

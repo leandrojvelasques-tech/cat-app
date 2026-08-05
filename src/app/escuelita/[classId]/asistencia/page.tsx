@@ -21,7 +21,7 @@ export default async function PublicAttendancePage({ params }: { params: Promise
            <div className="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center border border-blue-500/20 mb-4">
              <span className="text-2xl font-black text-blue-500">C</span>
            </div>
-           <h1 className="text-2xl font-bold text-white text-center">Escuelita CAT</h1>
+           <h1 className="text-2xl font-bold text-white text-center">Escuela del CAT</h1>
            <p className="text-sm text-zinc-500 mt-1 text-center">Registro de asistencia a clase gratuita</p>
            <div className="mt-4 inline-block px-3 py-1 bg-white/5 border border-white/10 rounded-full text-xs font-medium text-zinc-300">
              {new Date(escuelitaClass.date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
