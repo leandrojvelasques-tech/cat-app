@@ -284,7 +284,7 @@ export default async function CobranzasPage({
                 <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Forma de Pago</th>
                 <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Concepto</th>
                 <th className="py-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Monto</th>
-                <th className="py-6 pr-10 text-right text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Acciones</th>
+                <th className="py-6 pr-10 text-right text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Detalles</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -351,23 +351,7 @@ export default async function CobranzasPage({
                       <span className="text-white font-black tracking-widest text-sm">${item.amount.toLocaleString()}</span>
                     </td>
                     <td className="py-5 pr-10 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {item.proofUrl && (
-                          <PaymentDetailModal 
-                            payment={item} 
-                            trigger={
-                              <button 
-                                className="flex items-center gap-1 px-2.5 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all"
-                                title="Ver comprobante adjunto"
-                              >
-                                <FileText size={13} />
-                                <span>Comprobante</span>
-                              </button>
-                            }
-                          />
-                        )}
-                        <PaymentDetailModal payment={item} />
-                      </div>
+                      <PaymentDetailModal payment={item} />
                     </td>
                   </tr>
                 )
