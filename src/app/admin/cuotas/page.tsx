@@ -23,6 +23,7 @@ import { es } from "date-fns/locale"
 import { CobranzasFilters } from "./CobranzasFilters"
 import { PaymentDetailModal } from "./PaymentDetailModal"
 import { ApproveFeePaymentButton } from "./ApproveFeePaymentButton"
+import { extractPaymentProofUrl } from "@/lib/proof-utils"
 
 export default async function CobranzasPage({
   searchParams,
@@ -102,11 +103,7 @@ export default async function CobranzasPage({
   // 3. Unify and Map Data
   const unifiedHistory = [
     ...fees.map(f => {
-      let proofUrl: string | null = null
-      if (f.notes) {
-        const match = f.notes.match(/\[COMPROBANTE: (.*?)\]/)
-        if (match) proofUrl = match[1]
-      }
+      const proofUrl = extractPaymentProofUrl(f)
       return {
         id: f.id,
         paymentId: f.id,
@@ -125,7 +122,7 @@ export default async function CobranzasPage({
       }
     }),
     ...registrations.map(r => {
-      let proofUrl: string | null = r.paymentProof || null
+      const proofUrl = extractPaymentProofUrl(r)
       return {
         id: r.id,
         paymentId: r.id,

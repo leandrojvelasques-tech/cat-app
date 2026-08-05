@@ -1,9 +1,8 @@
-"use client"
-
 import { useState } from "react"
-import { Eye, X, User, Calendar, CreditCard, Clock, Info, ShieldCheck, Tag } from "lucide-react"
+import { Eye, X, User, Calendar, CreditCard, Clock, Info, ShieldCheck, Tag, FileText, ExternalLink } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import { extractPaymentProofUrl } from "@/lib/proof-utils"
 
 interface PaymentDetailModalProps {
   payment: any
@@ -12,8 +11,10 @@ interface PaymentDetailModalProps {
 
 export function PaymentDetailModal({ payment, trigger }: PaymentDetailModalProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [imgError, setImgError] = useState(false)
 
   const data = payment.fullData
+  const proofUrl = extractPaymentProofUrl(payment)
 
   return (
     <>
@@ -77,7 +78,7 @@ export function PaymentDetailModal({ payment, trigger }: PaymentDetailModalProps
                       <Info size={12} /> Grabado por
                    </p>
                    <p className="text-white font-bold text-sm uppercase flex items-center gap-2">
-                     <ShieldCheck size={14} className="text-emerald-500" /> {payment?.recordedBy || "Sistema"}
+                      <ShieldCheck size={14} className="text-emerald-500" /> {payment?.recordedBy || "Sistema"}
                    </p>
                 </div>
               </div>
@@ -114,38 +115,65 @@ export function PaymentDetailModal({ payment, trigger }: PaymentDetailModalProps
             </div>
 
             {/* Proof of Payment Section */}
-            {(payment?.proofUrl || payment?.fullData?.paymentProof || payment?.fullData?.notes?.includes('[COMPROBANTE:')) && (
+            {proofUrl && (
               <div className="pt-8 border-t border-white/10 relative z-10 space-y-4">
-                 <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 flex items-center gap-2 italic mb-4">
-                    <Eye size={12} /> Comprobante de Pago
-                 </p>
-                 <div className="bg-black/60 rounded-[40px] border border-white/10 overflow-hidden group/img relative min-h-[200px] flex items-center justify-center">
+                 <div className="flex justify-between items-center mb-2">
+                   <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2 italic">
+                      <FileText size={12} className="text-amber-400" /> Comprobante de Pago Adjunto
+                   </p>
+                   <a 
+                     href={proofUrl} 
+                     target="_blank" 
+                     rel="noopener noreferrer"
+                     className="flex items-center gap-1 text-[10px] font-bold text-amber-400 hover:text-amber-300 transition-colors uppercase tracking-wider"
+                   >
+                     <ExternalLink size={12} /> Ver en Pantalla Completa
+                   </a>
+                 </div>
+                 
+                 <div className="bg-black/60 rounded-[32px] border border-white/10 overflow-hidden group/img relative min-h-[220px] p-4 flex items-center justify-center">
                     {(() => {
-                      let proofUrl = payment?.proofUrl || ""
-                      if (!proofUrl && payment?.fullData?.paymentProof) {
-                        proofUrl = payment.fullData.paymentProof
-                      } else if (!proofUrl && payment?.fullData?.notes) {
-                        // Extract from notes for CUOTAS
-                        const match = payment.fullData.notes.match(/\[COMPROBANTE: (.*?)\]/)
-                        if (match) proofUrl = match[1]
+                      const isPdf = proofUrl.startsWith("data:application/pdf") || proofUrl.toLowerCase().endsWith(".pdf")
+
+                      if (isPdf) {
+                        return (
+                          <div className="w-full flex flex-col items-center gap-3 p-4">
+                            <FileText size={40} className="text-amber-400" />
+                            <p className="text-xs text-zinc-300 font-medium">Documento PDF adjunto</p>
+                            <a 
+                              href={proofUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
+                            >
+                              <ExternalLink size={14} /> Abrir PDF Completo
+                            </a>
+                          </div>
+                        )
                       }
 
-                      if (!proofUrl) return <p className="text-zinc-700 italic text-[10px] uppercase font-black">Link no válido</p>
-
-                      if (proofUrl.startsWith('data:') || proofUrl.startsWith('http://') || proofUrl.startsWith('https://') || proofUrl.startsWith('/')) {
-                        return <img src={proofUrl} alt="Comprobante" className="max-w-full h-auto cursor-zoom-in group-hover/img:scale-[1.02] transition-transform duration-700" />
+                      if (!imgError) {
+                        return (
+                          <img 
+                            src={proofUrl} 
+                            alt="Comprobante de pago" 
+                            className="max-w-full max-h-[400px] object-contain rounded-2xl border border-white/10 shadow-lg cursor-zoom-in hover:scale-[1.01] transition-transform duration-300" 
+                            onError={() => setImgError(true)}
+                          />
+                        )
                       }
-                      
+
                       return (
-                        <div className="p-10 text-center">
-                           <p className="text-zinc-500 text-xs mb-4">El comprobante es un archivo externo o antiguo.</p>
+                        <div className="p-8 text-center flex flex-col items-center gap-3">
+                           <FileText size={36} className="text-amber-400" />
+                           <p className="text-zinc-400 text-xs font-medium">Comprobante externo o link adjunto</p>
                            <a 
                              href={proofUrl} 
                              target="_blank" 
                              rel="noopener noreferrer"
-                             className="inline-block bg-white text-black px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all"
+                             className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                            >
-                             Ver Archivo Externo
+                             <ExternalLink size={14} /> Abrir Archivo Adjunto
                            </a>
                         </div>
                       )
