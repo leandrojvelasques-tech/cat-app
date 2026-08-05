@@ -1,3 +1,5 @@
+"use client"
+
 import { useState } from "react"
 import { Eye, X, User, Calendar, CreditCard, Clock, Info, ShieldCheck, Tag, FileText, ExternalLink } from "lucide-react"
 import { format } from "date-fns"
