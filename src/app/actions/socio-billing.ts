@@ -5,8 +5,6 @@ import { auth } from "@/auth"
 import { revalidatePath } from "next/cache"
 import { validateAndSanitizeFile } from "@/lib/security-utils"
 import { sendFeePaymentPendingEmail } from "@/lib/emails"
-import { writeFileSync, existsSync, mkdirSync } from "fs"
-import { join } from "path"
 
 export async function submitSocioPaymentProof(formData: FormData) {
   try {
@@ -63,16 +61,9 @@ export async function submitSocioPaymentProof(formData: FormData) {
         return { success: false, error: validation.error || "Formato de comprobante no válido por seguridad." }
       }
 
-      const uploadDir = join(process.cwd(), "public", "uploads")
-      if (!existsSync(uploadDir)) {
-        mkdirSync(uploadDir, { recursive: true })
-      }
-      const ext = file.name.split('.').pop() || "png"
-      const uniqueName = `cuota-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`
-      const filepath = join(uploadDir, uniqueName)
-      writeFileSync(filepath, buffer)
-
-      paymentProofUrl = `/uploads/${uniqueName}`
+      // Vercel's serverless filesystem is read-only. Store the validated file
+      // inline so the proof remains available to the member and treasury views.
+      paymentProofUrl = `data:${validation.mimeType};base64,${buffer.toString("base64")}`
     }
 
     const proofNote = paymentProofUrl 
