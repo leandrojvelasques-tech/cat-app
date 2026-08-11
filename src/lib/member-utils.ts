@@ -1,4 +1,28 @@
-export type CalculatedStatus = 'AL DIA' | 'EN MORA' | 'INACTIVO' | 'SUSPENDIDO' | 'BAJA' | 'HONORARIO'
+export type SocietaryStatus = 'ACTIVO' | 'HONORARIO' | 'BAJA'
+export type PaymentStatus = 'AL DIA' | 'EN MORA' | 'SUSPENDIDO'
+export type CalculatedStatus = PaymentStatus | 'BAJA' | 'HONORARIO'
+
+const LEGACY_BAJA_STATUSES = [
+  'DECEASED',
+  'RESIGNED',
+  'ARCHIVED',
+  'INACTIVE',
+  'DUPLICATE',
+  'MOROSIDAD',
+  'ADMINISTRATIVE',
+] as const
+
+export function getSocietaryStatus(member: any): SocietaryStatus {
+  if (member.type === 'HONORARIO' && member.status !== 'BAJA') {
+    return 'HONORARIO'
+  }
+
+  if (member.status === 'BAJA' || LEGACY_BAJA_STATUSES.includes(member.status)) {
+    return 'BAJA'
+  }
+
+  return 'ACTIVO'
+}
 
 /**
  * Calculates the current status of a member based on payment and activity history.
@@ -7,12 +31,12 @@ export type CalculatedStatus = 'AL DIA' | 'EN MORA' | 'INACTIVO' | 'SUSPENDIDO' 
  */
 export function calculateMemberStatus(member: any, now: Date = new Date()): CalculatedStatus {
   // If the member is an Honorary Member, they are permanently HONORARIO (exempt from fee debt)
-  if (member.type === 'HONORARIO') {
+  if (member.type === 'HONORARIO' && member.status !== 'BAJA') {
     return 'HONORARIO'
   }
 
   // If the manual status is already a terminal state, return BAJA
-  if (["DECEASED", "RESIGNED", "ARCHIVED", "INACTIVE", "DUPLICATE", "MOROSIDAD", "ADMINISTRATIVE"].includes(member.status)) {
+  if (member.status === 'BAJA' || LEGACY_BAJA_STATUSES.includes(member.status)) {
     return 'BAJA'
   }
 
@@ -47,21 +71,6 @@ export function calculateMemberStatus(member: any, now: Date = new Date()): Calc
   // 1. AL DIA: Pagó el mes de referencia exigible o posterior (ej. Junio o posterior)
   if (hasPaidOnOrAfter(referenceMonth, referenceYear)) {
     return 'AL DIA'
-  }
-
-  // Calcular meses previos de referencia M1 (Mayo) y M2 (Abril)
-  let monthM1 = referenceMonth - 1
-  let yearM1 = referenceYear
-  if (monthM1 === 0) {
-    monthM1 = 12
-    yearM1 = referenceYear - 1
-  }
-
-  let monthM2 = referenceMonth - 2
-  let yearM2 = referenceYear
-  if (monthM2 <= 0) {
-    monthM2 = 12 + monthM2
-    yearM2 = referenceYear - 1
   }
 
   // Calcular meses de deuda esperados en 2026 desde su ingreso
@@ -99,21 +108,31 @@ export function calculateMemberStatus(member: any, now: Date = new Date()): Calc
   const debtMonths = unpaidMonths.length
 
   // 2. EN MORA: Pagó Mayo o Abril, o debe menos de 3 meses en total
-  if (hasPaid(monthM1, yearM1) || hasPaid(monthM2, yearM2) || (debtMonths > 0 && debtMonths < 3)) {
+  if (debtMonths > 0 && debtMonths <= 3) {
     return 'EN MORA'
   }
 
   // 3. INACTIVO: Pagó al menos una cuota en 2026 (Enero, Febrero, Marzo)
-  const hasPaidInReferenceYear = paidFees.some((f: any) => f.periodYear === referenceYear)
-  if (hasPaidInReferenceYear) {
-    return 'INACTIVO'
-  }
-
   // 4. SUSPENDIDO: No registra ningún pago en 2026
   return 'SUSPENDIDO'
 }
 
+export function getPaymentStatus(member: any, now: Date = new Date()): PaymentStatus {
+  if (member.type === 'HONORARIO' || member.status === 'BAJA') return 'AL DIA'
+
+  if (['AL DIA', 'EN MORA', 'SUSPENDIDO'].includes(member.debtStatus)) {
+    return member.debtStatus
+  }
+
+  const calculatedStatus = calculateMemberStatus(member, now)
+  if (calculatedStatus === 'BAJA' || calculatedStatus === 'HONORARIO') return 'AL DIA'
+  return calculatedStatus
+}
+
 export function getMemberBajaReason(member: any): string | null {
+  if (member.bajaReason === 'FALLECIMIENTO') return "Fallecimiento"
+  if (member.bajaReason === 'RENUNCIA') return "Renuncia"
+  if (member.bajaReason === 'BAJA_ADMINISTRATIVA') return "Decisión Administrativa"
   if (member.status === "DECEASED") return "Fallecimiento"
   if (member.status === "RESIGNED") return "Renuncia"
   if (member.status === "DUPLICATE") return "Socio Duplicado"
@@ -130,7 +149,6 @@ export function getStatusBadgeStyles(status: CalculatedStatus) {
     case 'HONORARIO': return "bg-gradient-to-r from-amber-500/20 to-yellow-500/10 text-amber-300 border-amber-500/40 font-bold"
     case 'AL DIA': return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
     case 'EN MORA': return "bg-amber-500/10 text-amber-300 border-amber-500/20"
-    case 'INACTIVO': return "bg-zinc-500/10 text-zinc-400 border-white/10"
     case 'SUSPENDIDO': return "bg-red-500/10 text-red-500 border-red-500/20"
     case 'BAJA': return "bg-zinc-800 text-zinc-300 border-zinc-700"
     default: return "bg-zinc-500/10 text-zinc-400 border-white/10"
@@ -174,4 +192,3 @@ export function formatDNI(dni?: string | null): string {
   if (!cleanDigits) return trimmed
   return new Intl.NumberFormat("es-AR").format(Number(cleanDigits))
 }
-
