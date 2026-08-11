@@ -319,10 +319,10 @@ export function PendingApprovalsSection({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {fees.map((fee) => (
-                <div key={fee.id} className="bg-black/50 border border-white/10 hover:border-amber-500/40 p-4 rounded-2xl flex items-center justify-between gap-3 transition-all">
-                  <div className="space-y-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs font-bold text-white truncate">
+                <div key={fee.id} className="bg-black/50 border border-white/10 hover:border-amber-500/40 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-all">
+                  <div className="space-y-1.5 min-w-0">
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                      <p className="text-sm font-bold text-white break-words">
                         {fee.member.lastName}, {fee.member.firstName}
                       </p>
                       <span className="text-[10px] text-zinc-500 font-mono">#{fee.member.memberNumber}</span>

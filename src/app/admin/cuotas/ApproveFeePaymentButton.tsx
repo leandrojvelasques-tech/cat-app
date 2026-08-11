@@ -66,7 +66,7 @@ export function ApproveFeePaymentButton({
 
   return (
     <>
-      <div className="flex items-center gap-2 justify-end">
+      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
         {proofUrl && (
           <button
             type="button"
@@ -74,7 +74,7 @@ export function ApproveFeePaymentButton({
               setImgError(false)
               setIsPreviewOpen(true)
             }}
-            className="flex items-center gap-1 bg-white/5 hover:bg-white/10 text-zinc-300 border border-white/10 px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer"
+            className="flex min-w-0 flex-1 items-center justify-center gap-1 bg-white/5 hover:bg-white/10 text-zinc-300 border border-white/10 px-2.5 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer sm:flex-none sm:py-1"
             title="Previsualizar comprobante de forma segura"
           >
             <FileText size={12} className="text-amber-400" />
@@ -83,12 +83,12 @@ export function ApproveFeePaymentButton({
         )}
 
         {currentStatus !== "PAID" ? (
-          <div className="flex items-center gap-1">
+          <div className="flex min-w-0 flex-1 items-center gap-1 sm:flex-none">
             <button
               type="button"
               onClick={handleApprove}
               disabled={isPending}
-              className="flex items-center gap-1 bg-amber-500 hover:bg-amber-400 text-zinc-950 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95 disabled:opacity-50 cursor-pointer"
+              className="flex min-w-0 flex-1 items-center justify-center gap-1 bg-amber-500 hover:bg-amber-400 text-zinc-950 px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-95 disabled:opacity-50 cursor-pointer sm:flex-none sm:py-1"
             >
               {isPending ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
               <span>Aprobar Pago</span>
@@ -97,7 +97,7 @@ export function ApproveFeePaymentButton({
               type="button"
               onClick={handleReject}
               disabled={isPending}
-              className="p-1 text-zinc-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-all cursor-pointer"
+              className="shrink-0 p-2 text-zinc-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-all cursor-pointer sm:p-1"
               title="Rechazar comprobante"
             >
               <XCircle size={14} />

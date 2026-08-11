@@ -80,8 +80,8 @@ export function MemberDailyStatusChart({ series }: MemberDailyStatusChartProps) 
         </div>
       </div>
 
-      <div className="mt-5 overflow-x-auto">
-        <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="min-w-[620px] w-full" role="img" aria-label={`Evolución de socios al día durante ${selected.label}`}>
+      <div className="mt-5 w-full overflow-hidden">
+        <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="block h-auto w-full" role="img" aria-label={`Evolución de socios al día durante ${selected.label}`}>
           {gridValues.map(value => {
             const y = yFor(value)
             return (
