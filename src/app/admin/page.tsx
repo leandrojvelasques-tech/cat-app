@@ -2,8 +2,9 @@ import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import Link from "next/link"
 import { ArrowRight, GraduationCap, CreditCard } from "lucide-react"
-import { calculateMemberStatus, CalculatedStatus } from "@/lib/member-utils"
+import { calculateMemberStatus, getPaymentStatus, getSocietaryStatus, PaymentStatus } from "@/lib/member-utils"
 import { PendingApprovalsSection } from "./components/PendingApprovalsSection"
+import { MemberDailyStatusChart } from "./components/MemberDailyStatusChart"
 
 export default async function AdminDashboard() {
   const session = await auth()
@@ -56,30 +57,24 @@ export default async function AdminDashboard() {
       fees: true,
       eventRegistrations: true
     }
-  } as any)
+  })
 
-  // Group by calculated status
-  const stats: Record<CalculatedStatus, number> = {
+  // El dashboard usa la misma separación societaria/deuda que el Panel de Socios.
+  const stats: Record<PaymentStatus, number> = {
     'AL DIA': 0,
     'EN MORA': 0,
-    'INACTIVO': 0,
     'SUSPENDIDO': 0,
-    'BAJA': 0,
-    'HONORARIO': 0
   }
 
   allMembers.forEach(m => {
-    const calculated = calculateMemberStatus(m, now)
-    stats[calculated]++
+    if (getSocietaryStatus(m) === 'ACTIVO') {
+      stats[getPaymentStatus(m, now)]++
+    }
   })
 
-  // Aliases for the dashboard cards
-  const totalSocios = allMembers.length
   const sociosSinDeuda = stats['AL DIA']
   const sociosDeudores = stats['EN MORA']
   const sociosSuspendidos = stats['SUSPENDIDO']
-  const sociosInactivos = stats['INACTIVO']
-  const sociosBaja = stats['BAJA']
 
   // 1. GESTIONES PENDIENTES DE APROBACIÓN (Centralizadas)
   const pendingEnrollments = await db.enrollmentRequest.findMany({
@@ -105,8 +100,13 @@ export default async function AdminDashboard() {
 
   const revenueData: { month: string; total: number }[] = []
   const activeSeries: { month: string; active: number }[] = []
+  const dailyStatusSeries: {
+    key: string
+    label: string
+    days: { day: number; count: number }[]
+  }[] = []
 
-  let iterDate = new Date(startYear, startMonth, 1)
+  const iterDate = new Date(startYear, startMonth, 1)
   const endDate = new Date(now.getFullYear(), now.getMonth(), 1)
   if (endDate < iterDate) {
     endDate.setTime(iterDate.getTime())
@@ -159,6 +159,28 @@ export default async function AdminDashboard() {
     }).length
 
     activeSeries.push({ month: label, active: activeMembersInMonth })
+
+    const daysInMonth = y === now.getFullYear() && m === now.getMonth()
+      ? now.getDate()
+      : new Date(y, m + 1, 0).getDate()
+    const dailyCounts: { day: number; count: number }[] = []
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const asOf = new Date(y, m, day, 23, 59, 59, 999)
+      const count = allMembers.filter(member => {
+        const memberJoin = new Date(member.joinDate || member.createdAt)
+        if (memberJoin > asOf || getSocietaryStatus(member) !== "ACTIVO") return false
+        return calculateMemberStatus(member, asOf) === "AL DIA"
+      }).length
+
+      dailyCounts.push({ day, count })
+    }
+
+    dailyStatusSeries.push({
+      key: `${y}-${String(monthNum).padStart(2, "0")}`,
+      label: `${label} ${y}`,
+      days: dailyCounts,
+    })
 
     iterDate.setMonth(iterDate.getMonth() + 1)
   }
@@ -226,32 +248,34 @@ export default async function AdminDashboard() {
         eventRegistrations={pendingEventRegistrations}
       />
 
+      <MemberDailyStatusChart series={dailyStatusSeries} />
+
       {/* Tarjetas de Métricas Principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md relative overflow-hidden group shadow-xl">
-           <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-none mb-2">Socios Registrados</p>
-           <p className="text-2xl font-black text-white">{totalSocios}</p>
+           <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-none mb-2">Socios al día</p>
+           <p className="text-2xl font-black text-emerald-400">{sociosSinDeuda}</p>
            <div className="absolute -right-4 -bottom-4 w-12 h-12 bg-blue-500/5 rounded-full blur-xl"></div>
         </div>
 
         <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md relative overflow-hidden group shadow-xl">
-           <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-none mb-2">Activos (Neto)</p>
-           <p className="text-2xl font-black text-white">{sociosSinDeuda + sociosDeudores}</p>
-           <div className="flex gap-1.5 mt-2">
+           <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-none mb-2">Socios en mora</p>
+           <p className="text-2xl font-black text-amber-300">{sociosDeudores}</p>
+           <div className="hidden flex gap-1.5 mt-2">
               <span className="text-[8px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded font-bold uppercase">AL DÍA: {sociosSinDeuda}</span>
               <span className="text-[8px] bg-amber-500/10 text-amber-300 px-1.5 py-0.5 rounded font-bold uppercase">MORA: {sociosDeudores}</span>
            </div>
         </div>
 
         <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md relative overflow-hidden group shadow-xl">
-           <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-none mb-2">Inactivos / Bajas</p>
-           <p className="text-2xl font-black text-white">{sociosInactivos + sociosBaja}</p>
+           <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-none mb-2 text-red-400">Socios suspendidos</p>
+           <p className="text-2xl font-black text-red-400">{sociosSuspendidos}</p>
         </div>
 
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md relative overflow-hidden group shadow-xl border-red-500/20">
+        <div className="hidden bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md relative overflow-hidden group shadow-xl border-red-500/20">
            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-none mb-2 text-red-400">Suspendidos</p>
            <p className="text-2xl font-black text-white">{sociosSuspendidos}</p>
-           <p className="text-[8px] text-red-500/50 font-medium leading-tight mt-1">Sin actividad &gt; 12 meses</p>
+           <p className="text-[8px] text-red-500/50 font-medium leading-tight mt-1">Más de 3 cuotas impagas</p>
         </div>
       </div>
 
