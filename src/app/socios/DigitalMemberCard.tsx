@@ -13,32 +13,28 @@ export interface AttendedMilonga {
 export function DigitalMemberCard({ 
   member, 
   awards,
-  attendedMilongas = [] 
+  attendedMilongas = [],
+  calculatedStatus
 }: { 
   member: any
   awards: any[]
   attendedMilongas?: AttendedMilonga[]
+  calculatedStatus?: string
 }) {
   const hasPodium = awards.some(a => a.place <= 3)
   const isChampion = awards.some(a => a.place === 1)
   const isHonorario = member.type === "HONORARIO"
   const [fullscreen, setFullscreen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  // Detecta si el dispositivo está en modo portrait (vertical) para rotar el carnet
-  const [isPortrait, setIsPortrait] = useState(false)
+  const membershipStatus = calculatedStatus || member.debtStatus || "AL DIA"
+  const membershipStatusClass = membershipStatus === "AL DIA"
+    ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/30"
+    : membershipStatus === "SUSPENDIDO"
+    ? "text-red-400 bg-red-500/10 border-red-500/30"
+    : "text-amber-300 bg-amber-500/10 border-amber-500/30"
 
   useEffect(() => {
     setMounted(true)
-    const checkOrientation = () => {
-      setIsPortrait(window.matchMedia("(orientation: portrait)").matches)
-    }
-    checkOrientation()
-    window.addEventListener("orientationchange", checkOrientation)
-    window.addEventListener("resize", checkOrientation)
-    return () => {
-      window.removeEventListener("orientationchange", checkOrientation)
-      window.removeEventListener("resize", checkOrientation)
-    }
   }, [])
 
   // Bloquear scroll del body cuando está en fullscreen
@@ -58,7 +54,7 @@ export function DigitalMemberCard({
         : isChampion
         ? "from-zinc-900 via-zinc-950 to-amber-900/40 border-amber-500/30"
         : "from-zinc-900/95 to-zinc-950/98 border-white/10"
-    } ${fullscreen ? "h-full p-10 md:p-14" : "p-6 md:p-8 aspect-[1.8/1]"}`}>
+    } ${fullscreen ? "h-full p-6 sm:p-10 md:p-14" : "p-4 sm:p-6 md:p-8 min-h-[560px] sm:min-h-0 sm:aspect-[1.8/1]"}`}>
 
       {/* Background Glow */}
       <div className={`absolute inset-0 rounded-[32px] blur-3xl opacity-10 pointer-events-none bg-gradient-to-tr ${
@@ -71,7 +67,7 @@ export function DigitalMemberCard({
       </div>
 
       {/* Top Header */}
-      <div className="flex justify-between items-start relative z-10">
+      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start relative z-10">
         <div className="flex flex-col gap-1">
            <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center text-white font-black text-lg shadow-lg">C</div>
@@ -80,7 +76,7 @@ export function DigitalMemberCard({
            <p className="text-[10px] text-zinc-600 font-bold ml-10">FUNDADA EN 1991</p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap justify-end">
+        <div className="flex items-center gap-2 flex-wrap justify-start sm:justify-end">
           {isHonorario && (
             <div className="bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-zinc-950 text-[9px] font-black px-3 py-1 rounded-full flex items-center gap-1 shadow-lg shadow-amber-500/30">
               <Award size={10} /> SOCIO HONORARIO
@@ -100,8 +96,8 @@ export function DigitalMemberCard({
       </div>
 
       {/* Center Content */}
-      <div className={`flex items-end gap-6 relative z-10 ${fullscreen ? "gap-10" : ""}`}>
-         <div className="relative shrink-0">
+      <div className={`flex flex-col items-stretch gap-5 sm:flex-row sm:items-end sm:gap-6 relative z-10 ${fullscreen ? "sm:gap-10" : ""}`}>
+         <div className="relative shrink-0 mx-auto sm:mx-0">
             <div className={`bg-gradient-to-br from-white/10 to-white/5 rounded-2xl flex items-center justify-center text-zinc-700 font-black border border-white/10 shadow-xl overflow-hidden ${
               fullscreen ? "w-32 h-32" : "w-20 h-20 md:w-24 md:h-24"
             }`}>
@@ -118,11 +114,11 @@ export function DigitalMemberCard({
             )}
          </div>
 
-         <div className="flex-1 pb-1">
-            <h3 className={`font-black text-white tracking-tighter uppercase leading-none mb-3 ${fullscreen ? "text-4xl md:text-5xl" : "text-xl md:text-2xl"}`}>
+         <div className="flex-1 pb-1 text-center sm:text-left">
+            <h3 className={`font-black text-white tracking-tighter uppercase leading-none mb-3 ${fullscreen ? "text-3xl sm:text-4xl md:text-5xl" : "text-2xl md:text-2xl"}`}>
               {member.lastName}, {member.firstName}
             </h3>
-            <div className="flex gap-5 flex-wrap">
+            <div className="flex justify-center sm:justify-start gap-5 flex-wrap">
                <div className="flex flex-col">
                   <span className="text-[8px] uppercase font-black tracking-widest text-zinc-600">Nro Socio</span>
                   <span className={`font-bold text-amber-500 ${fullscreen ? "text-2xl" : "text-sm"}`}>#{member.memberNumber}</span>
@@ -140,7 +136,7 @@ export function DigitalMemberCard({
       </div>
 
       {/* Bottom Bar */}
-      <div className="flex justify-between items-center border-t border-white/5 pt-4 relative z-10 flex-wrap gap-2">
+      <div className="flex flex-col items-stretch border-t border-white/5 pt-4 relative z-10 gap-4 sm:flex-row sm:justify-between sm:items-center sm:flex-wrap sm:gap-2">
          <div className="flex gap-4 items-center">
             <div className="flex flex-col">
                <span className="text-[7px] uppercase font-black tracking-widest text-zinc-600">Socio Desde</span>
@@ -148,7 +144,11 @@ export function DigitalMemberCard({
             </div>
             <div className="flex flex-col">
                <span className="text-[7px] uppercase font-black tracking-widest text-zinc-600">Validez</span>
-               <span className={`font-bold text-emerald-400 ${fullscreen ? "text-base" : "text-[9px]"}`}>AL DIA</span>
+               <span className={`font-bold ${fullscreen ? "text-base" : "text-[9px]"}`}>{membershipStatus}</span>
+            </div>
+            <div className={`flex flex-col border-l border-white/10 pl-3 ${membershipStatusClass}`}>
+               <span className="text-[7px] uppercase font-black tracking-widest text-zinc-600">Estado de deuda</span>
+               <span className={`font-black text-[9px] uppercase px-2 py-1 rounded-md border w-fit ${membershipStatusClass}`}>{membershipStatus}</span>
             </div>
             {member.boardHistory?.some((h: any) => h.position.includes("Presidente")) && (
               <div className="flex flex-col border-l border-white/10 pl-3">
@@ -159,10 +159,10 @@ export function DigitalMemberCard({
          </div>
 
          {/* Condecoraciones & Medallas */}
-         <div className="flex items-center gap-2 flex-wrap">
+         <div className="flex flex-col items-stretch gap-2 sm:items-end sm:flex-row sm:flex-wrap sm:justify-end">
             {/* Insignias de Asistencia a Milongas del Año con Título y Fecha */}
             {attendedMilongas.length > 0 && (
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex flex-col items-stretch gap-2 max-h-40 overflow-y-auto sm:flex-row sm:items-center sm:flex-wrap sm:max-h-none sm:overflow-visible">
                 {attendedMilongas.map((m, idx) => {
                   const eventDate = new Date(m.date)
                   const formattedDate = format(eventDate, "dd/MM/yyyy")
@@ -170,14 +170,14 @@ export function DigitalMemberCard({
                   return (
                     <div
                       key={m.id || idx}
-                      className="flex items-center gap-1.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 px-2.5 py-1 rounded-xl shadow-md transition-all"
+                      className="flex items-center gap-2 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 px-3 py-2 rounded-xl shadow-md transition-all"
                     >
                       <span className="text-amber-400 text-xs font-black">★</span>
                       <div className="flex flex-col leading-none">
-                        <span className="text-[9px] font-black uppercase text-white tracking-tight truncate max-w-[140px]">
+                        <span className="text-[10px] font-black uppercase text-white tracking-tight truncate max-w-[220px] sm:max-w-[140px]">
                           {m.title}
                         </span>
-                        <span className="text-[7px] font-bold text-amber-300/90 tracking-widest">
+                        <span className="text-[8px] font-bold text-amber-300/90 tracking-widest">
                           {formattedDate}
                         </span>
                       </div>
@@ -216,20 +216,9 @@ export function DigitalMemberCard({
         <X size={22} />
       </button>
 
-      {/* Carnet centrado — en portrait (vertical) rota 90° para mostrarse horizontal */}
+      {/* Carnet centrado; en celular conserva la orientación vertical */}
       <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
-        <div
-          style={isPortrait ? {
-            transform: "rotate(90deg)",
-            width: "85vh",
-            maxWidth: "none",
-            transformOrigin: "center center",
-          } : {
-            width: "100%",
-            maxWidth: "860px",
-          }}
-          className="transition-all duration-300"
-        >
+        <div style={{ width: "100%", maxWidth: "860px", height: "100%" }} className="transition-all duration-300">
           {cardContent}
         </div>
       </div>

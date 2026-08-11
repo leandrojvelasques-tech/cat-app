@@ -8,9 +8,10 @@ interface SocioCarnetToggleProps {
   member: any
   awards: any[]
   attendedMilongas: AttendedMilonga[]
+  calculatedStatus?: string
 }
 
-export function SocioCarnetToggle({ member, awards, attendedMilongas }: SocioCarnetToggleProps) {
+export function SocioCarnetToggle({ member, awards, attendedMilongas, calculatedStatus }: SocioCarnetToggleProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
@@ -46,6 +47,7 @@ export function SocioCarnetToggle({ member, awards, attendedMilongas }: SocioCar
             member={member} 
             awards={awards} 
             attendedMilongas={attendedMilongas} 
+            calculatedStatus={calculatedStatus}
           />
         </div>
       )}

@@ -167,7 +167,8 @@ export default async function PortalSocioPage() {
       <SocioCarnetToggle 
         member={member} 
         awards={[]} 
-        attendedMilongas={attendedMilongas} 
+        attendedMilongas={attendedMilongas}
+        calculatedStatus={calculatedStatus}
       />
 
       {/* 3. Control de Morosidad y Pago de Cuotas (Solo si registra deuda) */}
