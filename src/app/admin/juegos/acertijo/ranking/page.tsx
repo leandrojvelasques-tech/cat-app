@@ -2,6 +2,8 @@ import { getRanking } from "@/app/actions/juegos"
 import Link from "next/link"
 import { ArrowLeft, Trophy, Clock, Star } from "lucide-react"
 
+export const dynamic = "force-dynamic"
+
 export default async function AdminRankingPage() {
   const ranking = await getRanking(100)
 

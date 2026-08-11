@@ -7,6 +7,8 @@ export const metadata = {
   description: "Ranking de jugadores del Acertijo 2.0 - Centro Amigos del Tango",
 }
 
+export const dynamic = "force-dynamic"
+
 export default async function RankingPage() {
   const ranking = await getRanking(100)
 
