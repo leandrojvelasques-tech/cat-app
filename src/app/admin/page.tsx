@@ -1,7 +1,7 @@
 import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import Link from "next/link"
-import { ArrowRight, GraduationCap, CreditCard } from "lucide-react"
+import { ArrowRight, GraduationCap, CreditCard, CalendarDays, Users, UserCheck, Wallet, ShoppingBag } from "lucide-react"
 import { calculateMemberStatus, getPaymentStatus, getSocietaryStatus, PaymentStatus } from "@/lib/member-utils"
 import { PendingApprovalsSection } from "./components/PendingApprovalsSection"
 import { MemberDailyStatusChart } from "./components/MemberDailyStatusChart"
@@ -189,28 +189,28 @@ export default async function AdminDashboard() {
   const maxActive = Math.max(...activeSeries.map(s => s.active), 1)
 
   // 3. Próximos Eventos
-  const upcomingEvents = await db.event.findMany({
-    where: { 
-      startDate: { gte: new Date(new Date().setHours(0,0,0,0)) },
-      status: 'OPEN' 
+  const lastFinishedEvent = await db.event.findFirst({
+    where: { status: 'FINALIZADO' },
+    include: {
+      registrations: { include: { member: { select: { id: true } } } },
+      buffetSales: { include: { items: { include: { product: { select: { name: true } } } } } }
     },
-    include: { _count: { select: { registrations: true } } },
-    orderBy: { startDate: 'asc' },
-    take: 4
+    orderBy: [{ endDate: 'desc' }, { startDate: 'desc' }]
   })
 
-  // 4. Milonga Attendance History
-  const milongas = await db.event.findMany({
-    where: { type: { in: ['MILONGA', 'BOTH'] }, status: 'FINALIZADO' },
-    include: { _count: { select: { registrations: true } } },
-    orderBy: { startDate: 'desc' },
-    take: 5
-  })
-  const milongaData = milongas.map(m => ({
-    name: m.title.length > 20 ? m.title.substring(0, 20) + '...' : m.title,
-    count: m._count.registrations
-  })).reverse()
-  const maxAttendance = Math.max(...milongaData.map(d => d.count), 1)
+  const eventRegistrations = lastFinishedEvent?.registrations || []
+  const eventAttendees = eventRegistrations.filter(registration => registration.attended)
+  const eventTicketRevenue = eventRegistrations
+    .filter(registration => registration.paymentStatus === 'PAID')
+    .reduce((total, registration) => total + registration.amountPaid, 0)
+  const eventBuffetRevenue = lastFinishedEvent?.buffetSales
+    .reduce((total, sale) => total + sale.amountPaid, 0) || 0
+  const buffetConsumption = Object.entries((lastFinishedEvent?.buffetSales || []).reduce<Record<string, number>>((summary, sale) => {
+    sale.items.forEach(item => {
+      summary[item.product.name] = (summary[item.product.name] || 0) + item.quantity
+    })
+    return summary
+  }, {})).sort(([, quantityA], [, quantityB]) => quantityB - quantityA)
 
   // 5. Escuelita Stats
   const lastEscuelitaClass = await db.escuelitaClass.findFirst({
@@ -242,34 +242,26 @@ export default async function AdminDashboard() {
       </div>
 
       {/* SECCIÓN CENTRALIZADA DE GESTIONES PENDIENTES DE APROBACIÓN */}
-      <PendingApprovalsSection
-        enrollmentRequests={pendingEnrollments}
-        feePayments={pendingFeePayments}
-        eventRegistrations={pendingEventRegistrations}
-      />
-
-      <MemberDailyStatusChart series={dailyStatusSeries} />
-
       {/* Tarjetas de Métricas Principales */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md relative overflow-hidden group shadow-xl">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-md relative overflow-hidden group shadow-xl">
            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-none mb-2">Socios al día</p>
-           <p className="text-2xl font-black text-emerald-400">{sociosSinDeuda}</p>
+           <p className="text-xl sm:text-2xl font-black text-emerald-400">{sociosSinDeuda}</p>
            <div className="absolute -right-4 -bottom-4 w-12 h-12 bg-blue-500/5 rounded-full blur-xl"></div>
         </div>
 
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md relative overflow-hidden group shadow-xl">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-md relative overflow-hidden group shadow-xl">
            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-none mb-2">Socios en mora</p>
-           <p className="text-2xl font-black text-amber-300">{sociosDeudores}</p>
+           <p className="text-xl sm:text-2xl font-black text-amber-300">{sociosDeudores}</p>
            <div className="hidden flex gap-1.5 mt-2">
               <span className="text-[8px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded font-bold uppercase">AL DÍA: {sociosSinDeuda}</span>
               <span className="text-[8px] bg-amber-500/10 text-amber-300 px-1.5 py-0.5 rounded font-bold uppercase">MORA: {sociosDeudores}</span>
            </div>
         </div>
 
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md relative overflow-hidden group shadow-xl">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-md relative overflow-hidden group shadow-xl">
            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-none mb-2 text-red-400">Socios suspendidos</p>
-           <p className="text-2xl font-black text-red-400">{sociosSuspendidos}</p>
+           <p className="text-xl sm:text-2xl font-black text-red-400">{sociosSuspendidos}</p>
         </div>
 
         <div className="hidden bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md relative overflow-hidden group shadow-xl border-red-500/20">
@@ -278,6 +270,14 @@ export default async function AdminDashboard() {
            <p className="text-[8px] text-red-500/50 font-medium leading-tight mt-1">Más de 3 cuotas impagas</p>
         </div>
       </div>
+
+      <PendingApprovalsSection
+        enrollmentRequests={pendingEnrollments}
+        feePayments={pendingFeePayments}
+        eventRegistrations={pendingEventRegistrations}
+      />
+
+      <MemberDailyStatusChart series={dailyStatusSeries} />
 
       {/* GRÁFICOS INICIANDO ESTRICTAMENTE DESDE JULIO 2026 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -359,78 +359,66 @@ export default async function AdminDashboard() {
          </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-         {/* 3. Inscriptos a Próximos Eventos */}
-         <div className="bg-white/5 border border-white/10 rounded-[40px] p-8 backdrop-blur-md shadow-2xl">
-            <div className="flex justify-between items-center mb-8">
-               <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                 <div className="w-1 h-6 bg-emerald-500 rounded-full"></div>
-                 Próximos Eventos
-               </h3>
-            </div>
-            
-            <div className="space-y-6">
-               {upcomingEvents.length > 0 ? (
-                 upcomingEvents.map((e) => (
-                   <div key={e.id} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-white line-clamp-1">{e.title}</span>
-                        <span className="text-[10px] text-zinc-500 uppercase">{new Date(e.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <span className="text-xl font-black text-emerald-400">{e._count.registrations}</span>
-                        <span className="text-[9px] text-zinc-600 uppercase font-bold">Inscriptos</span>
-                      </div>
-                   </div>
-                 ))
-               ) : (
-                 <p className="text-zinc-500 text-sm italic text-center py-10">No hay eventos próximos abiertos.</p>
+      <section className="bg-white/5 border border-white/10 rounded-[40px] p-5 sm:p-8 backdrop-blur-md shadow-2xl">
+         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8">
+            <div>
+               <p className="text-[10px] text-amber-400 font-mono uppercase tracking-[0.2em] mb-2">Último evento finalizado</p>
+               <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  {lastFinishedEvent?.title || "Sin eventos finalizados"}
+               </h2>
+               {lastFinishedEvent && (
+                  <p className="text-sm text-zinc-400 mt-2 flex items-center gap-2">
+                     <CalendarDays size={14} className="text-amber-400" />
+                     {new Date(lastFinishedEvent.startDate).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })}
+                     {lastFinishedEvent.endDate && ` — ${new Date(lastFinishedEvent.endDate).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })}`}
+                  </p>
                )}
-               
-               <Link 
-                 href="/admin/eventos" 
-                 className="flex items-center justify-center gap-2 w-full py-3 text-xs font-bold text-zinc-400 hover:text-white transition-colors border-t border-white/5 mt-4"
-               >
-                 Gestionar todos los eventos <ArrowRight size={14} />
-               </Link>
             </div>
+            {lastFinishedEvent && <Link href={`/admin/eventos/${lastFinishedEvent.id}`} className="inline-flex items-center gap-2 text-xs font-bold text-amber-400 hover:text-white transition-colors">Ver detalle <ArrowRight size={14} /></Link>}
          </div>
 
-         {/* 4. Milongas Attendance History */}
-         <div className="md:col-span-2 bg-white/5 border border-white/10 rounded-[40px] p-8 backdrop-blur-md shadow-2xl">
-            <div className="flex justify-between items-center mb-8">
-               <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                 <div className="w-1 h-6 bg-red-500 rounded-full"></div>
-                 Asistencia Histórica
-               </h3>
-               <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest">Eventos Finalizados</span>
-            </div>
-            
-            <div className="space-y-6">
-               {milongaData.length > 0 ? (
-                 milongaData.map((d, i) => {
-                   const percentage = (d.count / maxAttendance) * 100
-                   return (
-                     <div key={i} className="space-y-2">
-                        <div className="flex justify-between items-center text-xs">
-                           <span className="text-zinc-300 font-medium">{d.name}</span>
-                           <span className="text-white font-black">{d.count} <span className="text-zinc-600 font-normal">asistentes</span></span>
-                        </div>
-                        <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                           <div 
-                             className="h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-1000 shadow-[0_0_10px_rgba(220,38,38,0.3)]"
-                             style={{ width: `${percentage}%` }}
-                           ></div>
-                        </div>
+         {lastFinishedEvent ? (
+            <>
+               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                  {[
+                     { label: "Inscriptos", value: eventRegistrations.length, icon: Users, color: "text-sky-400" },
+                     { label: "Presentes", value: eventAttendees.length, icon: UserCheck, color: "text-emerald-400" },
+                     { label: "Socios inscriptos", value: eventRegistrations.filter(registration => Boolean(registration.memberId)).length, icon: Users, color: "text-amber-400" },
+                     { label: "No socios inscriptos", value: eventRegistrations.filter(registration => !registration.memberId).length, icon: Users, color: "text-purple-400" }
+                  ].map(({ label, value, icon: Icon, color }) => (
+                     <div key={label} className="bg-black/20 border border-white/5 rounded-2xl p-4">
+                        <Icon size={16} className={`${color} mb-3`} />
+                        <p className="text-2xl font-black text-white">{value}</p>
+                        <p className="text-[9px] text-zinc-500 uppercase tracking-widest mt-1">{label}</p>
                      </div>
-                   )
-                 })
-               ) : (
-                 <p className="text-zinc-500 text-sm italic text-center py-10">Sin historial de eventos finalizados.</p>
-               )}
-            </div>
-         </div>
-      </div>
+                  ))}
+               </div>
+
+               <div className="grid grid-cols-1 lg:grid-cols-[0.8fr_1.2fr] gap-4">
+                  <div className="grid grid-cols-2 gap-3">
+                     <div className="bg-black/20 border border-white/5 rounded-2xl p-4">
+                        <Wallet size={16} className="text-emerald-400 mb-3" />
+                        <p className="text-xl font-black text-white">${eventTicketRevenue.toLocaleString('es-AR')}</p>
+                        <p className="text-[9px] text-zinc-500 uppercase tracking-widest mt-1">Entradas recaudadas</p>
+                     </div>
+                     <div className="bg-black/20 border border-white/5 rounded-2xl p-4">
+                        <ShoppingBag size={16} className="text-orange-400 mb-3" />
+                        <p className="text-xl font-black text-white">${eventBuffetRevenue.toLocaleString('es-AR')}</p>
+                        <p className="text-[9px] text-zinc-500 uppercase tracking-widest mt-1">Buffet recaudado</p>
+                     </div>
+                  </div>
+                  <div className="bg-black/20 border border-white/5 rounded-2xl p-4">
+                     <div className="flex items-center gap-2 mb-3"><ShoppingBag size={16} className="text-orange-400" /><p className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold">Consumo del evento</p></div>
+                     {buffetConsumption.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                           {buffetConsumption.slice(0, 8).map(([product, quantity]) => <div key={product} className="flex justify-between gap-3 text-xs"><span className="text-zinc-300 truncate">{product}</span><span className="font-black text-white">{quantity}</span></div>)}
+                        </div>
+                     ) : <p className="text-xs text-zinc-600 italic">Sin consumos registrados.</p>}
+                  </div>
+               </div>
+            </>
+         ) : <p className="text-sm text-zinc-500 italic">Todavía no hay un evento finalizado para mostrar.</p>}
+      </section>
 
       {/* Escuelita ROW */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
