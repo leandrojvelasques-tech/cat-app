@@ -5,6 +5,7 @@ import { ArrowRight, GraduationCap, CreditCard, CalendarDays, Users, UserCheck, 
 import { calculateMemberStatus, getPaymentStatus, getSocietaryStatus, PaymentStatus } from "@/lib/member-utils"
 import { PendingApprovalsSection } from "./components/PendingApprovalsSection"
 import { MemberDailyStatusChart } from "./components/MemberDailyStatusChart"
+import { finalizePastEvents } from "@/lib/event-status"
 
 export default async function AdminDashboard() {
   const session = await auth()
@@ -51,6 +52,7 @@ export default async function AdminDashboard() {
 
   // Real stats for the dashboard - New Unified Status Logic
   const now = new Date()
+  await finalizePastEvents(now)
 
   const allMembers = await db.member.findMany({
     include: {

@@ -10,9 +10,12 @@ import { DeleteRegistrationButton } from "../components/DeleteRegistrationButton
 import { EventPreviewModal } from "../components/EventPreviewModal"
 import { PresenceButton } from "@/app/admin/components/PresenceButton"
 import { getEffectiveEventPrices } from "@/lib/event-utils"
+import { finalizePastEvents } from "@/lib/event-status"
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  await finalizePastEvents()
+
   const event = await db.event.findUnique({
     where: { id },
     include: { 

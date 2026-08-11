@@ -3,8 +3,11 @@ import { Calendar, Plus, Users, Music, ShoppingBag, Share2, Tag, ShieldAlert, Ar
 import Link from "next/link"
 import { EventPreviewModal } from "./components/EventPreviewModal"
 import { isExternalEvent } from "@/lib/event-utils"
+import { finalizePastEvents } from "@/lib/event-status"
 
 export default async function EventosPage() {
+  await finalizePastEvents()
+
   const events = await db.event.findMany({
     orderBy: { startDate: "desc" },
     include: { _count: { select: { registrations: true } } }
