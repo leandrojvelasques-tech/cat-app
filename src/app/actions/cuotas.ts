@@ -6,6 +6,7 @@ import { sendPaymentValidatedEmail } from "@/lib/emails"
 import { auth } from "@/auth"
 import { writeFileSync, existsSync, mkdirSync } from "fs"
 import { join } from "path"
+import { getFeeHistory, getFeeAmountForPeriod } from "@/lib/fee-utils"
 
 export async function createPayment(memberId: string, formData: FormData) {
   const session = await auth()
@@ -30,7 +31,7 @@ export async function createPayment(memberId: string, formData: FormData) {
 
   const periodYear = parseInt(formData.get("periodYear") as string)
   const totalAmountPaid = parseFloat(formData.get("amountPaid") as string)
-  const totalAmountDue = parseFloat(formData.get("amountDue") as string)
+  const requestedAmountDue = parseFloat(formData.get("amountDue") as string)
   const paymentMethod = formData.get("paymentMethod") as string
   const notes = formData.get("notes") as string
   const file = formData.get("paymentProof") as File | null
@@ -57,8 +58,26 @@ export async function createPayment(memberId: string, formData: FormData) {
     finalNotes = `[COMPROBANTE: /uploads/${uniqueName}]\n${finalNotes}`
   }
 
+  const member = await db.member.findUnique({
+    where: { id: memberId },
+    select: { isFamilyDiscount: true }
+  })
+  if (!member) throw new Error("Socio no encontrado.")
+
+  const feeHistory = await getFeeHistory()
+  const expectedByMonth = new Map(months.map((month) => [
+    month,
+    getFeeAmountForPeriod(periodYear, month, member.isFamilyDiscount, feeHistory)
+  ]))
+  const expectedTotal = months.reduce((total, month) => total + (expectedByMonth.get(month) || 0), 0)
   const amountPaidPerMonth = totalAmountPaid / months.length
-  const amountDuePerMonth = totalAmountDue / months.length
+
+  if (!Number.isFinite(periodYear) || !Number.isFinite(totalAmountPaid) || totalAmountPaid < 0) {
+    throw new Error("El período o el monto abonado no son válidos.")
+  }
+  if (Number.isFinite(requestedAmountDue) && requestedAmountDue !== expectedTotal) {
+    console.warn(`Monto exigible corregido para ${memberId}: formulario=${requestedAmountDue}, esperado=${expectedTotal}`)
+  }
 
   // Check for duplicates
   for (const m of months) {
@@ -84,16 +103,17 @@ export async function createPayment(memberId: string, formData: FormData) {
         memberId,
         periodMonth: m,
         periodYear,
-        amountDue: amountDuePerMonth,
+        amountDue: expectedByMonth.get(m) || 0,
         amountPaid: amountPaidPerMonth,
         paymentDate: new Date(),
         paymentMethod,
-        paymentStatus: amountPaidPerMonth >= amountDuePerMonth ? "PAID" : "PARTIAL",
+        paymentStatus: amountPaidPerMonth >= (expectedByMonth.get(m) || 0) ? "PAID" : "PARTIAL",
         notes: finalNotes,
         recordedById: userId
       }
     })
   }
+
 
   // Enviar email de confirmación
   try {

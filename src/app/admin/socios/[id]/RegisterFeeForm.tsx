@@ -3,14 +3,20 @@
 import { createPayment } from "@/app/actions/cuotas"
 import { CreditCard, Send, Plus, CheckCircle2 } from "lucide-react"
 import { useTransition, useState } from "react"
+import { DEFAULT_FEE_HISTORY, getFeeAmountForPeriod, type FeePeriod } from "@/lib/fee-calculation"
 
-export function RegisterFeeForm({ socioId, lastFee }: { socioId: string, lastFee?: any }) {
+export function RegisterFeeForm({ socioId, lastFee, isFamilyDiscount = false, feeHistory = DEFAULT_FEE_HISTORY }: { socioId: string, lastFee?: any, isFamilyDiscount?: boolean, feeHistory?: FeePeriod[] }) {
   const [isPending, startTransition] = useTransition()
   const [showSuccess, setShowSuccess] = useState(false)
   
   // Suggest next period based on last fee or current date
   const suggestMonth = lastFee ? (lastFee.periodMonth === 12 ? 1 : lastFee.periodMonth + 1) : new Date().getMonth() + 1
   const suggestYear = lastFee ? (lastFee.periodMonth === 12 ? lastFee.periodYear + 1 : lastFee.periodYear) : new Date().getFullYear()
+  const suggestedAmount = getFeeAmountForPeriod(suggestYear, suggestMonth, isFamilyDiscount, feeHistory)
+  const [selectedMonth, setSelectedMonth] = useState(suggestMonth)
+  const [selectedYear, setSelectedYear] = useState(suggestYear)
+  const [amountDue, setAmountDue] = useState(suggestedAmount)
+  const [amountPaid, setAmountPaid] = useState(suggestedAmount)
 
   const handleFormAction = async (formData: FormData) => {
     startTransition(async () => {
@@ -51,7 +57,14 @@ export function RegisterFeeForm({ socioId, lastFee }: { socioId: string, lastFee
           <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">Mes</label>
           <select 
             name="periodMonth" 
-            defaultValue={suggestMonth}
+            value={selectedMonth}
+            onChange={(event) => {
+              const month = Number(event.target.value)
+              setSelectedMonth(month)
+              const amount = getFeeAmountForPeriod(selectedYear, month, isFamilyDiscount, feeHistory)
+              setAmountDue(amount)
+              setAmountPaid(amount)
+            }}
             className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white/20 transition-all appearance-none cursor-pointer"
           >
             {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => (
@@ -67,7 +80,14 @@ export function RegisterFeeForm({ socioId, lastFee }: { socioId: string, lastFee
           <input 
             name="periodYear" 
             type="number" 
-            defaultValue={suggestYear}
+            value={selectedYear}
+            onChange={(event) => {
+              const year = Number(event.target.value)
+              setSelectedYear(year)
+              const amount = getFeeAmountForPeriod(year, selectedMonth, isFamilyDiscount, feeHistory)
+              setAmountDue(amount)
+              setAmountPaid(amount)
+            }}
             className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white/20 transition-all"
           />
         </div>
@@ -79,11 +99,12 @@ export function RegisterFeeForm({ socioId, lastFee }: { socioId: string, lastFee
             <input 
               name="amountPaid" 
               type="number" 
-              defaultValue={6000}
+              value={amountPaid}
+              onChange={(event) => setAmountPaid(Number(event.target.value) || 0)}
               className="w-full bg-black/40 border border-white/10 rounded-2xl pl-8 pr-4 py-3 text-sm text-white focus:outline-none focus:border-white/20 transition-all font-mono"
             />
           </div>
-          <input name="amountDue" type="hidden" value={6000} />
+          <input name="amountDue" type="hidden" value={amountDue} />
           <input name="paymentMethod" type="hidden" value="EFECTIVO" />
         </div>
 

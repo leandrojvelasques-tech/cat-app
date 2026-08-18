@@ -4,17 +4,20 @@ import { useState } from "react"
 import { createPayment } from "@/app/actions/cuotas"
 import Link from "next/link"
 import { CreditCard } from "lucide-react"
+import { DEFAULT_FEE_HISTORY, getFeeAmountForPeriod, type FeePeriod } from "@/lib/fee-calculation"
 
 export function PagarCuotaForm({ 
   memberId, 
-  baseAmount, 
+  feeHistory = DEFAULT_FEE_HISTORY,
+  isFamilyDiscount = false,
   currentMonth, 
   currentYear,
   returnTo,
   paidFees = []
 }: { 
   memberId: string, 
-  baseAmount: number, 
+  feeHistory?: FeePeriod[],
+  isFamilyDiscount?: boolean,
   currentMonth: number, 
   currentYear: number,
   returnTo?: string,
@@ -35,9 +38,10 @@ export function PagarCuotaForm({
   }
 
   const initialSelected = getInitialSelected()
+  const getAmountForMonths = (months: number[], selectedYear = year) => months.reduce((total, month) => total + getFeeAmountForPeriod(selectedYear, month, isFamilyDiscount, feeHistory), 0)
   const [selectedMonths, setSelectedMonths] = useState<number[]>(initialSelected)
-  const [amountDue, setAmountDue] = useState(initialSelected.length * baseAmount)
-  const [amountPaid, setAmountPaid] = useState(initialSelected.length * baseAmount)
+  const [amountDue, setAmountDue] = useState(getAmountForMonths(initialSelected, currentYear))
+  const [amountPaid, setAmountPaid] = useState(getAmountForMonths(initialSelected, currentYear))
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const monthNames = [
@@ -61,8 +65,9 @@ export function PagarCuotaForm({
     }
     
     setSelectedMonths(newSelected)
-    setAmountDue(newSelected.length * baseAmount)
-    setAmountPaid(newSelected.length * baseAmount)
+    const newAmount = getAmountForMonths(newSelected)
+    setAmountDue(newAmount)
+    setAmountPaid(newAmount)
   }
 
   const handleYearChange = (newYear: number) => {
@@ -76,8 +81,9 @@ export function PagarCuotaForm({
       }
     }
     setSelectedMonths(found)
-    setAmountDue(found.length * baseAmount)
-    setAmountPaid(found.length * baseAmount)
+    const newAmount = getAmountForMonths(found, newYear)
+    setAmountDue(newAmount)
+    setAmountPaid(newAmount)
   }
 
   const createPaymentWithId = createPayment.bind(null, memberId)
