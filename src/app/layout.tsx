@@ -18,6 +18,10 @@ export const metadata: Metadata = {
   description: "Asociación civil sin fines de lucro en Comodoro Rivadavia",
 };
 
+// CAT reads PostgreSQL at request time. Keep the app out of Next's build-time
+// prerendering so production secrets are supplied only by the running service.
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({
   children,
 }: Readonly<{
