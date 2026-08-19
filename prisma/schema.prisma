@@ -42,6 +42,7 @@ model Member {
   joinDate     DateTime  @default(now())
   honoraryAppointmentDate DateTime?
   honoraryReason          String?
+  honorarySummary         String?
   birthDate    DateTime?
   type         String    @default("ACTIVO") // ACTIVO, HONORARIO
     status       String    @default("ACTIVE") // ACTIVE, BAJA, plus legacy values during migration

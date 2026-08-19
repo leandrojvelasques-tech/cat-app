@@ -316,7 +316,8 @@ export async function updateMember(id: string, formData: FormData) {
   const birthDateStr = formData.get("birthDate") as string
   const joinDateStr = formData.get("joinDate") as string
   const honoraryAppointmentDateStr = formData.get("honoraryAppointmentDate") as string
-  const honoraryReason = formData.get("honoraryReason") as string
+  const honoraryReason = (formData.get("honoraryReason") as string | null) || ""
+  const honorarySummary = (formData.get("honorarySummary") as string | null) || ""
   const wantsMailing = formData.get("wantsMailing") === "on"
   const avatarUrl = formData.get("avatarUrl") as string
 
@@ -368,10 +369,11 @@ export async function updateMember(id: string, formData: FormData) {
       type: isHonorary ? "HONORARIO" : "ACTIVO",
       honoraryAppointmentDate: isHonorary ? honoraryAppointmentDate : null,
       honoraryReason: isHonorary ? honoraryReason.trim() : null,
-      notes,
+      honorarySummary: isHonorary ? honorarySummary.trim() : null,
+      notes: isHonorary ? null : notes,
       birthDate,
       joinDate,
-      wantsMailing,
+      wantsMailing: isHonorary ? false : wantsMailing,
       avatarUrl: avatarUrl || null
     }
   })

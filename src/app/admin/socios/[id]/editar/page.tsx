@@ -5,7 +5,7 @@ import { ArrowLeft, Save, Key } from "lucide-react"
 import Link from "next/link"
 import { AvatarFormInput } from "@/components/AvatarFormInput"
 import { ResetMemberPasswordForm } from "@/app/admin/socios/components/ResetMemberPasswordForm"
-import { getPaymentStatus, getSocietaryStatus } from "@/lib/member-utils"
+import { getSocietaryStatus } from "@/lib/member-utils"
 
 export default async function EditarSocioPage(props: any) {
   const params = await props.params
@@ -28,6 +28,7 @@ export default async function EditarSocioPage(props: any) {
         joinDate: true,
         honoraryAppointmentDate: true,
         honoraryReason: true,
+        honorarySummary: true,
         birthDate: true,
         type: true,
         status: true,
@@ -48,9 +49,7 @@ export default async function EditarSocioPage(props: any) {
   if (!member) return notFound()
 
   const societaryStatus = getSocietaryStatus(member)
-  const paymentStatus = getPaymentStatus(member)
-
-
+  const isHonorary = societaryStatus === "HONORARIO"
   const updateMemberWithId = updateMember.bind(null, id)
 
   return (
@@ -122,6 +121,17 @@ export default async function EditarSocioPage(props: any) {
                   className="w-full bg-black/20 border border-white/10 rounded-xl p-4 text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition-colors font-light"
                 />
               </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-zinc-300">Descripción breve del socio</label>
+                <textarea
+                  name="honorarySummary"
+                  defaultValue={member.honorarySummary || ""}
+                  rows={2}
+                  maxLength={240}
+                  placeholder="Una o dos líneas para presentar a esta persona."
+                  className="w-full bg-black/20 border border-white/10 rounded-xl p-4 text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition-colors font-light"
+                />
+              </div>
             </div>
           )}
 
@@ -135,6 +145,9 @@ export default async function EditarSocioPage(props: any) {
                 className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition-colors font-light"
               />
             </div>
+            {isHonorary ? (
+              <input type="hidden" name="societaryStatus" value="HONORARIO" />
+            ) : (
             <div className="space-y-2">
               <label className="text-sm font-medium text-zinc-300">Estado societario</label>
               <select 
@@ -147,10 +160,11 @@ export default async function EditarSocioPage(props: any) {
                 <option value="BAJA" className="bg-zinc-900 text-white">Baja</option>
               </select>
             </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
+            {!isHonorary && <div className="space-y-2">
               <label className="text-sm font-medium text-zinc-300">Motivo de baja</label>
               <select
                 name="bajaReason"
@@ -163,12 +177,12 @@ export default async function EditarSocioPage(props: any) {
                 <option value="BAJA_ADMINISTRATIVA" className="bg-zinc-900 text-white">Baja administrativa</option>
               </select>
               <p className="text-xs text-zinc-500">Se utiliza únicamente cuando el estado societario es Baja.</p>
-            </div>
-            <div className="space-y-2">
+            </div>}
+            {!isHonorary && <div className="space-y-2">
               <label className="text-sm font-medium text-zinc-300">Estado de deuda</label>
               <select
                 name="debtStatus"
-                defaultValue={paymentStatus}
+                defaultValue="AL DIA"
                 className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50 transition-colors font-light appearance-none"
               >
                 <option value="AL DIA" className="bg-zinc-900 text-white">Al día</option>
@@ -176,7 +190,7 @@ export default async function EditarSocioPage(props: any) {
                 <option value="SUSPENDIDO" className="bg-zinc-900 text-white">Suspendido</option>
               </select>
               <p className="text-xs text-zinc-500">Honorarios y bajas quedan automáticamente al día.</p>
-            </div>
+            </div>}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -232,7 +246,7 @@ export default async function EditarSocioPage(props: any) {
             </div>
           </div>
 
-          <div className="space-y-2">
+          {!isHonorary && <div className="space-y-2">
             <label className="text-sm font-medium text-zinc-300">Comentarios / Notas</label>
             <textarea 
               name="notes" 
@@ -240,9 +254,9 @@ export default async function EditarSocioPage(props: any) {
               rows={3}
               className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition-colors font-light"
             />
-          </div>
+          </div>}
 
-          <div className="flex items-center gap-3 bg-white/5 p-4 rounded-2xl border border-white/5">
+          {!isHonorary && <div className="flex items-center gap-3 bg-white/5 p-4 rounded-2xl border border-white/5">
             <input 
               id="wantsMailing"
               name="wantsMailing"
@@ -253,7 +267,7 @@ export default async function EditarSocioPage(props: any) {
             <label htmlFor="wantsMailing" className="text-sm text-zinc-300 cursor-pointer">
               Desea recibir Mailing con novedades sobre el Centro Amigos del Tango
             </label>
-          </div>
+          </div>}
 
           <div className="pt-6 border-t border-white/5 flex justify-end gap-4">
             <Link 
@@ -273,14 +287,14 @@ export default async function EditarSocioPage(props: any) {
         </form>
 
         {/* Portal access — outside the main save form to avoid conflicts */}
-        <div className="mt-6 pt-6 border-t border-white/5 space-y-3">
+        {!isHonorary && <div className="mt-6 pt-6 border-t border-white/5 space-y-3">
           <div className="flex items-center gap-2 mb-2">
             <Key size={16} className="text-zinc-500" />
             <h3 className="text-sm font-bold text-zinc-300">Acceso al Portal del Socio</h3>
           </div>
           <p className="text-xs text-zinc-600">Si este socio tiene cuenta de acceso al portal, podés cambiarle la contraseña desde acá.</p>
           <ResetMemberPasswordForm memberId={id} hasPortalAccess={!!member.userId} />
-        </div>
+        </div>}
       </div>
     </div>
   )

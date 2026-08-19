@@ -64,6 +64,7 @@ export default async function FichaSocioPage(props: any) {
   const societaryStatus = getSocietaryStatus(member)
   const paymentStatus = getPaymentStatus(member, now)
   const isInactive = societaryStatus === 'BAJA'
+  const isHonorary = societaryStatus === 'HONORARIO'
   const feeHistory = await getFeeHistory()
   const feeAmount = getFeeAmountForPeriod(now.getFullYear(), now.getMonth() + 1, member.isFamilyDiscount, feeHistory)
   
@@ -107,7 +108,7 @@ export default async function FichaSocioPage(props: any) {
               <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-lg border shadow-sm ${societaryStatus === 'BAJA' ? 'bg-zinc-800 text-zinc-300 border-zinc-700' : societaryStatus === 'HONORARIO' ? 'bg-amber-500/10 text-amber-300 border-amber-500/20' : 'bg-blue-500/10 text-blue-300 border-blue-500/20'}`}>
                 Societario: {societaryStatus}
               </span>
-              {societaryStatus !== 'BAJA' && (
+              {societaryStatus === 'ACTIVO' && (
                 <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-lg border shadow-sm ${getStatusBadgeStyles(paymentStatus)}`}>
                   Pagos: {paymentStatus}
                 </span>
@@ -130,12 +131,32 @@ export default async function FichaSocioPage(props: any) {
           <Link href={`/admin/socios/${member.id}/editar`} className="bg-white/5 hover:bg-white/10 text-white px-5 py-2.5 rounded-2xl text-xs font-bold border border-white/5 transition-all">
             Editar
           </Link>
-          <DeactivateMemberButton memberId={member.id} />
+          {!isHonorary && <DeactivateMemberButton memberId={member.id} />}
         </div>
         
         <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
       </div>
 
+      {isHonorary ? (
+        <div className="space-y-8">
+          <div className="bg-white/5 border border-amber-500/20 rounded-[40px] p-8 md:p-10 backdrop-blur-md shadow-2xl">
+            <div className="flex items-center gap-2 mb-8 text-amber-400">
+              <Award size={18} />
+              <h3 className="text-xs font-black uppercase tracking-widest">Información del Socio Honorario</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
+              <div><p className="text-zinc-600 text-[10px] font-black uppercase tracking-widest mb-1">DNI</p><p className="text-lg text-zinc-200 font-medium font-mono">{formatDNI(member.dni)}</p></div>
+              <div><p className="text-zinc-600 text-[10px] font-black uppercase tracking-widest mb-1">Socio desde</p><p className="text-lg text-zinc-200 font-medium">{format(new Date(member.joinDate), "MMMM yyyy", { locale: es })}</p></div>
+              <div><p className="text-zinc-600 text-[10px] font-black uppercase tracking-widest mb-1">Email</p><p className="text-lg text-zinc-200 font-medium">{member.email || "-"}</p></div>
+              <div><p className="text-zinc-600 text-[10px] font-black uppercase tracking-widest mb-1">Teléfono</p><p className="text-lg text-zinc-200 font-medium">{member.phone || "-"}</p></div>
+              <div className="md:col-span-2"><p className="text-zinc-600 text-[10px] font-black uppercase tracking-widest mb-1">Descripción breve</p><p className="text-base leading-relaxed text-zinc-200">{member.honorarySummary || "Sin descripción breve cargada."}</p></div>
+              <div><p className="text-zinc-600 text-[10px] font-black uppercase tracking-widest mb-1">Nombramiento honorario</p><p className="text-lg text-zinc-200 font-medium">{member.honoraryAppointmentDate ? format(new Date(member.honoraryAppointmentDate), "d 'de' MMMM 'de' yyyy", { locale: es }) : "Sin fecha cargada"}</p></div>
+              <div><p className="text-zinc-600 text-[10px] font-black uppercase tracking-widest mb-1">Motivo institucional</p><p className="text-sm leading-relaxed text-zinc-200 whitespace-pre-wrap">{member.honoraryReason || "Sin motivo cargado."}</p></div>
+            </div>
+          </div>
+          <HonoraryAchievementsManager memberId={member.id} achievements={member.honoraryAchievements} />
+        </div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: Key Stats and Tools */}
         <div className="space-y-8">
@@ -297,28 +318,6 @@ export default async function FichaSocioPage(props: any) {
             </div>
           </div>
 
-          {societaryStatus === "HONORARIO" && (
-            <>
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-[40px] p-8 md:p-10 shadow-2xl">
-                <div className="flex items-center gap-2 mb-5 text-amber-400">
-                  <Award size={18} />
-                  <h3 className="text-xs font-black uppercase tracking-widest">Reconocimiento como Socio Honorario</h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="md:col-span-1">
-                    <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest mb-1">Nombramiento</p>
-                    <p className="text-lg text-white font-medium">{member.honoraryAppointmentDate ? format(new Date(member.honoraryAppointmentDate), "d 'de' MMMM 'de' yyyy", { locale: es }) : "Sin fecha cargada"}</p>
-                  </div>
-                  <div className="md:col-span-2">
-                    <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest mb-1">Motivo / resolución</p>
-                    <p className="text-sm leading-relaxed text-zinc-200 whitespace-pre-wrap">{member.honoraryReason || "Sin motivo cargado"}</p>
-                  </div>
-                </div>
-              </div>
-              <HonoraryAchievementsManager memberId={member.id} achievements={member.honoraryAchievements} />
-            </>
-          )}
-
           {/* Quick Pay Form */}
           {!isInactive && (
             <div className="bg-gradient-to-r from-zinc-800/50 to-zinc-900/50 border border-white/5 rounded-[40px] p-10 backdrop-blur-md">
@@ -470,6 +469,7 @@ export default async function FichaSocioPage(props: any) {
            </div>
         </div>
       </div>
+      )}
     </div>
   )
 }
