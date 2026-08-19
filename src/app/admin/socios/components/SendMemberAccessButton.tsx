@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { createPortal } from "react-dom"
 import { CheckCircle2, KeyRound, Loader2, ShieldAlert, X } from "lucide-react"
 import { sendTemporaryMemberAccess } from "@/app/actions/users"
 
@@ -59,14 +60,14 @@ export function SendMemberAccessButton({
         <KeyRound size={13} /> Enviar acceso
       </button>
 
-      {isOpen && (
+      {isOpen && typeof document !== "undefined" && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm sm:p-6"
           role="dialog"
           aria-modal="true"
           aria-labelledby={`access-title-${memberId}`}
         >
-          <div className="flex max-h-[calc(100dvh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-zinc-900 shadow-2xl">
+          <div className="flex h-[min(90dvh,42rem)] max-h-[calc(100dvh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-zinc-900 shadow-2xl">
             <div className="flex shrink-0 items-center justify-between border-b border-white/5 p-6">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-500/20 bg-amber-500/10 text-amber-400">
@@ -82,7 +83,7 @@ export function SendMemberAccessButton({
               </button>
             </div>
 
-            <div className="space-y-5 overflow-y-auto p-6">
+            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-6">
               <div className="rounded-2xl border border-white/5 bg-black/25 p-4 text-sm">
                 <p className="font-bold text-zinc-100">{memberName}</p>
                 <p className="mt-1 text-zinc-400">Destino: {memberEmail}</p>
@@ -101,20 +102,22 @@ export function SendMemberAccessButton({
                 </div>
               )}
 
-              <div className="flex justify-end gap-3">
-                <button type="button" onClick={closeModal} disabled={isPending} className="rounded-xl border border-white/10 px-4 py-2.5 text-xs font-bold text-zinc-300 hover:bg-white/5 disabled:opacity-40">
-                  {result?.success ? "Cerrar" : "Cancelar"}
+            </div>
+
+            <div className="flex shrink-0 justify-end gap-3 border-t border-white/5 p-6 pt-4">
+              <button type="button" onClick={closeModal} disabled={isPending} className="rounded-xl border border-white/10 px-4 py-2.5 text-xs font-bold text-zinc-300 hover:bg-white/5 disabled:opacity-40">
+                {result?.success ? "Cerrar" : "Cancelar"}
+              </button>
+              {!result?.success && (
+                <button type="button" onClick={handleSend} disabled={isPending} className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-black hover:bg-amber-400 disabled:cursor-wait disabled:opacity-60">
+                  {isPending ? <Loader2 className="animate-spin" size={15} /> : <KeyRound size={15} />}
+                  {isPending ? "Enviando..." : result ? "Reintentar" : "Generar y enviar"}
                 </button>
-                {!result?.success && (
-                  <button type="button" onClick={handleSend} disabled={isPending} className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-black hover:bg-amber-400 disabled:cursor-wait disabled:opacity-60">
-                    {isPending ? <Loader2 className="animate-spin" size={15} /> : <KeyRound size={15} />}
-                    {isPending ? "Enviando..." : result ? "Reintentar" : "Generar y enviar"}
-                  </button>
-                )}
-              </div>
+              )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )

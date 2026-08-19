@@ -12,6 +12,7 @@ export function MonthlyTeachersManager({
   initialTeachers: MonthlyTeacher[]
   initialDocentesText: string
 }) {
+  const MAX_MONTHLY_TEACHERS = 2
   const [teachers, setTeachers] = useState<MonthlyTeacher[]>(initialTeachers)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingTeacher, setEditingTeacher] = useState<MonthlyTeacher | null>(null)
@@ -94,6 +95,11 @@ export function MonthlyTeachersManager({
         role: form.role
       } : t)
     } else {
+      if (teachers.length >= MAX_MONTHLY_TEACHERS) {
+        toast.error("Ya cargaste los 2 profesores permitidos para este mes")
+        return
+      }
+
       const newTeacher: MonthlyTeacher = {
         id: `teacher_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
         firstName: form.firstName.trim(),
@@ -148,9 +154,10 @@ export function MonthlyTeachersManager({
         
         <button
           onClick={openNewModal}
-          className="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 shadow-lg shadow-blue-900/30 cursor-pointer"
+          disabled={teachers.length >= MAX_MONTHLY_TEACHERS}
+          className="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 shadow-lg shadow-blue-900/30 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-blue-600"
         >
-          <Plus size={14} /> Cargar Profe del Mes
+          <Plus size={14} /> {teachers.length}/{MAX_MONTHLY_TEACHERS} · Cargar Profe
         </button>
       </div>
 

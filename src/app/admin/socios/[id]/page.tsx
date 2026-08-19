@@ -1,6 +1,6 @@
 import { db } from "@/lib/db"
 import Link from "next/link"
-import { ArrowLeft, Edit, CheckCircle2, Mail, Users, AlertCircle, History, MapPin, Phone, User, CreditCard, Clock, Trophy, Medal, Star, X, Calendar } from "lucide-react"
+import { ArrowLeft, Edit, CheckCircle2, Mail, Users, AlertCircle, History, MapPin, Phone, User, CreditCard, Clock, Trophy, Medal, Star, X, Calendar, Award } from "lucide-react"
 import { notFound } from "next/navigation"
 import { DeactivateMemberButton } from "./DeactivateButton"
 import { NombrarHonorarioModal } from "./NombrarHonorarioModal"
@@ -10,8 +10,9 @@ import { AddBoardHistoryForm } from "./AddBoardHistoryForm"
 import { deleteBoardHistory } from "@/app/actions/board-history"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { calculateMemberStatus, getStatusBadgeStyles, getMemberBajaReason, getBajaReasonStyles, formatDNI } from "@/lib/member-utils"
+import { getPaymentStatus, getSocietaryStatus, getStatusBadgeStyles, getMemberBajaReason, getBajaReasonStyles, formatDNI } from "@/lib/member-utils"
 import { ApproveFeePaymentButton } from "../../cuotas/ApproveFeePaymentButton"
+import { HonoraryAchievementsManager } from "./HonoraryAchievementsManager"
 
 interface CommunicationSummary {
   id: string
@@ -43,7 +44,8 @@ export default async function FichaSocioPage(props: any) {
         orderBy: { createdAt: "desc" }
       },
       championshipResults: { include: { championship: true } },
-      boardHistory: { orderBy: { periodStart: "desc" } }
+      boardHistory: { orderBy: { periodStart: "desc" } },
+      honoraryAchievements: { orderBy: [{ sortOrder: "asc" }, { eventDate: "asc" }, { createdAt: "asc" }] }
     }
   }) as any
 
@@ -52,13 +54,15 @@ export default async function FichaSocioPage(props: any) {
   const communications = member.communications as CommunicationSummary[]
 
   const otherMembers = await db.member.findMany({
-    where: { id: { not: id }, status: { notIn: ["INACTIVE", "DECEASED", "RESIGNED", "DUPLICATE", "MOROSIDAD", "ADMINISTRATIVE", "ARCHIVED"] } },
+    where: { id: { not: id }, status: { notIn: ["BAJA", "INACTIVE", "DECEASED", "RESIGNED", "DUPLICATE", "MOROSIDAD", "ADMINISTRATIVE", "ARCHIVED"] } },
     select: { id: true, firstName: true, lastName: true, memberNumber: true },
     orderBy: { lastName: 'asc' }
   }) as any[]
 
   const now = new Date()
-  const calculatedStatus = calculateMemberStatus(member, now)
+  const societaryStatus = getSocietaryStatus(member)
+  const paymentStatus = getPaymentStatus(member, now)
+  const isInactive = societaryStatus === 'BAJA'
   const baseFeeAmount = 6000
   const feeAmount = member.isFamilyDiscount ? baseFeeAmount / 2 : baseFeeAmount
   
@@ -73,8 +77,6 @@ export default async function FichaSocioPage(props: any) {
   const paidMonthsCount = member.fees.filter((f: any) => f.paymentStatus === "PAID").length
   const unpaidMonths = Math.max(0, monthsExpected - paidMonthsCount)
   const totalDebt = unpaidMonths * feeAmount
-
-  const isInactive = calculatedStatus === 'BAJA'
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-5xl mx-auto pb-20">
@@ -101,10 +103,15 @@ export default async function FichaSocioPage(props: any) {
               <h1 className="text-3xl font-black text-white tracking-tight uppercase">
                 {member.lastName}, {member.firstName}
               </h1>
-              <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-lg border shadow-sm ${getStatusBadgeStyles(calculatedStatus)}`}>
-                {calculatedStatus}
+              <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-lg border shadow-sm ${societaryStatus === 'BAJA' ? 'bg-zinc-800 text-zinc-300 border-zinc-700' : societaryStatus === 'HONORARIO' ? 'bg-amber-500/10 text-amber-300 border-amber-500/20' : 'bg-blue-500/10 text-blue-300 border-blue-500/20'}`}>
+                Societario: {societaryStatus}
               </span>
-              {calculatedStatus === 'BAJA' && (() => {
+              {societaryStatus !== 'BAJA' && (
+                <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-lg border shadow-sm ${getStatusBadgeStyles(paymentStatus)}`}>
+                  Pagos: {paymentStatus}
+                </span>
+              )}
+              {societaryStatus === 'BAJA' && (() => {
                 const bajaReason = getMemberBajaReason(member)
                 return bajaReason ? (
                   <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-lg border shadow-sm ${getBajaReasonStyles(bajaReason)}`}>
@@ -288,6 +295,28 @@ export default async function FichaSocioPage(props: any) {
               </div>
             </div>
           </div>
+
+          {societaryStatus === "HONORARIO" && (
+            <>
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-[40px] p-8 md:p-10 shadow-2xl">
+                <div className="flex items-center gap-2 mb-5 text-amber-400">
+                  <Award size={18} />
+                  <h3 className="text-xs font-black uppercase tracking-widest">Reconocimiento como Socio Honorario</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="md:col-span-1">
+                    <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest mb-1">Nombramiento</p>
+                    <p className="text-lg text-white font-medium">{member.honoraryAppointmentDate ? format(new Date(member.honoraryAppointmentDate), "d 'de' MMMM 'de' yyyy", { locale: es }) : "Sin fecha cargada"}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest mb-1">Motivo / resolución</p>
+                    <p className="text-sm leading-relaxed text-zinc-200 whitespace-pre-wrap">{member.honoraryReason || "Sin motivo cargado"}</p>
+                  </div>
+                </div>
+              </div>
+              <HonoraryAchievementsManager memberId={member.id} achievements={member.honoraryAchievements} />
+            </>
+          )}
 
           {/* Quick Pay Form */}
           {!isInactive && (

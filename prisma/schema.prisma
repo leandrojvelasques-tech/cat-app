@@ -40,9 +40,13 @@ model Member {
   email        String?
   phone        String?
   joinDate     DateTime  @default(now())
+  honoraryAppointmentDate DateTime?
+  honoraryReason          String?
   birthDate    DateTime?
   type         String    @default("ACTIVO") // ACTIVO, HONORARIO
-  status       String    @default("ACTIVE") // ACTIVE, INACTIVE, DEBTOR, SUSPENDED, DECEASED, RESIGNED
+    status       String    @default("ACTIVE") // ACTIVE, BAJA, plus legacy values during migration
+    bajaReason   String?   // RENUNCIA, FALLECIMIENTO
+    debtStatus   String?   // AL DIA, EN MORA, SUSPENDIDO
 
   // Board status
   isBoardMember Boolean @default(false)
@@ -67,8 +71,23 @@ model Member {
   deactivatedAt       DateTime?
   eventRegistrations  EventRegistration[]
   championshipResults ChampionshipResult[] @relation("MemberAwards")
+  honoraryAchievements HonoraryAchievement[]
   boardHistory        BoardHistory[]
   buffetPurchases     BuffetSale[]         @relation("BuffetBuyer")
+}
+
+model HonoraryAchievement {
+  id          String   @id @default(uuid())
+  memberId    String
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  eventDate   DateTime?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([memberId, sortOrder])
 }
 
 model Communication {

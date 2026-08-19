@@ -5,6 +5,7 @@ import { ArrowLeft, Save, Key } from "lucide-react"
 import Link from "next/link"
 import { AvatarFormInput } from "@/components/AvatarFormInput"
 import { ResetMemberPasswordForm } from "@/app/admin/socios/components/ResetMemberPasswordForm"
+import { getPaymentStatus, getSocietaryStatus } from "@/lib/member-utils"
 
 export default async function EditarSocioPage(props: any) {
   const params = await props.params
@@ -25,14 +26,18 @@ export default async function EditarSocioPage(props: any) {
         email: true,
         phone: true,
         joinDate: true,
+        honoraryAppointmentDate: true,
+        honoraryReason: true,
         birthDate: true,
         type: true,
         status: true,
+        bajaReason: true,
         city: true,
         notes: true,
         wantsMailing: true,
         avatarUrl: true,
         userId: true,
+        fees: true,
       }
     })
   } catch (error) {
@@ -41,6 +46,9 @@ export default async function EditarSocioPage(props: any) {
   }
 
   if (!member) return notFound()
+
+  const societaryStatus = getSocietaryStatus(member)
+  const paymentStatus = getPaymentStatus(member)
 
 
   const updateMemberWithId = updateMember.bind(null, id)
@@ -88,6 +96,35 @@ export default async function EditarSocioPage(props: any) {
             </div>
           </div>
 
+          {societaryStatus === "HONORARIO" && (
+            <div className="space-y-5 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-amber-400">Información honoraria</p>
+                <p className="mt-1 text-xs text-zinc-500">La fecha de alta como socio y la fecha del nombramiento pueden ser distintas.</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-zinc-300">Fecha de nombramiento como socio honorario</label>
+                <input
+                  name="honoraryAppointmentDate"
+                  type="date"
+                  defaultValue={member.honoraryAppointmentDate ? new Date(member.honoraryAppointmentDate).toISOString().split("T")[0] : ""}
+                  className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50 transition-colors font-light"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-zinc-300">Motivo y comentario de la Comisión Directiva *</label>
+                <textarea
+                  name="honoraryReason"
+                  defaultValue={member.honoraryReason || ""}
+                  rows={4}
+                  required
+                  placeholder="Describí por qué se lo nombró socio honorario y la resolución o visita institucional correspondiente."
+                  className="w-full bg-black/20 border border-white/10 rounded-xl p-4 text-white placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition-colors font-light"
+                />
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-zinc-300">DNI *</label>
@@ -99,20 +136,46 @@ export default async function EditarSocioPage(props: any) {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-300">Estado</label>
+              <label className="text-sm font-medium text-zinc-300">Estado societario</label>
               <select 
-                name="status"
-                defaultValue={member.status}
+                name="societaryStatus"
+                defaultValue={societaryStatus}
                 className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50 transition-colors font-light appearance-none"
               >
-                <option value="ACTIVE" className="bg-zinc-900 text-white">Activo</option>
-                <option value="PENDING" className="bg-zinc-900 text-white">Pendiente</option>
-                <option value="INACTIVE" className="bg-zinc-900 text-white">Baja</option>
-                <option value="DEBTOR" className="bg-zinc-900 text-white">Deudor</option>
-                <option value="SUSPENDED" className="bg-zinc-900 text-white">Suspendido</option>
-                <option value="DECEASED" className="bg-zinc-900 text-white">Fallecido</option>
-                <option value="RESIGNED" className="bg-zinc-900 text-white">Renuncia</option>
+                <option value="ACTIVO" className="bg-zinc-900 text-white">Socio activo</option>
+                <option value="HONORARIO" className="bg-zinc-900 text-white">Socio honorario</option>
+                <option value="BAJA" className="bg-zinc-900 text-white">Baja</option>
               </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-300">Motivo de baja</label>
+              <select
+                name="bajaReason"
+                defaultValue={member.bajaReason || ""}
+                className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50 transition-colors font-light appearance-none"
+              >
+                <option value="" className="bg-zinc-900 text-white">No corresponde</option>
+                <option value="RENUNCIA" className="bg-zinc-900 text-white">Renuncia</option>
+                <option value="FALLECIMIENTO" className="bg-zinc-900 text-white">Fallecimiento</option>
+                <option value="BAJA_ADMINISTRATIVA" className="bg-zinc-900 text-white">Baja administrativa</option>
+              </select>
+              <p className="text-xs text-zinc-500">Se utiliza únicamente cuando el estado societario es Baja.</p>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-300">Estado de deuda</label>
+              <select
+                name="debtStatus"
+                defaultValue={paymentStatus}
+                className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50 transition-colors font-light appearance-none"
+              >
+                <option value="AL DIA" className="bg-zinc-900 text-white">Al día</option>
+                <option value="EN MORA" className="bg-zinc-900 text-white">En mora</option>
+                <option value="SUSPENDIDO" className="bg-zinc-900 text-white">Suspendido</option>
+              </select>
+              <p className="text-xs text-zinc-500">Honorarios y bajas quedan automáticamente al día.</p>
             </div>
           </div>
 
@@ -146,17 +209,7 @@ export default async function EditarSocioPage(props: any) {
                 className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50 transition-colors font-light"
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-300">Tipo de Socio</label>
-              <select 
-                name="type"
-                defaultValue={member.type}
-                className="w-full bg-zinc-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50 transition-colors font-light appearance-none"
-              >
-                <option value="ACTIVO" className="bg-zinc-900 text-white">Socio Activo</option>
-                <option value="HONORARIO" className="bg-zinc-900 text-white">Socio Honorario</option>
-              </select>
-            </div>
+            <div />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -56,9 +56,7 @@ export function DeactivateMemberButton({ memberId }: { memberId: string }) {
             >
               <option value="RESIGNED" className="bg-zinc-900 text-white">Renuncia Voluntaria</option>
               <option value="DECEASED" className="bg-zinc-900 text-white">Fallecimiento</option>
-              <option value="MOROSIDAD" className="bg-zinc-900 text-white">Morosidad</option>
-              <option value="INACTIVE" className="bg-zinc-900 text-white">Decisión Administrativa</option>
-              <option value="DUPLICATE" className="bg-zinc-900 text-white">Socio Duplicado</option>
+              <option value="ADMINISTRATIVE" className="bg-zinc-900 text-white">Baja administrativa</option>
             </select>
           </div>
 

@@ -2,7 +2,7 @@ import { db } from "@/lib/db"
 import { UserPlus, UserCheck, UserX, Clock, Users } from "lucide-react"
 import Link from "next/link"
 import { SociosFilters } from "./SociosFilters"
-import { calculateMemberStatus, getStatusBadgeStyles, getMemberBajaReason, getBajaReasonStyles, formatDNI } from "@/lib/member-utils"
+import { getPaymentStatus, getSocietaryStatus, getStatusBadgeStyles, getMemberBajaReason, getBajaReasonStyles, formatDNI } from "@/lib/member-utils"
 import { SendMemberAccessButton } from "./components/SendMemberAccessButton"
 
 export default async function SociosPage({
@@ -18,12 +18,14 @@ export default async function SociosPage({
     "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
   ]
   
-  const BAJA_STATUS_KEYS = ["DECEASED", "RESIGNED", "INACTIVE", "ARCHIVED", "DUPLICATE", "MOROSIDAD", "ADMINISTRATIVE"]
+  const BAJA_STATUS_KEYS = ["BAJA", "DECEASED", "RESIGNED", "INACTIVE", "ARCHIVED", "DUPLICATE", "MOROSIDAD", "ADMINISTRATIVE"]
 
   const viewFilter = view === "honorary"
     ? { type: "HONORARIO", status: { notIn: BAJA_STATUS_KEYS } }
     : view === "archive" 
-    ? (status ? (status === "INACTIVE" ? { status: { in: ["INACTIVE", "ARCHIVED", "ADMINISTRATIVE"] } } : { status }) : { status: { in: BAJA_STATUS_KEYS } })
+    ? (status
+      ? (status === "ADMINISTRATIVE" ? { status: "BAJA", bajaReason: "BAJA_ADMINISTRATIVA" } : { status })
+      : { status: { in: BAJA_STATUS_KEYS } })
     : view === "all"
     ? (status ? { status } : {})
     : { status: { notIn: BAJA_STATUS_KEYS }, type: { not: "HONORARIO" } }
@@ -69,12 +71,16 @@ export default async function SociosPage({
 
   // Apply final filtering based on dynamic status logic
   const filteredMembers = membersData.filter((member: any) => {
-    const calculated = calculateMemberStatus(member, now)
+    const societary = getSocietaryStatus(member)
+    const calculated = societary === 'BAJA'
+      ? 'BAJA'
+      : societary === 'HONORARIO'
+      ? 'HONORARIO'
+      : getPaymentStatus(member, now)
     
     if (view === "all") {
       if (status === "ACTIVE") return calculated === 'AL DIA'
       if (status === "DEBTOR") return calculated === 'EN MORA'
-      if (status === "INACTIVE") return calculated === 'INACTIVO'
       if (status === "SUSPENDED") return calculated === 'SUSPENDIDO'
       if (status === "BAJA") return calculated === 'BAJA'
       return true
@@ -88,11 +94,10 @@ export default async function SociosPage({
     // Filter by specific status if requested
     if (status === "ACTIVE") return calculated === 'AL DIA'
     if (status === "DEBTOR") return calculated === 'EN MORA'
-    if (status === "INACTIVE") return calculated === 'INACTIVO'
     if (status === "SUSPENDED") return calculated === 'SUSPENDIDO'
 
-    // By default, in "active" view, exclude all BAJA statuses completely
-    return calculated !== 'BAJA'
+    // By default, show active members who are current or in arrears. Suspended members have their own filter.
+    return calculated === 'AL DIA' || calculated === 'EN MORA'
   }).sort((a: any, b: any) => {
     const numA = Number(a.memberNumber) || 0
     const numB = Number(b.memberNumber) || 0
@@ -169,7 +174,8 @@ export default async function SociosPage({
                 </tr>
               ) : (
                 filteredMembers.map((member: any) => {
-                  const calculated = calculateMemberStatus(member, now)
+                  const societaryStatus = getSocietaryStatus(member)
+                  const paymentStatus = getPaymentStatus(member, now)
                   const lastFee = member.fees[0]
                   const lastPaidLabel = lastFee ? `${monthNames[lastFee.periodMonth-1]} ${lastFee.periodYear}` : 'Sin pagos'
                   const bajaReason = getMemberBajaReason(member)
@@ -200,10 +206,17 @@ export default async function SociosPage({
                       </td>
                       <td className="py-4">
                         <div className="flex flex-col gap-1 items-start">
-                          <span className={`px-3 py-1 text-[9px] uppercase font-black rounded-lg border shadow-sm ${getStatusBadgeStyles(calculated)}`}>
-                            {calculated}
+                          <span className="text-[8px] uppercase font-black tracking-wider text-zinc-500">Societario</span>
+                          <span className={`px-3 py-1 text-[9px] uppercase font-black rounded-lg border shadow-sm ${societaryStatus === 'BAJA' ? 'bg-zinc-800 text-zinc-300 border-zinc-700' : societaryStatus === 'HONORARIO' ? 'bg-amber-500/10 text-amber-300 border-amber-500/20' : 'bg-blue-500/10 text-blue-300 border-blue-500/20'}`}>
+                            {societaryStatus}
                           </span>
-                          {calculated === 'BAJA' && bajaReason && (
+                          {societaryStatus !== 'BAJA' && <>
+                            <span className="text-[8px] uppercase font-black tracking-wider text-zinc-500 mt-1">Pagos</span>
+                            <span className={`px-3 py-1 text-[9px] uppercase font-black rounded-lg border shadow-sm ${getStatusBadgeStyles(paymentStatus)}`}>
+                              {paymentStatus}
+                            </span>
+                          </>}
+                          {societaryStatus === 'BAJA' && bajaReason && (
                             <span className={`px-2 py-0.5 text-[8px] uppercase font-bold rounded-md border ${getBajaReasonStyles(bajaReason)}`}>
                               {bajaReason}
                             </span>

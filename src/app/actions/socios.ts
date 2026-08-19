@@ -220,10 +220,17 @@ export async function changeMemberStatus(memberId: string, status: string) {
 }
 
 export async function deactivateMember(memberId: string, status: string, notes?: string) {
+  if (!['RESIGNED', 'DECEASED', 'ADMINISTRATIVE'].includes(status)) {
+    throw new Error("El motivo de baja no es válido.")
+  }
+  const bajaReason = status === "DECEASED" ? "FALLECIMIENTO" : status === "ADMINISTRATIVE" ? "BAJA_ADMINISTRATIVA" : "RENUNCIA"
   await db.member.update({
     where: { id: memberId },
     data: { 
-      status,
+      status: "BAJA",
+      bajaReason,
+      debtStatus: "AL DIA",
+      type: "ACTIVO",
       notes: notes ? `BAJA (${new Date().toLocaleDateString()}): ${notes}` : undefined
     }
   })
@@ -290,11 +297,26 @@ export async function updateMember(id: string, formData: FormData) {
   const phone = formData.get("phone") as string
   const city = formData.get("city") as string
   const address = formData.get("address") as string
-  const status = formData.get("status") as string
-  const type = formData.get("type") as string || "ACTIVO"
+  const societaryStatus = formData.get("societaryStatus") as string
+  const bajaReason = formData.get("bajaReason") as string
+  const debtStatus = formData.get("debtStatus") as string
+  const isHonorary = societaryStatus === "HONORARIO"
+  const isBaja = societaryStatus === "BAJA"
+
+  if (!['ACTIVO', 'HONORARIO', 'BAJA'].includes(societaryStatus)) {
+    throw new Error("Estado societario inválido.")
+  }
+  if (isBaja && !['RENUNCIA', 'FALLECIMIENTO', 'BAJA_ADMINISTRATIVA'].includes(bajaReason)) {
+    throw new Error("Una baja debe tener un motivo válido.")
+  }
+  if (!isBaja && !isHonorary && !['AL DIA', 'EN MORA', 'SUSPENDIDO'].includes(debtStatus)) {
+    throw new Error("Estado de deuda inválido.")
+  }
   const notes = formData.get("notes") as string
   const birthDateStr = formData.get("birthDate") as string
   const joinDateStr = formData.get("joinDate") as string
+  const honoraryAppointmentDateStr = formData.get("honoraryAppointmentDate") as string
+  const honoraryReason = formData.get("honoraryReason") as string
   const wantsMailing = formData.get("wantsMailing") === "on"
   const avatarUrl = formData.get("avatarUrl") as string
 
@@ -305,6 +327,11 @@ export async function updateMember(id: string, formData: FormData) {
   // Dates
   const birthDate = birthDateStr ? new Date(birthDateStr) : null
   const joinDate = joinDateStr ? new Date(joinDateStr) : new Date()
+  const honoraryAppointmentDate = honoraryAppointmentDateStr ? new Date(honoraryAppointmentDateStr) : null
+
+  if (isHonorary && !honoraryReason?.trim()) {
+    throw new Error("Un socio honorario debe tener registrado el motivo de su nombramiento.")
+  }
 
   // DNI & Email Uniqueness Validation
   if (dni && dni.length > 0) {
@@ -335,8 +362,12 @@ export async function updateMember(id: string, formData: FormData) {
       phone: phone || null,
       city: city || null,
       address: address || null,
-      status,
-      type,
+      status: isBaja ? "BAJA" : "ACTIVE",
+      bajaReason: isBaja ? bajaReason : null,
+      debtStatus: isBaja || isHonorary ? "AL DIA" : debtStatus,
+      type: isHonorary ? "HONORARIO" : "ACTIVO",
+      honoraryAppointmentDate: isHonorary ? honoraryAppointmentDate : null,
+      honoraryReason: isHonorary ? honoraryReason.trim() : null,
       notes,
       birthDate,
       joinDate,
@@ -347,6 +378,7 @@ export async function updateMember(id: string, formData: FormData) {
 
   revalidatePath(`/admin/socios/${id}`)
   revalidatePath("/admin/socios")
+  revalidatePath("/socios-honorarios")
   redirect(`/admin/socios/${id}`)
 }
 export async function updateMemberProfile(memberId: string, formData: FormData) {
@@ -392,6 +424,11 @@ export async function updateMemberProfile(memberId: string, formData: FormData) 
 }
 
 export async function nombrarSocioHonorario(memberId: string, reason: string, honorarioDateStr?: string) {
+  const session = await auth()
+  if (!session?.user || !MEMBER_MANAGEMENT_ROLES.includes(session.user.role)) {
+    throw new Error("No autorizado")
+  }
+
   if (!reason || reason.trim().length === 0) {
     throw new Error("Debe proporcionar el motivo de la designación como Socio Honorario.")
   }
@@ -415,7 +452,9 @@ export async function nombrarSocioHonorario(memberId: string, reason: string, ho
     where: { id: memberId },
     data: {
       type: "HONORARIO",
-      notes: updatedNotes
+      notes: updatedNotes,
+      honoraryReason: reason.trim(),
+      honoraryAppointmentDate: honorarioDateStr ? new Date(`${honorarioDateStr}T12:00:00`) : new Date()
     }
   })
 
@@ -433,5 +472,6 @@ export async function nombrarSocioHonorario(memberId: string, reason: string, ho
 
   revalidatePath(`/admin/socios/${memberId}`)
   revalidatePath("/admin/socios")
+  revalidatePath("/socios-honorarios")
   return { success: true }
 }

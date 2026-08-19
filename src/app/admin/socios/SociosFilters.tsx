@@ -130,7 +130,6 @@ export function SociosFilters() {
                   <option value="" className="bg-zinc-900 italic">Todos</option>
                   <option value="ACTIVE" className="bg-zinc-900 font-bold text-emerald-400">Al Día</option>
                   <option value="DEBTOR" className="bg-zinc-900 font-bold text-amber-400">En Mora</option>
-                  <option value="INACTIVE" className="bg-zinc-900 font-bold text-zinc-400">Inactivos</option>
                   <option value="SUSPENDED" className="bg-zinc-900 font-bold text-red-400">Suspendidos</option>
                   {currentView === 'all' && <option value="BAJA" className="bg-zinc-900 font-bold text-red-500">Bajas</option>}
                 </>
@@ -140,7 +139,7 @@ export function SociosFilters() {
                   <option value="DECEASED" className="bg-zinc-900 font-bold text-purple-400">Baja por Fallecimiento</option>
                   <option value="RESIGNED" className="bg-zinc-900 font-bold text-orange-400">Baja por Renuncia</option>
                   <option value="MOROSIDAD" className="bg-zinc-900 font-bold text-red-400">Baja por Morosidad</option>
-                  <option value="INACTIVE" className="bg-zinc-900 font-bold text-zinc-400">Decisión Administrativa</option>
+                  <option value="ADMINISTRATIVE" className="bg-zinc-900 font-bold text-zinc-400">Baja administrativa</option>
                   <option value="DUPLICATE" className="bg-zinc-900 font-bold text-blue-400">Socio Duplicado</option>
                 </>
               )}

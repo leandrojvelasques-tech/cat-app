@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { calculateMemberStatus } from "@/lib/member-utils"
 import { sendSocioEnMoraEmail } from "@/lib/emails"
+import { finalizePastEvents } from "@/lib/event-status"
 
 export async function GET(request: Request) {
   // Protección por Token en la cabecera para evitar ejecuciones maliciosas
@@ -12,6 +12,7 @@ export async function GET(request: Request) {
 
   try {
     const now = new Date()
+    const finalizedEvents = await finalizePastEvents(now)
     const currentMonth = now.getMonth() + 1
     const currentYear = now.getFullYear()
     const currentDay = now.getDate()
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
     const members = await db.member.findMany({
       where: {
         NOT: {
-          status: { in: ["DECEASED", "RESIGNED", "ARCHIVED", "INACTIVE", "DUPLICATE", "MOROSIDAD", "ADMINISTRATIVE"] }
+          status: { in: ["BAJA", "DECEASED", "RESIGNED", "ARCHIVED", "INACTIVE", "DUPLICATE", "MOROSIDAD", "ADMINISTRATIVE"] }
         }
       },
       include: {
@@ -92,10 +93,10 @@ export async function GET(request: Request) {
       // Si debe 3 o más meses, entra en estado de MORA en la base de datos
       if (debtMonths >= 3) {
         // Solo actualizar y enviar email si no estaba marcado ya como deudor (DEBTOR o SUSPENDED)
-        if (member.status !== "DEBTOR" && member.status !== "SUSPENDED") {
+        if (member.debtStatus !== "EN MORA" && member.debtStatus !== "SUSPENDIDO") {
           await db.member.update({
             where: { id: member.id },
-            data: { status: "DEBTOR" }
+            data: { debtStatus: "EN MORA" }
           })
 
           const unpaidMonthLabels = unpaidMonths.map(um => `${monthNames[um.month - 1]} ${um.year}`)
@@ -106,10 +107,10 @@ export async function GET(request: Request) {
         }
       } else {
         // Si regularizó su deuda a menos de 3 meses, reactivar su ficha automáticamente a ACTIVE
-        if (member.status === "DEBTOR" || member.status === "SUSPENDED") {
+        if (member.debtStatus === "EN MORA" || member.debtStatus === "SUSPENDIDO") {
           await db.member.update({
             where: { id: member.id },
-            data: { status: "ACTIVE" }
+            data: { debtStatus: "AL DIA" }
           })
         }
       }
@@ -120,11 +121,13 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       processed: processedCount,
-      moraEmailsSent: moraCount
+      moraEmailsSent: moraCount,
+      finalizedEvents
     })
 
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("Error en cron de mora:", e)
-    return NextResponse.json({ success: false, error: e.message }, { status: 500 })
+    const message = e instanceof Error ? e.message : "Error desconocido en el proceso automático"
+    return NextResponse.json({ success: false, error: message }, { status: 500 })
   }
 }

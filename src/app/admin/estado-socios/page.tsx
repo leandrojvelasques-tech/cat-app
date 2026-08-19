@@ -2,7 +2,7 @@ import { db } from "@/lib/db"
 import { Users, UserPlus, CreditCard, List } from "lucide-react"
 import Link from "next/link"
 import { EstadoSociosFilters } from "./EstadoSociosFilters"
-import { calculateMemberStatus, getStatusBadgeStyles } from "@/lib/member-utils"
+import { getPaymentStatus } from "@/lib/member-utils"
 import { SolicitudesList } from "../solicitudes/SolicitudesList"
 import { EstadoSociosTable } from "./EstadoSociosTable"
 import { ApproveFeePaymentButton } from "../cuotas/ApproveFeePaymentButton"
@@ -34,7 +34,7 @@ export default async function EstadoSociosPage({
   })
 
   let membersData = []
-  const BAJA_STATUSES = ["DECEASED", "RESIGNED", "INACTIVE", "ARCHIVED", "DUPLICATE", "MOROSIDAD", "ADMINISTRATIVE"]
+  const BAJA_STATUSES = ["BAJA", "DECEASED", "RESIGNED", "INACTIVE", "ARCHIVED", "DUPLICATE", "MOROSIDAD", "ADMINISTRATIVE"]
 
   if (query) {
     // Search Mode: Find any active member matching the query (excluding Honorarios)
@@ -75,17 +75,11 @@ export default async function EstadoSociosPage({
       take: 50 // Limit to avoid massive renders on short queries
     } as any) as any[]
   } else {
-    // Default Mode: Find active members participating (paid at least one fee from Jan 2026, excluding Honorarios)
+    // Default Mode: include every active member, including those already marked SUSPENDIDO.
     membersData = await db.member.findMany({
       where: {
         status: { notIn: BAJA_STATUSES },
         type: { not: "HONORARIO" },
-        fees: {
-          some: {
-            paymentStatus: "PAID",
-            periodYear: { gte: 2026 }
-          }
-        }
       },
       include: {
         fees: {
@@ -98,18 +92,16 @@ export default async function EstadoSociosPage({
     } as any) as any[]
   }
 
-  // Calculate dynamic status and filter out any remaining BAJA/FALLECIDO/RENUNCIA
+  // Use the persisted debt status so all suspended members remain visible.
   const filteredMembers = membersData
     .map((member: any) => ({
       ...member,
-      calculatedStatus: calculateMemberStatus(member, now)
+      calculatedStatus: getPaymentStatus(member, now)
     }))
-    .filter((m: any) => !['BAJA', 'FALLECIDO', 'RENUNCIA'].includes(m.calculatedStatus))
 
   // Calcular resumen
   const totalAlDia = filteredMembers.filter((m: any) => m.calculatedStatus === 'AL DIA').length
   const totalEnMora = filteredMembers.filter((m: any) => m.calculatedStatus === 'EN MORA').length
-  const totalInactivos = filteredMembers.filter((m: any) => m.calculatedStatus === 'INACTIVO' || m.calculatedStatus === 'SUSPENDIDO').length
 
   // Ordenar
   filteredMembers.sort((a: any, b: any) => {

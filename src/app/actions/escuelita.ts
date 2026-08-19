@@ -106,9 +106,6 @@ export async function uploadClassPhoto(formData: FormData) {
   revalidatePath(`/admin/escuelita/clases/${classId}`)
 }
 
-import { writeFileSync, existsSync, mkdirSync } from "fs"
-import { join } from "path"
-
 export async function uploadEscuelitaDocentePhoto(formData: FormData) {
   try {
     const file = formData.get("file") as File
@@ -116,21 +113,19 @@ export async function uploadEscuelitaDocentePhoto(formData: FormData) {
       return { success: false, error: "No se proporcionó archivo de imagen" }
     }
 
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-
-    const uploadDir = join(process.cwd(), "public", "uploads")
-    if (!existsSync(uploadDir)) {
-      mkdirSync(uploadDir, { recursive: true })
+    const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"])
+    if (!allowedTypes.has(file.type)) {
+      return { success: false, error: "Usá una imagen JPG, PNG o WebP" }
     }
 
-    const ext = file.name.split('.').pop() || 'jpg'
-    const uniqueName = `escuelita_teacher_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`
-    const filepath = join(uploadDir, uniqueName)
+    if (file.size > 5 * 1024 * 1024) {
+      return { success: false, error: "La foto debe pesar menos de 5MB" }
+    }
 
-    writeFileSync(filepath, buffer)
+    const bytes = await file.arrayBuffer()
+    const dataUrl = `data:${file.type};base64,${Buffer.from(bytes).toString("base64")}`
 
-    return { success: true, url: `/uploads/${uniqueName}` }
+    return { success: true, url: dataUrl }
   } catch (error: any) {
     console.error("Error al subir foto de docente de Escuela del CAT:", error)
     return { success: false, error: error.message || "Error al subir la foto" }
@@ -164,6 +159,16 @@ export interface MonthlyTeacher {
 
 export async function updateEscuelitaDocentesStructured(teachers: MonthlyTeacher[]) {
   try {
+    if (!Array.isArray(teachers) || teachers.length > 2) {
+      return { success: false, error: "Podés cargar como máximo 2 profesores del mes" }
+    }
+
+    for (const teacher of teachers) {
+      if (!teacher.firstName?.trim() || !teacher.lastName?.trim()) {
+        return { success: false, error: "Cada profesor debe tener nombre y apellido" }
+      }
+    }
+
     const jsonValue = JSON.stringify(teachers)
     
     // Save structured JSON

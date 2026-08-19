@@ -154,7 +154,17 @@ export default async function Home() {
               <LogIn size={14} />
               <span>Portal CD / Socios</span>
             </Link>
+            <Link href="/socios-honorarios" className="text-zinc-400 hover:text-white text-sm transition-colors">Socios Honorarios</Link>
           </div>
+
+          <Link
+            href="/login"
+            aria-label="Ingresar al Portal de Socios"
+            className="md:hidden min-h-11 px-3.5 rounded-xl border border-white/10 bg-white/5 text-zinc-200 hover:bg-white/10 active:scale-95 transition-all flex items-center gap-2 text-xs font-bold"
+          >
+            <LogIn size={17} aria-hidden="true" />
+            <span>Socios</span>
+          </Link>
           
           <div>
             <Link 
@@ -185,7 +195,7 @@ export default async function Home() {
               <span className="bg-gradient-to-r from-cat-gold to-cat-bronze bg-clip-text text-transparent">del Tango</span>
             </h1>
             <p className="text-base md:text-xl text-zinc-400 font-light max-w-xl mb-10 tracking-wide">
-              Comodoro Rivadavia · Asociación Civil · Desde 2007
+              Comodoro Rivadavia · Asociación Civil · Fundado el 13 de noviembre de 2002
             </p>
             <Link 
               href="/asociate" 
@@ -340,10 +350,10 @@ export default async function Home() {
             <div className="space-y-6">
               <h2 className="text-3xl md:text-4xl font-bold text-cat-gold font-serif">Sobre Nosotros</h2>
               <p className="text-base md:text-lg text-zinc-300 leading-relaxed font-light">
-                Somos una asociación civil sin fines de lucro dedicada a preservar, difundir y enseñar el arte del Tango en Comodoro Rivadavia. Desde nuestra fundación en 2007, hemos trabajado incansablemente para crear un espacio de pertenencia para todos los amantes del 2x4.
+                Somos una asociación civil sin fines de lucro dedicada a promover y difundir el Tango en sus diversas expresiones artísticas, culturales y sociales en Comodoro Rivadavia. Desde nuestra fundación el 13 de noviembre de 2002, trabajamos para crear un espacio de pertenencia para todos los amantes del 2x4.
               </p>
               <p className="text-sm text-zinc-400 font-light leading-relaxed">
-                Nuestra misión trasciende el baile; buscamos fortalecer los lazos culturales de nuestra comunidad patagónica a través de la música, la danza y la historia que nos define como argentinos.
+                Nuestra misión es propender a la difusión del Tango en sus vastas expresiones artísticas, culturales y sociales, como la música instrumental, el canto, la poesía, la danza, la literatura, el teatro, la pintura, la escultura y la historia.
               </p>
             </div>
             
@@ -518,7 +528,7 @@ export default async function Home() {
           <div className="space-y-6">
             <div className="font-bold text-2xl text-white font-serif tracking-wide">CAT</div>
             <p className="text-xs text-zinc-500 leading-relaxed font-light">
-              Centro Amigos del Tango. Fomentando la pasión, el abrazo y la cultura rioplatense en Comodoro Rivadavia, Chubut, desde 2007.
+              Centro Amigos del Tango. Fomentando la pasión, el abrazo y la cultura rioplatense en Comodoro Rivadavia, Chubut, desde el 13 de noviembre de 2002.
             </p>
           </div>
           

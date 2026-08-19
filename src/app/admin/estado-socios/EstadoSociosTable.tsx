@@ -36,31 +36,29 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
   // Calculate totals from initialMembers
   const totalAlDia = initialMembers.filter((m: any) => m.calculatedStatus === 'AL DIA').length
   const totalEnMora = initialMembers.filter((m: any) => m.calculatedStatus === 'EN MORA').length
-  const totalInactivos = initialMembers.filter((m: any) => 
-    m.calculatedStatus === 'INACTIVO' || m.calculatedStatus === 'SUSPENDIDO' || m.calculatedStatus === 'BAJA'
-  ).length
+  const totalSuspendidos = initialMembers.filter((m: any) => m.calculatedStatus === 'SUSPENDIDO').length
 
   // Select group helper (selects members in current group who HAVE an email)
-  const getGroupMembers = (group: 'AL DIA' | 'EN MORA' | 'INACTIVOS') => {
+  const getGroupMembers = (group: 'AL DIA' | 'EN MORA' | 'SUSPENDIDOS') => {
     return initialMembers.filter((m: any) => {
       if (group === 'AL DIA') return m.calculatedStatus === 'AL DIA'
       if (group === 'EN MORA') return m.calculatedStatus === 'EN MORA'
-      return m.calculatedStatus === 'INACTIVO' || m.calculatedStatus === 'SUSPENDIDO' || m.calculatedStatus === 'BAJA'
+      return m.calculatedStatus === 'SUSPENDIDO'
     }).filter(m => m.email)
   }
 
-  const isGroupAllSelected = (group: 'AL DIA' | 'EN MORA' | 'INACTIVOS') => {
+  const isGroupAllSelected = (group: 'AL DIA' | 'EN MORA' | 'SUSPENDIDOS') => {
     const groupMembers = getGroupMembers(group)
     if (groupMembers.length === 0) return false
     return groupMembers.every(m => selectedIds.includes(m.id))
   }
 
-  const isGroupAnySelected = (group: 'AL DIA' | 'EN MORA' | 'INACTIVOS') => {
+  const isGroupAnySelected = (group: 'AL DIA' | 'EN MORA' | 'SUSPENDIDOS') => {
     const groupMembers = getGroupMembers(group)
     return groupMembers.some(m => selectedIds.includes(m.id))
   }
 
-  function handleSelectStatusGroup(group: 'AL DIA' | 'EN MORA' | 'INACTIVOS') {
+  function handleSelectStatusGroup(group: 'AL DIA' | 'EN MORA' | 'SUSPENDIDOS') {
     const groupMembers = getGroupMembers(group)
     const groupIds = groupMembers.map(m => m.id)
     if (groupIds.length === 0) return
@@ -87,7 +85,7 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
     displayedMembers = displayedMembers.filter(m => {
       if (filterStatus === "AL DIA") return m.calculatedStatus === "AL DIA"
       if (filterStatus === "EN MORA") return m.calculatedStatus === "EN MORA"
-      if (filterStatus === "INACTIVOS") return ["INACTIVO", "SUSPENDIDO", "BAJA"].includes(m.calculatedStatus)
+      if (filterStatus === "SUSPENDIDOS") return m.calculatedStatus === "SUSPENDIDO"
       return true
     })
   }
@@ -265,21 +263,21 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
           </span>
         </div>
 
-        {/* Card Inactivos */}
+        {/* Card Suspendidos */}
         <div 
-          onClick={() => setFilterStatus(prev => prev === "INACTIVOS" ? "ALL" : "INACTIVOS")}
+          onClick={() => setFilterStatus(prev => prev === "SUSPENDIDOS" ? "ALL" : "SUSPENDIDOS")}
           className={`cursor-pointer p-5 rounded-[24px] flex flex-col justify-center items-center border transition-all hover:scale-[1.02] active:scale-95 ${
-            filterStatus === 'INACTIVOS'
+            filterStatus === 'SUSPENDIDOS'
               ? 'bg-zinc-800/90 border-white/40 shadow-xl ring-2 ring-white/30'
               : 'bg-zinc-900/20 border-white/10 hover:border-white/20'
           }`}
         >
           <div className="flex items-center gap-2">
-            <span className="text-3xl font-black text-zinc-400">{totalInactivos}</span>
+            <span className="text-3xl font-black text-zinc-400">{totalSuspendidos}</span>
           </div>
-          <span className="text-xs uppercase font-bold tracking-widest text-zinc-400 mt-1">Inactivos (+90 días)</span>
+          <span className="text-xs uppercase font-bold tracking-widest text-zinc-400 mt-1">Suspendidos (+3 cuotas)</span>
           <span className="text-[9px] text-zinc-400 mt-2 uppercase font-black tracking-widest">
-            {filterStatus === 'INACTIVOS' ? '✓ Filtrando Inactivos (clic para quitar)' : 'Filtrar por Inactivos'}
+            {filterStatus === 'SUSPENDIDOS' ? '✓ Filtrando Suspendidos (clic para quitar)' : 'Filtrar por Suspendidos'}
           </span>
         </div>
       </div>
@@ -298,7 +296,7 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
               <option value="ALL">Todos los Estados</option>
               <option value="AL DIA">Solo Al Día</option>
               <option value="EN MORA">Solo En Mora</option>
-              <option value="INACTIVOS">Solo Inactivos</option>
+              <option value="SUSPENDIDOS">Solo Suspendidos</option>
             </select>
           </div>
 

@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   const statusParam = searchParams.get("status") || ""
 
   const now = new Date()
-  const BAJA_STATUS_KEYS = ["DECEASED", "RESIGNED", "INACTIVE", "ARCHIVED", "DUPLICATE", "MOROSIDAD", "ADMINISTRATIVE"]
+  const BAJA_STATUS_KEYS = ["BAJA", "DECEASED", "RESIGNED", "INACTIVE", "ARCHIVED", "DUPLICATE", "MOROSIDAD", "ADMINISTRATIVE"]
 
   const viewFilter = view === "honorary"
     ? { type: "HONORARIO", status: { notIn: BAJA_STATUS_KEYS } }
@@ -65,7 +65,6 @@ export async function GET(req: NextRequest) {
     if (view === "all") {
       if (statusParam === "ACTIVE") return calculated === 'AL DIA'
       if (statusParam === "DEBTOR") return calculated === 'EN MORA'
-      if (statusParam === "INACTIVE") return calculated === 'INACTIVO'
       if (statusParam === "SUSPENDED") return calculated === 'SUSPENDIDO'
       if (statusParam === "BAJA") return calculated === 'BAJA'
       return true
@@ -77,10 +76,9 @@ export async function GET(req: NextRequest) {
 
     if (statusParam === "ACTIVE") return calculated === 'AL DIA'
     if (statusParam === "DEBTOR") return calculated === 'EN MORA'
-    if (statusParam === "INACTIVE") return calculated === 'INACTIVO'
     if (statusParam === "SUSPENDED") return calculated === 'SUSPENDIDO'
 
-    return calculated !== 'BAJA'
+    return calculated === 'AL DIA' || calculated === 'EN MORA'
   }).sort((a: any, b: any) => {
     const numA = Number(a.memberNumber) || 0
     const numB = Number(b.memberNumber) || 0
