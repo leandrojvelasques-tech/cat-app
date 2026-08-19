@@ -91,6 +91,10 @@ export default async function SociosPage({
        return calculated === 'BAJA'
     }
 
+    if (view === "honorary") {
+      return calculated === 'HONORARIO'
+    }
+
     // Filter by specific status if requested
     if (status === "ACTIVE") return calculated === 'AL DIA'
     if (status === "DEBTOR") return calculated === 'EN MORA'

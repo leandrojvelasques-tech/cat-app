@@ -154,7 +154,6 @@ export default async function Home() {
               <LogIn size={14} />
               <span>Portal CD / Socios</span>
             </Link>
-            <Link href="/socios-honorarios" className="text-zinc-400 hover:text-white text-sm transition-colors">Socios Honorarios</Link>
           </div>
 
           <Link
