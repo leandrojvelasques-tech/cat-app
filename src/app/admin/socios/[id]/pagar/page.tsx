@@ -2,6 +2,7 @@ import { db } from "@/lib/db"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { PagarCuotaForm } from "./PagarCuotaForm"
+import { getFeeHistory } from "@/lib/fee-utils"
 
 export default async function PagarCuotaPage(props: any) {
   const params = await props.params
@@ -23,8 +24,7 @@ export default async function PagarCuotaPage(props: any) {
   })
   if (!member) return null
 
-  // Use a stable amount for V1, or query Settings
-  const baseAmount = 6000
+  const feeHistory = await getFeeHistory()
   const currentMonth = new Date().getMonth() + 1
   const currentYear = new Date().getFullYear()
 
@@ -48,7 +48,8 @@ export default async function PagarCuotaPage(props: any) {
       <div className="bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-md shadow-2xl">
         <PagarCuotaForm 
           memberId={member.id}
-          baseAmount={baseAmount}
+          feeHistory={feeHistory}
+          isFamilyDiscount={member.isFamilyDiscount}
           currentMonth={currentMonth}
           currentYear={currentYear}
           returnTo={returnTo}

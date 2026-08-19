@@ -1,0 +1,9 @@
+.git
+.next
+node_modules
+dev.db
+*.log
+.env*
+tmp_*
+scripts
+check_members.ts

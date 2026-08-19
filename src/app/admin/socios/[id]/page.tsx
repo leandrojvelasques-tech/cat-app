@@ -13,6 +13,7 @@ import { es } from "date-fns/locale"
 import { getPaymentStatus, getSocietaryStatus, getStatusBadgeStyles, getMemberBajaReason, getBajaReasonStyles, formatDNI } from "@/lib/member-utils"
 import { ApproveFeePaymentButton } from "../../cuotas/ApproveFeePaymentButton"
 import { HonoraryAchievementsManager } from "./HonoraryAchievementsManager"
+import { getFeeHistory, getFeeAmountForPeriod } from "@/lib/fee-utils"
 
 interface CommunicationSummary {
   id: string
@@ -63,8 +64,8 @@ export default async function FichaSocioPage(props: any) {
   const societaryStatus = getSocietaryStatus(member)
   const paymentStatus = getPaymentStatus(member, now)
   const isInactive = societaryStatus === 'BAJA'
-  const baseFeeAmount = 6000
-  const feeAmount = member.isFamilyDiscount ? baseFeeAmount / 2 : baseFeeAmount
+  const feeHistory = await getFeeHistory()
+  const feeAmount = getFeeAmountForPeriod(now.getFullYear(), now.getMonth() + 1, member.isFamilyDiscount, feeHistory)
   
   // Dynamic Debt Calculation (matching business logic)
   const START_DATE = new Date(2026, 0, 1)
@@ -322,7 +323,7 @@ export default async function FichaSocioPage(props: any) {
           {!isInactive && (
             <div className="bg-gradient-to-r from-zinc-800/50 to-zinc-900/50 border border-white/5 rounded-[40px] p-10 backdrop-blur-md">
                <h3 className="text-lg font-black text-white mb-6 uppercase tracking-tighter italic">Registrar Pago Rápido</h3>
-               <RegisterFeeForm socioId={member.id} lastFee={member.fees?.[0]} />
+               <RegisterFeeForm socioId={member.id} lastFee={member.fees?.[0]} isFamilyDiscount={member.isFamilyDiscount} feeHistory={feeHistory} />
             </div>
           )}
 

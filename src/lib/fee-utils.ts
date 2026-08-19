@@ -1,35 +1,8 @@
 import { db } from "@/lib/db"
+import { DEFAULT_FEE_HISTORY, getFeeAmountForPeriod, type FeePeriod } from "@/lib/fee-calculation"
 
-export interface FeePeriod {
-  id: string
-  yearFrom: number
-  monthFrom: number
-  yearTo: number | null
-  monthTo: number | null
-  amount: number
-  description?: string
-}
-
-export const DEFAULT_FEE_HISTORY: FeePeriod[] = [
-  {
-    id: "default-1",
-    yearFrom: 2026,
-    monthFrom: 1,
-    yearTo: 2026,
-    monthTo: 6,
-    amount: 6000,
-    description: "Enero - Junio 2026"
-  },
-  {
-    id: "default-2",
-    yearFrom: 2026,
-    monthFrom: 7,
-    yearTo: null,
-    monthTo: null,
-    amount: 7000,
-    description: "Julio 2026 en adelante"
-  }
-]
+export { DEFAULT_FEE_HISTORY, getFeeAmountForPeriod }
+export type { FeePeriod }
 
 export async function getFeeHistory(): Promise<FeePeriod[]> {
   try {
@@ -53,36 +26,6 @@ export async function getFeeHistory(): Promise<FeePeriod[]> {
 /**
  * Calculates the exact fee amount for a given year, month, and member discount.
  */
-export function getFeeAmountForPeriod(
-  year: number,
-  month: number,
-  isFamilyDiscount: boolean = false,
-  history: FeePeriod[] = DEFAULT_FEE_HISTORY
-): number {
-  // Sort periods by start date descending to find matching period
-  const sorted = [...history].sort((a, b) => {
-    const valA = a.yearFrom * 100 + a.monthFrom
-    const valB = b.yearFrom * 100 + b.monthFrom
-    return valB - valA
-  })
-
-  const targetVal = year * 100 + month
-  let matchedAmount = 6000
-
-  for (const period of sorted) {
-    const startVal = period.yearFrom * 100 + period.monthFrom
-    const endVal = period.yearTo && period.monthTo ? (period.yearTo * 100 + period.monthTo) : Infinity
-
-    if (targetVal >= startVal && targetVal <= endVal) {
-      matchedAmount = period.amount
-      break
-    }
-  }
-
-  // Apply 50% discount for family/partner
-  return isFamilyDiscount ? Math.round(matchedAmount / 2) : matchedAmount
-}
-
 /**
  * Gets the current effective monthly fee amount.
  * Checks setting 'cuota_mensual' or falls back to fee history calculation for the current period.
