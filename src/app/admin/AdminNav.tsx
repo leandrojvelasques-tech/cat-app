@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Users, CreditCard, LayoutDashboard, Settings, Calendar, Trophy, ShieldCheck, GraduationCap, Gamepad2, BookOpen, MessageSquareText } from "lucide-react"
+import { Users, CreditCard, LayoutDashboard, Settings, Calendar, ShieldCheck, BookOpen, MessageSquareText } from "lucide-react"
 
 export function AdminNav({ role }: { role?: string }) {
   const pathname = usePathname()
@@ -13,9 +13,6 @@ export function AdminNav({ role }: { role?: string }) {
     { href: "/admin/cuotas", icon: CreditCard, label: "Caja" },
     { href: "/admin/eventos", icon: Calendar, label: "Eventos" },
     { href: "/admin/clases-comodoro", icon: BookOpen, label: "Clases de Tango" },
-    { href: "/admin/escuelita", icon: GraduationCap, label: "Escuela del CAT" },
-    { href: "/admin/vientos-de-tango", icon: Trophy, label: "Vientos de Tango" },
-    { href: "/admin/juegos", icon: Gamepad2, label: "Juegos" },
     ...(role === "ADMIN" || role === "SUPERADMIN" || role === "BOARD" || role === "PRESIDENT" ? [{ href: "/admin/comunicaciones", icon: MessageSquareText, label: "Comunicaciones" }] : []),
     // Usuarios now lives inside Ajustes (configuracion)
     ...(role === "ADMIN" || role === "SUPERADMIN" || role === "BOARD" || role === "PRESIDENT" ? [{ href: "/admin/configuracion", icon: Settings, label: "Ajustes" }] : []),
@@ -23,7 +20,7 @@ export function AdminNav({ role }: { role?: string }) {
   ]
 
   const links = role === "COLLABORATOR"
-    ? allLinks.filter(l => ["/admin", "/admin/escuelita", "/socios"].includes(l.href))
+    ? allLinks.filter(l => ["/admin", "/admin/clases-comodoro", "/socios"].includes(l.href))
     : allLinks
 
   return (
@@ -39,9 +36,10 @@ export function AdminNav({ role }: { role?: string }) {
       {links.map((link) => {
         const Icon = link.icon
         // Active if exactly the same, or if it's a sub-page of /admin/socios (but not Archive)
-        const isActive = link.href === "/admin" 
-          ? pathname === "/admin" 
-          : pathname.startsWith(link.href)
+        const isClassesArea = link.href === "/admin/clases-comodoro" && pathname.startsWith("/admin/escuelita")
+        const isActive = link.href === "/admin"
+          ? pathname === "/admin"
+          : isClassesArea || pathname.startsWith(link.href)
 
         return (
           <Link 
