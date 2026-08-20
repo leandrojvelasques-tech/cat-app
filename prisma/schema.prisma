@@ -589,3 +589,21 @@ model MemberBenefit {
   updatedAt   DateTime @updatedAt
 }
 
+model MemberCommunication {
+  id           String   @id @default(uuid())
+  title        String
+  description  String
+  fileUrl      String
+  storageName  String
+  fileData     Bytes?
+  fileName     String
+  fileMimeType String
+  status       String   @default("DRAFT") // DRAFT, PUBLISHED
+  publishedAt  DateTime?
+  createdById  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status, publishedAt])
+}
+

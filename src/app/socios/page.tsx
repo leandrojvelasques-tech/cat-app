@@ -16,6 +16,8 @@ import { SocioNovedadesSection } from "./SocioNovedadesSection"
 import { getSocioEventRegistrations } from "@/app/actions/eventos"
 import { getMemberDebt } from "@/app/actions/billing"
 import { getNextEventDate, getDayName, isExternalEvent } from "@/lib/event-utils"
+import { getMemberCommunications } from "@/app/actions/member-communications"
+import { SocioCommunicationsSection } from "./SocioCommunicationsSection"
 
 export default async function PortalSocioPage() {
   const session = await auth()
@@ -108,6 +110,7 @@ export default async function PortalSocioPage() {
     orderBy: { publishedAt: "desc" },
     take: 6
   })
+  const communicationsForSocio = await getMemberCommunications()
 
   return (
     <div className="flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
@@ -183,6 +186,8 @@ export default async function PortalSocioPage() {
 
       {/* 4. Novedades & Comunicados CAT */}
       <SocioNovedadesSection novedades={novedadesForSocio} />
+
+      <SocioCommunicationsSection communications={communicationsForSocio} />
 
       {/* 5. Agenda de Milongas & Eventos (Mes Actual + Próximo Mes) */}
       <div className="bg-white/5 border border-white/10 p-8 md:p-10 rounded-[48px] backdrop-blur-md shadow-2xl space-y-8">

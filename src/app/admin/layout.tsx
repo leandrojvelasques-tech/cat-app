@@ -10,7 +10,7 @@ import { OfficialLogo } from "@/components/OfficialLogo"
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const session = await auth()
   
-  if (!session || !["ADMIN", "BOARD", "SUPERADMIN", "COLLABORATOR"].includes(session.user.role)) {
+  if (!session || !["ADMIN", "BOARD", "SUPERADMIN", "PRESIDENT", "COLLABORATOR"].includes(session.user.role)) {
     redirect("/login")
   }
 

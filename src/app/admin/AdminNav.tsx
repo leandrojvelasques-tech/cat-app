@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Users, CreditCard, LayoutDashboard, Settings, Archive, Calendar, Trophy, ShieldCheck, GraduationCap, Gamepad2, BookOpen } from "lucide-react"
+import { Users, CreditCard, LayoutDashboard, Settings, Calendar, Trophy, ShieldCheck, GraduationCap, Gamepad2, BookOpen, MessageSquareText } from "lucide-react"
 
 export function AdminNav({ role }: { role?: string }) {
   const pathname = usePathname()
@@ -16,6 +16,7 @@ export function AdminNav({ role }: { role?: string }) {
     { href: "/admin/escuelita", icon: GraduationCap, label: "Escuela del CAT" },
     { href: "/admin/vientos-de-tango", icon: Trophy, label: "Vientos de Tango" },
     { href: "/admin/juegos", icon: Gamepad2, label: "Juegos" },
+    ...(role === "ADMIN" || role === "SUPERADMIN" || role === "BOARD" || role === "PRESIDENT" ? [{ href: "/admin/comunicaciones", icon: MessageSquareText, label: "Comunicaciones" }] : []),
     // Usuarios now lives inside Ajustes (configuracion)
     ...(role === "ADMIN" || role === "SUPERADMIN" || role === "BOARD" || role === "PRESIDENT" ? [{ href: "/admin/configuracion", icon: Settings, label: "Ajustes" }] : []),
     { href: "/socios", icon: ShieldCheck, label: "Mi Ficha de Socio" }

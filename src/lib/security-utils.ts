@@ -77,3 +77,60 @@ export async function validateAndSanitizeFile(
     safeFileName
   }
 }
+
+/**
+ * Valida adjuntos institucionales sin reutilizar el límite más restrictivo de comprobantes.
+ * DOCX se admite solo cuando el nombre declara esa extensión y el archivo es un contenedor ZIP.
+ */
+export async function validateInstitutionalFile(
+  buffer: Buffer,
+  originalName: string,
+  clientMimeType?: string
+): Promise<FileValidationResult> {
+  const MAX_SIZE = 10 * 1024 * 1024
+  if (buffer.length > MAX_SIZE) {
+    return { isValid: false, error: "El archivo excede el tamaño máximo permitido de 10MB." }
+  }
+
+  const extensionFromName = originalName.toLowerCase().split(".").pop() || ""
+  const header = buffer.subarray(0, 12).toString("hex").toUpperCase()
+  const isJpeg = header.startsWith("FFD8FF")
+  const isPng = header.startsWith("89504E47")
+  const isWebp = header.startsWith("52494646") && header.includes("57454250")
+  const isPdf = header.startsWith("25504446")
+  const isZipContainer = header.startsWith("504B0304") || header.startsWith("504B0506") || header.startsWith("504B0708")
+
+  let detectedMime: string | null = null
+  let extension: string | null = null
+
+  if (isJpeg && extensionFromName === "jpg" || isJpeg && extensionFromName === "jpeg") {
+    detectedMime = "image/jpeg"
+    extension = "jpg"
+  } else if (isPng && extensionFromName === "png") {
+    detectedMime = "image/png"
+    extension = "png"
+  } else if (isWebp && extensionFromName === "webp") {
+    detectedMime = "image/webp"
+    extension = "webp"
+  } else if (isPdf && extensionFromName === "pdf") {
+    detectedMime = "application/pdf"
+    extension = "pdf"
+  } else if (isZipContainer && extensionFromName === "docx") {
+    detectedMime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    extension = "docx"
+  }
+
+  if (!detectedMime || !extension) {
+    return {
+      isValid: false,
+      error: "Tipo de archivo no permitido. Solo se aceptan PDF, DOCX o imágenes JPG, PNG y WebP válidas."
+    }
+  }
+
+  return {
+    isValid: true,
+    mimeType: detectedMime,
+    extension,
+    safeFileName: `comunicacion-${randomUUID()}-${Date.now()}.${extension}`
+  }
+}

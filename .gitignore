@@ -45,3 +45,6 @@ next-env.d.ts
 .vercel
 dev.db
 tmp_*
+
+# Local temporary copy of institutional attachments (production data lives in PostgreSQL)
+/private_uploads/
