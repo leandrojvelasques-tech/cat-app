@@ -219,8 +219,8 @@ export default async function CobranzasPage({
         events={events}
       />
 
-      {/* Unified History table */}
-      <div className="bg-white/5 border border-white/10 rounded-[40px] overflow-hidden backdrop-blur-md shadow-2xl pb-4">
+      {/* Desktop history table */}
+      <div className="hidden md:block bg-white/5 border border-white/10 rounded-[40px] overflow-hidden backdrop-blur-md shadow-2xl pb-4">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
@@ -315,6 +315,61 @@ export default async function CobranzasPage({
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Mobile history: the whole movement opens its complete payment detail. */}
+      <div className="md:hidden space-y-3">
+        {historyToDisplay.map((item: any) => {
+          const methodUpper = (item.method || 'EFECTIVO').toUpperCase()
+          const isTransfer = methodUpper.includes('TRANSFER') || methodUpper.includes('MERCADO') || methodUpper.includes('MP')
+
+          return (
+            <PaymentDetailModal
+              key={item.id}
+              payment={item}
+              trigger={
+                <div className="group flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left shadow-lg transition-colors hover:border-amber-500/30 hover:bg-white/[0.07]">
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">
+                        {format(item.realDate, "dd/MM/yyyy", { locale: es })}
+                      </span>
+                      <span className="shrink-0 text-sm font-black tracking-tight text-amber-400">
+                        ${item.amount.toLocaleString("es-AR")}
+                      </span>
+                    </div>
+                    <div className="flex min-w-0 items-center justify-between gap-3">
+                      <span className="truncate text-sm font-black uppercase tracking-tight text-white group-hover:text-amber-300">
+                        {item.payerName}
+                      </span>
+                      <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[8px] font-black uppercase tracking-widest ${
+                        item.type === 'CUOTA'
+                          ? 'border-blue-500/20 bg-blue-500/10 text-blue-400'
+                          : 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+                      }`}>
+                        {item.type}
+                      </span>
+                    </div>
+                    <div className="flex min-w-0 items-center gap-2 text-[10px] text-zinc-500">
+                      <span className="truncate">{item.reason}</span>
+                      <span className="shrink-0 text-zinc-700">•</span>
+                      <span className={isTransfer ? 'text-purple-400' : 'text-amber-500/80'}>
+                        {isTransfer ? 'Transferencia' : 'Efectivo'}
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} className="shrink-0 text-zinc-600 transition-transform group-hover:translate-x-0.5 group-hover:text-amber-400" />
+                </div>
+              }
+            />
+          )
+        })}
+        {historyToDisplay.length === 0 && (
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] py-16 text-center text-zinc-600">
+            <Info size={36} className="mx-auto mb-4 opacity-10" />
+            <p className="text-xs font-black uppercase tracking-widest">No se encontraron movimientos</p>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -21,7 +21,18 @@ export function PaymentDetailModal({ payment, trigger }: PaymentDetailModalProps
   return (
     <>
       {trigger ? (
-        <div onClick={() => setIsOpen(true)} className="inline-block cursor-pointer">
+        <div
+          onClick={() => setIsOpen(true)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault()
+              setIsOpen(true)
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          className="block w-full cursor-pointer"
+        >
           {trigger}
         </div>
       ) : (
