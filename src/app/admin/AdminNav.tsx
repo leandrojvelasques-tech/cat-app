@@ -27,7 +27,7 @@ export function AdminNav({ role }: { role?: string }) {
     <nav className="flex flex-col gap-2">
       <Link 
         href="/admin/cobrar"
-        className="flex items-center justify-center gap-3 w-full bg-gradient-to-tr from-amber-600 to-red-800 hover:from-amber-500 text-white p-4 rounded-2xl font-bold transition-all mb-4 shadow-xl shadow-red-900/20 active:scale-95 group"
+      className="group mb-4 flex min-h-12 w-full items-center justify-center gap-3 rounded-xl bg-cat-gold px-4 py-3 font-bold text-zinc-950 shadow-lg shadow-cat-gold/15 transition-all hover:brightness-105 active:scale-[0.98]"
       >
          <CreditCard size={20} className="group-hover:rotate-12 transition-transform" />
          <span>Cobrar</span>
@@ -45,18 +45,18 @@ export function AdminNav({ role }: { role?: string }) {
           <Link 
             key={link.href}
             href={link.href} 
-            className={`flex items-center gap-4 px-5 py-4.5 rounded-2xl transition-all duration-300 group border ${
+            className={`group flex min-h-12 items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors ${
               isActive 
-                ? "bg-amber-600/10 text-amber-500 border-amber-600/20 shadow-lg shadow-amber-900/5 ring-1 ring-amber-500/20" 
+                ? "border-cat-gold/20 bg-cat-gold/10 text-cat-gold"
                 : "text-zinc-400 hover:text-white hover:bg-white/5 border-transparent hover:border-white/10"
             }`}
           >
             <div className={`p-2 rounded-xl transition-colors ${
-              isActive ? "bg-amber-500 text-zinc-950 shadow-lg shadow-amber-900/40" : "bg-white/5 text-zinc-500 group-hover:text-white group-hover:bg-white/10"
+              isActive ? "bg-cat-gold text-zinc-950" : "bg-white/5 text-zinc-500 group-hover:text-white group-hover:bg-white/10"
             }`}>
               <Icon size={18} className={isActive ? "" : "group-hover:scale-110 transition-transform"} />
             </div>
-            <span className={`font-bold tracking-tight text-base ${isActive ? "text-white" : ""}`}>{link.label}</span>
+            <span className={`text-sm font-semibold tracking-tight ${isActive ? "text-white" : ""}`}>{link.label}</span>
             {isActive && (
               <div className="ml-auto w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.8)]" />
             )}

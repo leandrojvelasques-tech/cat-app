@@ -3,6 +3,8 @@ import Link from "next/link"
 import { auth, signOut } from "@/auth"
 import { redirect } from "next/navigation"
 import { LogOut, Home, FileText, UserCircle } from "lucide-react"
+import { OfficialLogo } from "@/components/OfficialLogo"
+import { SociosMobileNav } from "./SociosMobileNav"
 
 export default async function SociosLayout({ children }: { children: ReactNode }) {
   const session = await auth()
@@ -16,16 +18,16 @@ export default async function SociosLayout({ children }: { children: ReactNode }
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex flex-col font-sans">
-      {/* Navbar Premium para Socios */}
-      <header className="sticky top-0 z-50 bg-zinc-900/80 backdrop-blur-xl border-b border-white/10">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-600 to-red-800 flex items-center justify-center text-white shadow-md">
-              <span className="font-bold text-sm">C</span>
+    <div className="cat-workspace min-h-screen text-white flex flex-col font-sans">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#141916]/95 backdrop-blur-xl">
+        <div className="container mx-auto flex min-h-16 items-center justify-between px-4">
+          <Link href="/socios" className="flex min-h-11 items-center gap-3 rounded-lg">
+            <OfficialLogo className="h-9 w-auto rounded-sm" priority />
+            <div className="border-l border-white/10 pl-3">
+              <span className="block text-sm font-semibold tracking-tight text-white">Portal de socios</span>
+              <span className="block text-[10px] text-zinc-500">Centro Amigos del Tango</span>
             </div>
-            <span className="font-semibold tracking-tight text-lg text-white">CAT Socios</span>
-          </div>
+          </Link>
 
           <nav className="hidden md:flex items-center gap-6">
             <Link href="/socios" className="text-sm font-medium text-zinc-400 hover:text-white flex items-center gap-2 transition-colors">
@@ -43,7 +45,7 @@ export default async function SociosLayout({ children }: { children: ReactNode }
              {session?.user && ["ADMIN", "BOARD", "SUPERADMIN"].includes(session.user.role as string) && (
                <Link 
                  href="/admin" 
-                 className="text-xs bg-amber-600/10 text-amber-500 hover:bg-amber-600 hover:text-white px-3 py-1.5 rounded-lg border border-amber-500/20 font-black uppercase tracking-wider transition-all"
+                 className="flex min-h-10 items-center rounded-xl border border-cat-gold/20 bg-cat-gold/10 px-3 text-[10px] font-bold uppercase tracking-wider text-cat-gold transition-colors hover:bg-cat-gold hover:text-zinc-950"
                >
                  Panel Admin
                </Link>
@@ -53,7 +55,7 @@ export default async function SociosLayout({ children }: { children: ReactNode }
               "use server"
               await signOut({ redirectTo: "/login" })
             }}>
-              <button className="text-sm font-medium text-red-400 hover:bg-red-400/10 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-2 border border-transparent hover:border-red-400/20">
+              <button className="flex min-h-10 items-center gap-2 rounded-xl border border-transparent px-3 text-sm font-medium text-red-400 transition-colors hover:border-red-400/20 hover:bg-red-400/10">
                 <LogOut size={16} /> <span className="hidden sm:inline">Salir</span>
               </button>
             </form>
@@ -62,9 +64,10 @@ export default async function SociosLayout({ children }: { children: ReactNode }
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 w-full max-w-6xl mx-auto p-4 md:p-8">
+      <main className="cat-mobile-safe-area mx-auto w-full max-w-6xl flex-1 p-4 sm:p-6 md:p-8 md:pb-8">
         {children}
       </main>
+      <SociosMobileNav />
     </div>
   )
 }

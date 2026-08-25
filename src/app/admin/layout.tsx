@@ -6,6 +6,7 @@ import { SidebarContent } from "./SidebarContent"
 import { MobileMenu } from "./MobileMenu"
 import { CreditCard } from "lucide-react"
 import { OfficialLogo } from "@/components/OfficialLogo"
+import { AdminMobileDock } from "./AdminMobileDock"
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const session = await auth()
@@ -24,23 +25,27 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex overflow-hidden">
+    <div className="cat-workspace min-h-screen text-white flex overflow-hidden">
       {/* Sidebar Desktop */}
-      <aside className="w-72 bg-zinc-900/50 border-r border-white/5 backdrop-blur-xl hidden md:block">
+      <aside className="hidden h-screen w-72 shrink-0 border-r border-white/10 bg-[#141916]/92 p-5 backdrop-blur-xl md:block">
         <SidebarContent user={user} />
       </aside>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* Topbar Mobile */}
-        <header className="md:hidden flex items-center justify-between p-3 px-4 border-b border-white/10 bg-zinc-900 backdrop-blur-md sticky top-0 z-10 shrink-0 shadow-lg shadow-black/20">
+        <header className="sticky top-0 z-40 flex min-h-16 shrink-0 items-center justify-between border-b border-white/10 bg-[#141916]/95 px-4 py-2 shadow-lg shadow-black/20 backdrop-blur-xl md:hidden">
           <div className="flex items-center gap-3">
-             <OfficialLogo className="h-8 w-auto rounded-sm" priority />
+             <OfficialLogo className="h-9 w-auto rounded-sm" priority />
+             <div className="border-l border-white/10 pl-3">
+               <p className="text-xs font-semibold text-white">Gestión CAT</p>
+               <p className="text-[10px] text-zinc-500">Comisión directiva</p>
+             </div>
           </div>
           <div className="flex items-center gap-3">
              <Link 
                href="/admin/cobrar"
-               className="bg-gradient-to-tr from-amber-600 to-red-800 text-white p-2 rounded-xl flex items-center gap-2 text-xs font-bold px-3 active:scale-95 transition-all shadow-lg shadow-red-900/20"
+               className="flex min-h-11 items-center gap-2 rounded-xl bg-cat-gold px-3 text-xs font-bold text-zinc-950 shadow-lg shadow-cat-gold/15 transition-all active:scale-95"
              >
                 <CreditCard size={14} />
                 <span>Cobrar</span>
@@ -49,12 +54,13 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           </div>
         </header>
         
-        <main className="flex-1 overflow-y-auto w-full">
-          <div className="p-6 md:p-10 container mx-auto max-w-7xl">
+        <main className="cat-mobile-safe-area w-full flex-1 overflow-y-auto md:pb-0">
+          <div className="container mx-auto max-w-7xl p-4 sm:p-6 md:p-10">
             {children}
           </div>
         </main>
       </div>
+      <AdminMobileDock role={user.role} />
     </div>
   )
 }

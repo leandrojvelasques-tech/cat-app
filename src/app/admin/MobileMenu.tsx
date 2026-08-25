@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { Menu, X } from "lucide-react"
 import { SidebarContent } from "./SidebarContent"
+import { OfficialLogo } from "@/components/OfficialLogo"
 
 interface User {
   email?: string | null
@@ -16,67 +17,67 @@ interface MobileMenuProps {
 
 export function MobileMenu({ user }: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
 
   // Block scrolling when menu is open
   useEffect(() => {
-    setMounted(true)
-    if (isOpen) {
-      document.body.style.overflow = "hidden"
-    } else {
-      document.body.style.overflow = "auto"
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = isOpen ? "hidden" : previousOverflow
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false)
+    }
+    document.addEventListener("keydown", closeOnEscape)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener("keydown", closeOnEscape)
     }
   }, [isOpen])
-
-  if (!mounted) return (
-    <button 
-      className="p-2.5 text-amber-500 bg-amber-500/10 rounded-xl border border-amber-500/20"
-      aria-label="Cargando Menú"
-    >
-      <Menu size={20} className="stroke-[2.5px]" />
-    </button>
-  )
 
   const menuOverlay = (
     <>
       {/* Backdrop */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[999] transition-all duration-300"
+        <button
+          type="button"
+          aria-label="Cerrar menú"
+          className="fixed inset-0 z-[999] bg-black/75 backdrop-blur-sm transition-opacity"
           style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Full Screen Menu container */}
-      <div className={`
-        fixed inset-0 bg-zinc-950 z-[1000] 
-        transition-all duration-300 ease-out transform flex flex-col
-        ${isOpen ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0 pointer-events-none"}
+      <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Menú administrativo"
+      className={`
+        fixed inset-y-0 right-0 z-[1000] flex w-[min(90vw,380px)] flex-col border-l border-white/10 bg-[#121613]
+        shadow-[-24px_0_70px_rgba(0,0,0,0.45)] transition-all duration-300 ease-out
+        ${isOpen ? "translate-x-0 opacity-100" : "translate-x-full opacity-0 pointer-events-none"}
       `}
-      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+      style={{ position: 'fixed', top: 0, right: 0, bottom: 0 }}
       >
-        <div className="flex justify-between items-center p-4 px-6 border-b border-white/5 shrink-0 bg-black/60 sticky top-0 z-[1010] backdrop-blur-md">
+        <div className="sticky top-0 z-[1010] flex shrink-0 items-center justify-between border-b border-white/10 bg-[#121613]/95 px-5 py-4 backdrop-blur-xl">
           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-zinc-950 font-black text-sm shadow-lg shadow-amber-900/40">
-                <span>C</span>
-             </div>
+             <OfficialLogo className="h-10 w-auto rounded-sm" priority />
              <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500">Menú de Navegación</span>
-                <span className="text-xs text-white/50 font-medium">Panel de Control</span>
+                <span className="text-xs font-semibold text-white">Menú de gestión</span>
+                <span className="text-[10px] text-zinc-500">Centro Amigos del Tango</span>
              </div>
           </div>
           <button 
             onClick={() => setIsOpen(false)}
-            className="p-3 text-white bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/10 active:scale-90"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white transition-colors hover:bg-white/10"
             aria-label="Cerrar Menú"
           >
             <X size={24} strokeWidth={2.5} />
           </button>
         </div>
         
-        <div className="flex-1 overflow-y-auto px-6 py-8 custom-scrollbar relative">
-           <div className="max-w-md mx-auto w-full pb-10">
+        <div className="custom-scrollbar relative flex-1 overflow-y-auto px-5 py-6">
+           <div className="mx-auto w-full max-w-md pb-10">
              <SidebarContent 
                user={user} 
                onNavigate={() => setIsOpen(false)} 
@@ -91,7 +92,7 @@ export function MobileMenu({ user }: MobileMenuProps) {
     <>
       <button 
         onClick={() => setIsOpen(true)}
-        className="p-2.5 text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 rounded-xl border border-amber-500/20 transition-all active:scale-95 flex items-center justify-center shadow-lg shadow-amber-900/20"
+        className="flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-cat-gold/20 bg-cat-gold/10 text-cat-gold transition-colors hover:bg-cat-gold/15 active:scale-95"
         aria-label="Desplegar Menú"
       >
         <Menu size={20} className="stroke-[2.5px]" />

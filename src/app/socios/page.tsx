@@ -116,7 +116,7 @@ export default async function PortalSocioPage() {
     <div className="flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       
       {/* 1. Header */}
-      <div className="grid grid-cols-1 gap-10 items-center bg-white/5 p-8 md:p-10 rounded-[48px] border border-white/10 shadow-3xl relative overflow-hidden backdrop-blur-xl">
+      <section id="perfil" className="relative grid scroll-mt-24 grid-cols-1 items-center gap-8 overflow-hidden rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur-xl sm:p-8 md:rounded-[36px] md:p-10">
          <div className="absolute right-0 top-0 w-[400px] h-[400px] bg-amber-500/10 rounded-full blur-[120px] -mr-32 -mt-32" />
          
          <div className="relative z-10">
@@ -163,7 +163,7 @@ export default async function PortalSocioPage() {
               </Link>
            </div>
          </div>
-      </div>
+      </section>
 
 
       {/* 2. Carnet Digital Plegable ("Ver Carnet") */}
@@ -176,12 +176,14 @@ export default async function PortalSocioPage() {
 
       {/* 3. Control de Morosidad y Pago de Cuotas (Solo si registra deuda) */}
       {debtData.total > 0 && (
-        <SocioDuesPaymentSection
-          memberId={member.id}
-          debtMonths={debtData.months}
-          totalDebt={debtData.total}
-          calculatedStatus={calculatedStatus}
-        />
+        <section id="pagar" className="scroll-mt-24">
+          <SocioDuesPaymentSection
+            memberId={member.id}
+            debtMonths={debtData.months}
+            totalDebt={debtData.total}
+            calculatedStatus={calculatedStatus}
+          />
+        </section>
       )}
 
       {/* 4. Novedades & Comunicados CAT */}
@@ -343,7 +345,9 @@ export default async function PortalSocioPage() {
       </div>
 
       {/* 5. Historial de Pagos y Ficha de Socio en Desplegables */}
-      <SocioAccordionSections member={member} isAlDia={isAlDia} />
+      <section id="pagos" className="scroll-mt-24">
+        <SocioAccordionSections member={member} isAlDia={isAlDia} />
+      </section>
 
     </div>
   )

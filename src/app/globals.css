@@ -10,6 +10,9 @@
   --color-cat-gold: #f2a81d;
   --color-cat-bronze: #a6702e;
   --color-cat-brown: #59412c;
+  --color-cat-canvas: #101311;
+  --color-cat-panel: #171c19;
+  --color-cat-panel-raised: #1d2420;
 
   /* Colores de compatibilidad de Stitch */
   --color-primary-container: #1b2621;
@@ -24,8 +27,10 @@
 
 @layer base {
   :root {
-    --background: #131313; /* Fondo oscuro oficial */
+    --background: #101311; /* Fondo oscuro oficial */
     --foreground: #e4e2e0; /* Texto claro */
+    --cat-line: rgba(255, 255, 255, 0.09);
+    --cat-soft-line: rgba(242, 168, 29, 0.16);
     color-scheme: dark;
   }
 
@@ -44,5 +49,36 @@
     background-color: #18181b;
     color: #ffffff;
   }
+
+  :focus-visible {
+    outline: 2px solid #f2a81d;
+    outline-offset: 3px;
+  }
 }
 
+@layer components {
+  .cat-workspace {
+    background:
+      radial-gradient(circle at 92% 3%, rgba(242, 168, 29, 0.07), transparent 28rem),
+      linear-gradient(145deg, #101311 0%, #111512 48%, #0d0f0e 100%);
+  }
+
+  .cat-mobile-safe-area {
+    padding-bottom: calc(6.25rem + env(safe-area-inset-bottom));
+  }
+
+  .cat-mobile-dock {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
