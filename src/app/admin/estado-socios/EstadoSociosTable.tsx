@@ -362,8 +362,8 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
         </div>
       )}
 
-      {/* Members Table */}
-      <div className="bg-white/5 border border-white/10 rounded-[40px] overflow-hidden backdrop-blur-md shadow-2xl">
+      {/* Desktop table */}
+      <div className="hidden overflow-hidden rounded-[40px] border border-white/10 bg-white/5 shadow-2xl backdrop-blur-md md:block">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -495,12 +495,6 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
                           >
                             Ver ficha
                           </Link>
-                          <Link 
-                            href={`/admin/socios/${member.id}/pagar?returnTo=/admin/estado-socios`}
-                            className="inline-flex items-center gap-1.5 bg-amber-600/10 hover:bg-amber-600/20 text-amber-500 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-amber-500/20"
-                          >
-                            Cobrar
-                          </Link>
                         </div>
                       </td>
                     </tr>
@@ -510,6 +504,89 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Mobile directory: the identity is the navigation target, while status and contact remain readable below it. */}
+      <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-md md:hidden">
+        {displayedMembers.length === 0 ? (
+          <div className="px-5 py-16 text-center text-sm italic text-zinc-500">
+            Ningún socio coincide con los filtros aplicados.
+          </div>
+        ) : (
+          <div className="divide-y divide-white/10">
+            {displayedMembers.map((member: any) => {
+              const calculated = member.calculatedStatus
+              const lastFee = member.fees[0]
+              const lastPaidLabel = lastFee ? `${monthNames[lastFee.periodMonth - 1]} ${lastFee.periodYear}` : "Sin pagos"
+              const isSelected = selectedIds.includes(member.id)
+
+              return (
+                <article key={member.id} className={`p-4 transition-colors ${isSelected ? "bg-amber-500/10" : "bg-transparent"}`}>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleSelectMember(member.id)}
+                      className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-zinc-500 transition-colors hover:bg-white/10 hover:text-white"
+                      title="Seleccionar socio"
+                      aria-label={`Seleccionar a ${member.lastName}, ${member.firstName}`}
+                    >
+                      {isSelected ? <CheckSquare className="text-amber-500" size={20} /> : <Square size={20} />}
+                    </button>
+
+                    <Link
+                      href={`/admin/socios/${member.id}`}
+                      className="group flex min-w-0 flex-1 items-center gap-3 rounded-xl focus-visible:outline-none"
+                      aria-label={`Abrir ficha de ${member.lastName}, ${member.firstName}`}
+                    >
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-white/10 to-white/5 text-xs font-black text-zinc-300 ring-1 ring-white/10">
+                        {member.avatarUrl ? (
+                          <img src={member.avatarUrl} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <>{member.firstName[0]}{member.lastName[0]}</>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-base font-bold uppercase text-zinc-100 transition-colors group-hover:text-amber-400">
+                          {member.lastName}, {member.firstName}
+                        </p>
+                        <p className="mt-0.5 text-[11px] font-medium text-zinc-500">Socio #{member.memberNumber}</p>
+                      </div>
+                    </Link>
+                  </div>
+
+                  <div className="mt-3 space-y-2 pl-14">
+                    <div className="space-y-1 text-xs">
+                      <p className={member.email ? "truncate text-zinc-400" : "text-red-400/80 italic"}>
+                        {member.email || "Sin email cargado"}
+                      </p>
+                      <p className={member.phone ? "text-zinc-400" : "text-red-400/80 italic"}>
+                        {member.phone || "Sin teléfono cargado"}
+                      </p>
+                    </div>
+
+                    <div className="flex items-end justify-between gap-3 border-t border-white/10 pt-3">
+                      <div>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Estado</p>
+                        <span className={`mt-1 inline-flex rounded-lg border px-3 py-1 text-[10px] font-black uppercase shadow-sm ${getStatusBadgeStyles(calculated)}`}>
+                          {calculated}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Último pago</p>
+                        <p className="mt-1 text-xs font-semibold text-zinc-300">{lastPaidLabel}</p>
+                        {member.isFamilyDiscount && (
+                          <p className="mt-1 flex items-center justify-end gap-1 text-[9px] font-black uppercase tracking-tight text-blue-400">
+                            <Users size={10} /> 50% pareja
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Batch Email Sender Modal */}

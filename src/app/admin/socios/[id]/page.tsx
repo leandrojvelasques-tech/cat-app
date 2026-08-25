@@ -14,6 +14,7 @@ import { getPaymentStatus, getSocietaryStatus, getStatusBadgeStyles, getMemberBa
 import { ApproveFeePaymentButton } from "../../cuotas/ApproveFeePaymentButton"
 import { HonoraryAchievementsManager } from "./HonoraryAchievementsManager"
 import { getFeeHistory, getFeeAmountForPeriod } from "@/lib/fee-utils"
+import { SendMemberAccessButton } from "../components/SendMemberAccessButton"
 
 interface CommunicationSummary {
   id: string
@@ -46,7 +47,8 @@ export default async function FichaSocioPage(props: any) {
       },
       championshipResults: { include: { championship: true } },
       boardHistory: { orderBy: { periodStart: "desc" } },
-      honoraryAchievements: { orderBy: [{ sortOrder: "asc" }, { eventDate: "asc" }, { createdAt: "asc" }] }
+      honoraryAchievements: { orderBy: [{ sortOrder: "asc" }, { eventDate: "asc" }, { createdAt: "asc" }] },
+      user: { select: { email: true } }
     }
   }) as any
 
@@ -127,6 +129,12 @@ export default async function FichaSocioPage(props: any) {
         </div>
 
         <div className="flex gap-2 flex-wrap items-center relative z-10">
+          <SendMemberAccessButton
+            memberId={member.id}
+            memberName={`${member.firstName} ${member.lastName}`}
+            memberEmail={member.email}
+            username={member.user?.email || null}
+          />
           <NombrarHonorarioModal memberId={member.id} isHonorario={member.type === "HONORARIO"} />
           <Link href={`/admin/socios/${member.id}/editar`} className="bg-white/5 hover:bg-white/10 text-white px-5 py-2.5 rounded-2xl text-xs font-bold border border-white/5 transition-all">
             Editar

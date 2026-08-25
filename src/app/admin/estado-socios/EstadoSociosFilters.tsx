@@ -37,23 +37,25 @@ export function EstadoSociosFilters() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="flex gap-2 w-full">
+      <div className="flex flex-col items-stretch justify-between gap-3 md:flex-row md:items-center md:gap-4">
+        <div className="flex w-full flex-col gap-2 md:flex-row">
           <div className="relative flex-1">
             <Search className={`absolute left-4 top-1/2 -translate-y-1/2 ${isPending ? "text-amber-500 animate-pulse" : "text-zinc-500"}`} size={16} />
             <input 
               type="text"
-              placeholder="Buscar cualquier socio en la base de datos (incluso suspendidos)..."
+              placeholder="Buscar socio..."
+              aria-label="Buscar socio"
               defaultValue={searchParams.get("query")?.toString()}
               onChange={(e) => handleSearch(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 focus:border-white/20 rounded-2xl pl-11 pr-4 py-3 text-sm text-white placeholder:text-zinc-500 focus:outline-none transition-all shadow-inner"
+              className="min-h-11 w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-sm text-white shadow-inner transition-all placeholder:text-zinc-500 focus:border-white/20 focus:outline-none"
             />
           </div>
           
           <select
             value={currentSort}
             onChange={(e) => handleSort(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none appearance-none cursor-pointer hover:bg-white/10 transition-all min-w-[160px]"
+            aria-label="Ordenar socios"
+            className="min-h-11 w-full min-w-0 cursor-pointer appearance-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white transition-all hover:bg-white/10 focus:outline-none md:min-w-[160px]"
           >
             <option value="num_desc" className="bg-zinc-900">N° Socio: Más nuevo arriba</option>
             <option value="num_asc" className="bg-zinc-900">N° Socio: Más antiguo arriba</option>
