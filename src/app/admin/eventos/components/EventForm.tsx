@@ -279,7 +279,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
           <div className="space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
               <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">Flyer / Imagen del Evento *</label>
-              <span className="text-[11px] text-purple-300/90 font-semibold">📐 Recomendado: 1200 × 630 px (proporción 16:9)</span>
+              <span className="text-[11px] text-purple-300/90 font-semibold">📐 Recomendado: 1080 × 1350 px (proporción 4:5, formato vertical)</span>
             </div>
             <div className="relative group overflow-hidden rounded-3xl border-2 border-dashed border-purple-500/30 bg-black/40 hover:border-purple-400 transition-all min-h-[220px] flex items-center justify-center">
               {bannerPreview ? (
@@ -935,7 +935,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
                 <Plus className="text-amber-500" size={20} />
                 <h2 className="text-lg font-medium">Banner / Flyer del Evento</h2>
               </div>
-              <span className="text-[11px] text-amber-300/90 font-semibold">📐 Recomendado: 1200 × 630 px (proporción 16:9)</span>
+              <span className="text-[11px] text-amber-300/90 font-semibold">📐 Recomendado: 1080 × 1350 px (proporción 4:5, formato vertical)</span>
             </div>
             
             <div className="flex flex-col gap-4">
