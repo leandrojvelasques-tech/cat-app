@@ -231,7 +231,7 @@ export default async function Home() {
               <>
                 {/* Evento 1 */}
                 <div className="group border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] p-5 rounded-2xl transition-all shadow-xl">
-                  <div className="relative aspect-[1200/623] overflow-hidden rounded-xl mb-6">
+                  <div className="relative aspect-[4/5] overflow-hidden rounded-xl mb-6">
                     <div 
                       className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" 
                       style={{ 
@@ -253,7 +253,7 @@ export default async function Home() {
 
                 {/* Evento 2 */}
                 <div className="group border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] p-5 rounded-2xl transition-all shadow-xl">
-                  <div className="relative aspect-[1200/623] overflow-hidden rounded-xl mb-6">
+                  <div className="relative aspect-[4/5] overflow-hidden rounded-xl mb-6">
                     <div 
                       className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" 
                       style={{ 
@@ -275,7 +275,7 @@ export default async function Home() {
 
                 {/* Evento 3 */}
                 <div className="group border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] p-5 rounded-2xl transition-all shadow-xl">
-                  <div className="relative aspect-[1200/623] overflow-hidden rounded-xl mb-6">
+                  <div className="relative aspect-[4/5] overflow-hidden rounded-xl mb-6">
                     <div 
                       className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" 
                       style={{ 
@@ -306,7 +306,7 @@ export default async function Home() {
                     href={`/eventos/${event.id}`}
                     className="group block border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] p-5 rounded-2xl transition-all shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cat-gold focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1210]"
                   >
-                    <div className="relative aspect-[1200/623] overflow-hidden rounded-xl mb-6">
+                    <div className="relative aspect-[4/5] overflow-hidden rounded-xl mb-6">
                       <div 
                         className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105 bg-zinc-800" 
                         style={{ 

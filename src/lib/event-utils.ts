@@ -77,17 +77,19 @@ export function isEventCurrentlyActive(
   const startDay = new Date(startDate)
   startDay.setHours(0, 0, 0, 0)
 
-  if (referenceDate < startDay) return false
-
   if (event.endDate) {
     const endDate = new Date(event.endDate)
     endDate.setHours(23, 59, 59, 999)
     if (referenceDate > endDate) return false
   }
 
+  // Future events are publishable before their start date. Without an endDate,
+  // a one-day event remains visible until the end of its start day.
+  if (event.isRecurring || event.endDate) return true
+
   const startDayEnd = new Date(startDate)
   startDayEnd.setHours(23, 59, 59, 999)
-  return Boolean(event.isRecurring) || referenceDate <= startDayEnd
+  return referenceDate <= startDayEnd
 }
 
 /** Returns whether a calculated occurrence falls inside the event's configured window. */

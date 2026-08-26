@@ -81,7 +81,7 @@ export default async function PublicEventLandingPage({ params }: { params: Promi
           
           {/* Left Column: Image/Flyer */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="relative aspect-[1200/623] rounded-3xl overflow-hidden border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-zinc-900 group">
+            <div className="relative aspect-[4/5] rounded-3xl overflow-hidden border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-zinc-900 group">
               {event.eventBanner ? (
                 <img 
                   src={event.eventBanner} 

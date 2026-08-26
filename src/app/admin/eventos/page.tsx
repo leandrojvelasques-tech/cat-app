@@ -164,7 +164,7 @@ export default async function EventosPage() {
                   </div>
 
                   {event.eventBanner && (
-                    <div className="relative w-full aspect-[4/5] max-h-56 overflow-hidden rounded-2xl mb-4 border border-white/5 bg-zinc-800">
+                    <div className="relative w-full aspect-[4/5] overflow-hidden rounded-2xl mb-4 border border-white/5 bg-zinc-800">
                       <img src={event.eventBanner} alt={event.title} className="w-full h-full object-cover" />
                     </div>
                   )}
