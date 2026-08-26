@@ -18,7 +18,7 @@ import {
 import { EscuelitaCarousel } from "./EscuelitaCarousel"
 import { NovedadesHomeSection } from "./NovedadesHomeSection"
 import { OfficialLogo } from "@/components/OfficialLogo"
-import { getNextEventDate, getDayName, isExternalEvent } from "@/lib/event-utils"
+import { getNextEventDate, getDayName, isEventCurrentlyActive, isEventOccurrenceWithinWindow, isExternalEvent } from "@/lib/event-utils"
 import { Repeat, Sparkles as SparklesIcon } from "lucide-react"
 import { getCurrentFeeAmount } from "@/lib/fee-utils"
 
@@ -51,7 +51,7 @@ export default async function Home() {
       ...evt,
       computedDate: getNextEventDate(evt, now)
     }))
-    .filter(evt => evt.computedDate >= todayStart || evt.isRecurring)
+    .filter(evt => isEventCurrentlyActive(evt, now) && isEventOccurrenceWithinWindow(evt, evt.computedDate) && evt.computedDate >= todayStart)
     .sort((a, b) => a.computedDate.getTime() - b.computedDate.getTime())
     .slice(0, 6)
 
@@ -231,7 +231,7 @@ export default async function Home() {
               <>
                 {/* Evento 1 */}
                 <div className="group border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] p-5 rounded-2xl transition-all shadow-xl">
-                  <div className="relative aspect-[4/5] overflow-hidden rounded-xl mb-6">
+                  <div className="relative aspect-[1200/623] overflow-hidden rounded-xl mb-6">
                     <div 
                       className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" 
                       style={{ 
@@ -253,7 +253,7 @@ export default async function Home() {
 
                 {/* Evento 2 */}
                 <div className="group border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] p-5 rounded-2xl transition-all shadow-xl">
-                  <div className="relative aspect-[4/5] overflow-hidden rounded-xl mb-6">
+                  <div className="relative aspect-[1200/623] overflow-hidden rounded-xl mb-6">
                     <div 
                       className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" 
                       style={{ 
@@ -275,7 +275,7 @@ export default async function Home() {
 
                 {/* Evento 3 */}
                 <div className="group border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] p-5 rounded-2xl transition-all shadow-xl">
-                  <div className="relative aspect-[4/5] overflow-hidden rounded-xl mb-6">
+                  <div className="relative aspect-[1200/623] overflow-hidden rounded-xl mb-6">
                     <div 
                       className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" 
                       style={{ 
@@ -301,8 +301,12 @@ export default async function Home() {
                 const month = event.computedDate.toLocaleString("es-ES", { month: "short" }).toUpperCase()
                 
                 return (
-                  <div key={event.id} className="group border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] p-5 rounded-2xl transition-all shadow-xl">
-                    <div className="relative aspect-[4/5] overflow-hidden rounded-xl mb-6">
+                  <Link
+                    key={event.id}
+                    href={`/eventos/${event.id}`}
+                    className="group block border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] p-5 rounded-2xl transition-all shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cat-gold focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1210]"
+                  >
+                    <div className="relative aspect-[1200/623] overflow-hidden rounded-xl mb-6">
                       <div 
                         className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105 bg-zinc-800" 
                         style={{ 
@@ -327,14 +331,10 @@ export default async function Home() {
                     <p className="text-zinc-400 text-xs font-light leading-relaxed mb-6 line-clamp-3">
                       {event.description || "Disfrutá de este gran evento de tango."}
                     </p>
-                    <Link 
-                      href={`/eventos/${event.id}`} 
-                      className="text-cat-gold font-bold text-sm flex items-center gap-2 hover:translate-x-1 transition-transform"
-                    >
-                      <span>{isExternalEvent(event) ? "Ver Flyer / Info" : "Inscribirme / Info"}</span>
-                      <ArrowRight size={14} />
-                    </Link>
-                  </div>
+                    <span className="mx-auto mt-2 flex w-fit items-center rounded-full bg-gradient-to-r from-cat-gold to-cat-bronze px-5 py-2.5 text-sm font-black text-zinc-950 shadow-lg shadow-cat-gold/10 transition-all group-hover:scale-105 group-hover:shadow-cat-gold/20">
+                      Más info <ArrowRight size={14} className="ml-1 inline-block" />
+                    </span>
+                  </Link>
                 )
               })
             )}

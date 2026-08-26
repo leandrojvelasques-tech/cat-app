@@ -15,7 +15,7 @@ import { SocioDuesPaymentSection } from "./SocioDuesPaymentSection"
 import { SocioNovedadesSection } from "./SocioNovedadesSection"
 import { getSocioEventRegistrations } from "@/app/actions/eventos"
 import { getMemberDebt } from "@/app/actions/billing"
-import { getNextEventDate, getDayName, isExternalEvent } from "@/lib/event-utils"
+import { getNextEventDate, getDayName, isEventCurrentlyActive, isEventOccurrenceWithinWindow, isExternalEvent } from "@/lib/event-utils"
 import { getMemberCommunications } from "@/app/actions/member-communications"
 import { SocioCommunicationsSection } from "./SocioCommunicationsSection"
 
@@ -73,7 +73,7 @@ export default async function PortalSocioPage() {
   }))
 
   // Filter events: Rest of current month + full next month
-  const todayStart = new Date(now.setHours(0, 0, 0, 0))
+  now.setHours(0, 0, 0, 0)
   const currentMonth = now.getMonth()
   const currentYear = now.getFullYear()
 
@@ -92,7 +92,7 @@ export default async function PortalSocioPage() {
       computedDate: getNextEventDate(evt, now)
     }))
     .filter(evt => {
-      if (evt.computedDate < todayStart && !evt.isRecurring) return false
+      if (!isEventCurrentlyActive(evt, now) || !isEventOccurrenceWithinWindow(evt, evt.computedDate)) return false
       const m = evt.computedDate.getMonth()
       const y = evt.computedDate.getFullYear()
       const isCurrentMonth = (y === currentYear && m === currentMonth)

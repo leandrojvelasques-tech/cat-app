@@ -531,7 +531,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
                
                <div className="flex flex-wrap items-center gap-2">
                  <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
-                   <button type="button" onClick={() => setIsFree(!isFree)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isFree ? "bg-emerald-600 text-white shadow-lg shadow-emerald-950/40" : "text-zinc-400 hover:text-white"}`}>
+                   <button type="button" onClick={() => { const nextIsFree = !isFree; setIsFree(nextIsFree); if (nextIsFree) setHasEarlyBird(false) }} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isFree ? "bg-emerald-600 text-white shadow-lg shadow-emerald-950/40" : "text-zinc-400 hover:text-white"}`}>
                      <Sparkles size={13} /> {isFree ? "100% GRATUITO ($0)" : "EVENTO CON COSTO"}
                    </button>
                    <input type="hidden" name="isFree" value={isFree ? "on" : "off"} />
@@ -700,11 +700,11 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs text-zinc-500 uppercase tracking-wider">Fecha Inicio (Día)</label>
+                <label className="text-xs text-zinc-500 uppercase tracking-wider">{isRecurring ? "Vigente desde" : "Fecha Inicio (Día)"}</label>
                 <input name="startDate" type="date" required defaultValue={formatDateForInput(initialData?.startDate)} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-amber-500/50 outline-none" />
               </div>
               <div className="space-y-2">
-                <label className="text-xs text-zinc-500 uppercase tracking-wider">Fecha Fin (Día - Opcional)</label>
+                <label className="text-xs text-zinc-500 uppercase tracking-wider">{isRecurring ? "Vigente hasta (opcional)" : "Fecha Fin (Día - Opcional)"}</label>
                 <input name="endDate" type="date" defaultValue={formatDateForInput(initialData?.endDate)} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-amber-500/50 outline-none" />
               </div>
             </div>
@@ -790,15 +790,15 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
                   <BookOpen className="text-cyan-400" size={22} />
                   <div>
                     <h2 className="text-lg font-medium text-white">Configuración de Capacitación (Clases)</h2>
-                    <p className="text-xs text-zinc-400">Defina el temario de las clases y títulos opcionales.</p>
+                    <p className="text-xs text-zinc-400">{isFree ? "Definí el temario y el horario de las clases gratuitas." : "Defina el temario de las clases y títulos opcionales."}</p>
                   </div>
                 </div>
-                <input 
+                {!isFree && <input
                   name="comboTitle" 
                   defaultValue={initialData?.comboTitle || "Combo 4 clases"} 
                   placeholder="Nombre Combo (ej: Combo 4 clases)" 
                   className="bg-black/40 border border-cyan-500/20 text-xs px-3 py-2 rounded-xl text-white outline-none focus:border-cyan-400" 
-                />
+                />}
               </div>
 
               {/* Dynamic Classes List */}
@@ -1062,7 +1062,7 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
             )}
 
             {/* Classes Pricing */}
-            {hasClasses && (
+            {hasClasses && !isFree && (
               <div className="space-y-4 bg-cyan-500/5 border border-cyan-500/10 p-4 rounded-2xl">
                  <p className="text-[10px] font-black text-cyan-400 uppercase tracking-widest flex items-center gap-1">
                    <BookOpen size={12} /> Capacitaciones / Clases (Normal)

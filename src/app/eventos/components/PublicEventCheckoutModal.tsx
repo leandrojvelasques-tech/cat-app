@@ -57,8 +57,8 @@ export function PublicEventCheckoutModal({ event }: PublicEventCheckoutModalProp
   const looseClassPrice = prices.classLooseNonSocio
 
   // Selection states
-  const [includeMilonga, setIncludeMilonga] = useState(event.hasMilonga ?? true)
-  const [includeCombo, setIncludeCombo] = useState(event.hasClasses ?? false)
+  const [includeMilonga, setIncludeMilonga] = useState(event.isFree ? false : (event.hasMilonga ?? true))
+  const [includeCombo, setIncludeCombo] = useState(event.isFree ? false : (event.hasClasses ?? false))
   const [includeLooseClass, setIncludeLooseClass] = useState(false)
   const [selectedClassIds, setSelectedClassIds] = useState<string[]>([])
 

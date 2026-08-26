@@ -37,6 +37,14 @@ export function resolveEventRegistrationSelection(
   selection: EventRegistrationSelection,
   isSocio: boolean
 ) {
+  if (event.isFree) {
+    selection = {
+      includeCombo: false,
+      includeMilonga: false,
+      selectedClassIds: [],
+    }
+  }
+
   const selectedClassIds = [...new Set(selection.selectedClassIds)]
   const availableClasses = new Map(event.classes.map((eventClass) => [eventClass.id, eventClass]))
 

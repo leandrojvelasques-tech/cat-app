@@ -104,16 +104,25 @@ export async function createEvent(prevState: any, formData: FormData) {
       }
     }
 
-    if (!title || !startDateStr) {
+    const parsedStartDate = parseDateInput(startDateStr)
+    const parsedEndDate = parseDateInput(endDateStr)
+
+    if (!title || !parsedStartDate) {
       return { error: "El título y la fecha de inicio son requeridos" }
+    }
+    if (parsedEndDate && parsedEndDate < parsedStartDate) {
+      return { error: "La fecha de vigencia hasta no puede ser anterior a la fecha de inicio." }
+    }
+    if (isRecurring && (recurrenceDay === null || recurrenceDay < 0 || recurrenceDay > 6 || !/^([01]\d|2[0-3]):[0-5]\d$/.test(recurrenceTime || ""))) {
+      return { error: "Configurá un día y un horario válidos para la recurrencia semanal." }
     }
 
     await db.event.create({
       data: {
         title,
         description,
-        startDate: parseDateInput(startDateStr)!,
-        endDate: parseDateInput(endDateStr),
+        startDate: parsedStartDate,
+        endDate: parsedEndDate,
         location,
         type,
         isPublic,
@@ -234,15 +243,24 @@ export async function updateEvent(id: string, prevState: any, formData: FormData
       }
     }
 
-    if (!title || !startDateStr) {
+    const parsedStartDate = parseDateInput(startDateStr)
+    const parsedEndDate = parseDateInput(endDateStr)
+
+    if (!title || !parsedStartDate) {
       return { error: "El título y la fecha de inicio son requeridos" }
+    }
+    if (parsedEndDate && parsedEndDate < parsedStartDate) {
+      return { error: "La fecha de vigencia hasta no puede ser anterior a la fecha de inicio." }
+    }
+    if (isRecurring && (recurrenceDay === null || recurrenceDay < 0 || recurrenceDay > 6 || !/^([01]\d|2[0-3]):[0-5]\d$/.test(recurrenceTime || ""))) {
+      return { error: "Configurá un día y un horario válidos para la recurrencia semanal." }
     }
 
     const updateData: any = {
       title,
       description,
-      startDate: parseDateInput(startDateStr)!,
-      endDate: parseDateInput(endDateStr),
+      startDate: parsedStartDate,
+      endDate: parsedEndDate,
       location,
       type,
       isPublic,

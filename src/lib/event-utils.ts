@@ -27,7 +27,9 @@ export function getNextEventDate(
   }
 
   const targetDay = event.recurrenceDay // 0-6 (0=Sun, 1=Mon, ..., 6=Sat)
-  const currentDay = referenceDate.getDay()
+  const originalDay = new Date(originalDate)
+  const baseDate = referenceDate < originalDay ? originalDay : referenceDate
+  const currentDay = baseDate.getDay()
 
   let daysUntilTarget = targetDay - currentDay
   if (daysUntilTarget < 0) {
@@ -46,20 +48,63 @@ export function getNextEventDate(
   }
 
   const nextDate = new Date(
-    referenceDate.getFullYear(),
-    referenceDate.getMonth(),
-    referenceDate.getDate() + daysUntilTarget,
+    baseDate.getFullYear(),
+    baseDate.getMonth(),
+    baseDate.getDate() + daysUntilTarget,
     hours,
     minutes,
     0
   )
 
   // If target day is today but time has already passed, jump 7 days ahead to next week
-  if (daysUntilTarget === 0 && nextDate < referenceDate) {
+  if (daysUntilTarget === 0 && nextDate < baseDate) {
     nextDate.setDate(nextDate.getDate() + 7)
   }
 
   return nextDate
+}
+
+/** Returns whether an event is within its configured publication window. */
+export function isEventCurrentlyActive(
+  event: {
+    startDate: Date | string
+    endDate?: Date | string | null
+    isRecurring?: boolean | null
+  },
+  referenceDate: Date = new Date()
+): boolean {
+  const startDate = new Date(event.startDate)
+  const startDay = new Date(startDate)
+  startDay.setHours(0, 0, 0, 0)
+
+  if (referenceDate < startDay) return false
+
+  if (event.endDate) {
+    const endDate = new Date(event.endDate)
+    endDate.setHours(23, 59, 59, 999)
+    if (referenceDate > endDate) return false
+  }
+
+  const startDayEnd = new Date(startDate)
+  startDayEnd.setHours(23, 59, 59, 999)
+  return Boolean(event.isRecurring) || referenceDate <= startDayEnd
+}
+
+/** Returns whether a calculated occurrence falls inside the event's configured window. */
+export function isEventOccurrenceWithinWindow(
+  event: { startDate: Date | string; endDate?: Date | string | null },
+  occurrenceDate: Date
+): boolean {
+  const startDate = new Date(event.startDate)
+  const startDay = new Date(startDate)
+  startDay.setHours(0, 0, 0, 0)
+  if (occurrenceDate < startDay) return false
+
+  if (!event.endDate) return true
+
+  const endDate = new Date(event.endDate)
+  endDate.setHours(23, 59, 59, 999)
+  return occurrenceDate <= endDate
 }
 
 export function getDayName(dayIndex?: number | null): string {
@@ -144,4 +189,3 @@ export function isExternalEvent(event?: { type?: string | null } | null): boolea
   const t = event.type.toUpperCase()
   return t.includes("DIFUSIÓN") || t.includes("DIFUSION") || t.includes("EXTERNO")
 }
-

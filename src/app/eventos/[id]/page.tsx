@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Calendar, MapPin, Music, ChevronLeft, User, DollarSign, Headphones, Clock, Sparkles, BookOpen, ExternalLink, MessageSquare, Mail, Phone, Tag } from "lucide-react"
 import { auth } from "@/auth"
 import { PublicEventCheckoutModal } from "../components/PublicEventCheckoutModal"
-import { getEffectiveEventPrices, isExternalEvent } from "@/lib/event-utils"
+import { getDayName, getEffectiveEventPrices, isExternalEvent } from "@/lib/event-utils"
 
 export default async function PublicEventLandingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -81,7 +81,7 @@ export default async function PublicEventLandingPage({ params }: { params: Promi
           
           {/* Left Column: Image/Flyer */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="relative aspect-[4/5] rounded-3xl overflow-hidden border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-zinc-900 group">
+            <div className="relative aspect-[1200/623] rounded-3xl overflow-hidden border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-zinc-900 group">
               {event.eventBanner ? (
                 <img 
                   src={event.eventBanner} 
@@ -166,7 +166,7 @@ export default async function PublicEventLandingPage({ params }: { params: Promi
                   </span>
                 )}
                 <span className="text-amber-500 text-xs font-black uppercase tracking-widest flex items-center gap-1">
-                  <Sparkles size={12} /> {day} de {month}, {year}
+                  <Sparkles size={12} /> {event.isRecurring ? `Todos los ${getDayName(event.recurrenceDay)}${event.recurrenceTime ? ` · ${event.recurrenceTime} hs` : ""}` : `${day} de ${month}, ${year}`}
                 </span>
               </div>
               <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight leading-tight font-serif">
@@ -240,8 +240,12 @@ export default async function PublicEventLandingPage({ params }: { params: Promi
                   </div>
                 )}
 
-                {/* Pricing Grid - Matching Flyer (Valores) */}
-                <div className="border border-red-500/30 rounded-3xl overflow-hidden bg-gradient-to-b from-black to-zinc-950 p-6 md:p-8 space-y-6">
+                {event.isFree ? (
+                  <div className="border border-emerald-500/20 rounded-3xl bg-emerald-500/10 p-6 text-center text-emerald-300">
+                    <p className="text-sm font-black uppercase tracking-widest">Clases gratuitas</p>
+                    <p className="text-xs mt-2 text-emerald-200/80">Esta actividad de difusión no tiene combo ni valores de inscripción.</p>
+                  </div>
+                ) : <div className="border border-red-500/30 rounded-3xl overflow-hidden bg-gradient-to-b from-black to-zinc-950 p-6 md:p-8 space-y-6">
                   <div className="text-center">
                     <h4 className="text-lg font-black tracking-widest uppercase text-cyan-400 italic">Valores Capacitación</h4>
                   </div>
@@ -279,7 +283,7 @@ export default async function PublicEventLandingPage({ params }: { params: Promi
                     </div>
 
                   </div>
-                </div>
+                </div>}
               </div>
             )}
 
