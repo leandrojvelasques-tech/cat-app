@@ -146,7 +146,7 @@ export default function AdminNovedadesPage() {
               className="bg-[#18181b] border border-white/10 rounded-3xl overflow-hidden flex flex-col justify-between hover:border-amber-500/40 transition-all group"
             >
               {/* Image & Badges */}
-              <div className="relative w-full h-48 bg-zinc-900 overflow-hidden">
+              <div className="relative aspect-[4/5] w-full bg-zinc-900 overflow-hidden">
                 {item.imageUrl ? (
                   <img
                     src={item.imageUrl}

@@ -62,7 +62,7 @@ export function SocioNovedadesSection({ novedades }: SocioNovedadesSectionProps)
               className="bg-[#18181b] border border-white/10 rounded-3xl overflow-hidden flex flex-col justify-between hover:border-amber-500/50 hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-300 group cursor-pointer"
             >
               {/* Image */}
-              <div className="relative w-full h-44 bg-zinc-900 overflow-hidden">
+              <div className="relative aspect-[4/5] w-full bg-zinc-900 overflow-hidden">
                 {item.imageUrl ? (
                   <img
                     src={item.imageUrl}

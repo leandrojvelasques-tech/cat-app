@@ -42,7 +42,7 @@ export function NovedadDetailModal({ novedad, onClose }: NovedadDetailModalProps
 
         {/* Cover Image */}
         {novedad.imageUrl ? (
-          <div className="relative w-full h-64 sm:h-80 bg-zinc-900 overflow-hidden">
+          <div className="relative aspect-[4/5] w-full bg-zinc-900 overflow-hidden">
             <img
               src={novedad.imageUrl}
               alt={novedad.title}

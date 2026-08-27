@@ -200,12 +200,12 @@ export function NovedadFormModal({ novedad, onClose, onSuccess }: NovedadFormMod
                 <span>Imagen de la Novedad</span>
               </label>
               <span className="text-[11px] text-amber-300/90 font-semibold">
-                📐 Recomendado: 1200 × 630 px (proporción 16:9)
+                📐 Recomendado: 1080 × 1350 px (proporción 4:5)
               </span>
             </div>
 
             {imagePreview && (
-              <div className="relative w-full h-44 rounded-xl overflow-hidden bg-zinc-900 border border-white/10 mb-3">
+              <div className="relative aspect-[4/5] w-full max-w-sm rounded-xl overflow-hidden bg-zinc-900 border border-white/10 mb-3">
                 <img src={imagePreview} alt="Previsualización" className="w-full h-full object-cover" />
                 <button
                   type="button"
