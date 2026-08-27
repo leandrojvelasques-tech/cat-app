@@ -155,7 +155,6 @@ export default async function Home() {
               <BookOpen size={14} />
               <span>Clases de Tango</span>
             </Link>
-            <Link href="#beneficios" className="text-zinc-400 hover:text-white text-sm transition-colors">Beneficios</Link>
             <Link href="/login" className="text-zinc-400 hover:text-white text-sm transition-colors flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-xl border border-white/5 hover:bg-white/10">
               <LogIn size={14} />
               <span>Portal CD / Socios</span>
