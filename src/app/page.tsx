@@ -302,7 +302,7 @@ export default async function Home() {
                   <Link
                     key={event.id}
                     href={`/eventos/${event.id}`}
-                    className="group block border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] p-5 rounded-2xl transition-all shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cat-gold focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1210]"
+                    className="group flex h-full flex-col border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] p-5 rounded-2xl transition-all shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cat-gold focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1210]"
                   >
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1">
                       <div className="inline-flex items-center gap-2 rounded-lg border border-cat-gold/30 bg-cat-gold/10 px-3 py-2 text-cat-gold shadow-sm">
@@ -334,7 +334,7 @@ export default async function Home() {
                     <p className="text-zinc-400 text-xs font-light leading-relaxed mb-6 line-clamp-3">
                       {event.description || "Disfrutá de este gran evento de tango."}
                     </p>
-                    <span className="mx-auto mt-2 flex w-fit items-center rounded-full bg-gradient-to-r from-cat-gold to-cat-bronze px-5 py-2.5 text-sm font-black text-zinc-950 shadow-lg shadow-cat-gold/10 transition-all group-hover:scale-105 group-hover:shadow-cat-gold/20">
+                    <span className="mx-auto mt-auto flex w-fit items-center rounded-full bg-gradient-to-r from-cat-gold to-cat-bronze px-5 py-2.5 text-sm font-black text-zinc-950 shadow-lg shadow-cat-gold/10 transition-all group-hover:scale-105 group-hover:shadow-cat-gold/20">
                       Más info <ArrowRight size={14} className="ml-1 inline-block" />
                     </span>
                   </Link>
