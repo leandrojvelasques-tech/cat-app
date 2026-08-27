@@ -343,6 +343,15 @@ export default async function Home() {
               })
             )}
           </div>
+
+          <div className="mt-10 flex justify-center">
+            <Link
+              href="/calendario-anual"
+              className="inline-flex items-center gap-2 rounded-full border border-cat-gold/40 bg-cat-gold/10 px-6 py-3 text-sm font-bold text-cat-gold shadow-lg shadow-cat-gold/5 transition-all hover:bg-cat-gold hover:text-zinc-950"
+            >
+              Ver calendario anual <ArrowRight size={16} />
+            </Link>
+          </div>
         </div>
       </section>
 

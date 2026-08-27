@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { CalendarDays, Clock3, Repeat, Sparkles } from "lucide-react"
+import { CalendarDays, Clock3, Mail, Repeat, Sparkles } from "lucide-react"
 import { db } from "@/lib/db"
 import { getCalendarEventOccurrences } from "@/lib/event-utils"
 import { AnnualCalendarClient, type CalendarMonth, type SerializableOccurrence } from "./AnnualCalendarClient"
@@ -48,13 +48,21 @@ export default async function CalendarioAnualPage() {
       <div className="mx-auto max-w-6xl px-5 py-12 md:px-10 md:py-16">
         <div className="mb-10 max-w-4xl">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cat-gold/30 bg-cat-gold/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-cat-gold"><CalendarDays size={13} /> Agenda extendida</div>
-          <h1 className="font-serif text-4xl font-bold tracking-tight text-white md:text-6xl">Calendario anual</h1>
+          <h1 className="mb-3 font-serif text-4xl font-bold tracking-tight text-white md:text-6xl">Calendario anual</h1>
+          <div className="h-1 w-20 rounded-full bg-cat-gold" />
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-zinc-400">Una mirada completa de lo que viene en el CAT: milongas recurrentes, clases y eventos especiales ya programados.</p>
           <div className="mt-5 flex flex-wrap gap-3 text-xs text-zinc-400">
             <span className="inline-flex items-center gap-1.5"><Repeat size={13} className="text-cat-gold" /> Actividad recurrente</span>
             <span className="inline-flex items-center gap-1.5"><Sparkles size={13} className="text-purple-300" /> Evento especial o externo</span>
             <span className="inline-flex items-center gap-1.5"><Clock3 size={13} className="text-zinc-500" /> Tocá una actividad para ver detalles</span>
           </div>
+        </div>
+        <div className="mb-10 flex flex-col gap-4 rounded-3xl border border-cat-gold/20 bg-cat-gold/5 px-5 py-5 md:flex-row md:items-center md:justify-between md:px-6">
+          <div>
+            <p className="text-sm font-bold text-white">¿Tenés un evento de tango que no figura?</p>
+            <p className="mt-1 text-sm leading-relaxed text-zinc-400">Mandanos la información para que podamos incorporarlo al calendario.</p>
+          </div>
+          <a href="mailto:info@centroamigosdeltango.com?subject=Evento%20de%20tango%20para%20el%20calendario" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-cat-gold px-4 text-xs font-black text-zinc-950 transition-colors hover:brightness-110"><Mail size={16} /> Enviar evento</a>
         </div>
         <AnnualCalendarClient initialMonths={months} />
       </div>
