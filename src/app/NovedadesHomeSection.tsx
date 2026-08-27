@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Newspaper, Calendar, ArrowRight, Sparkles } from "lucide-react"
+import { Newspaper, Calendar, ArrowRight } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { NovedadDetailModal } from "@/components/NovedadDetailModal"
@@ -31,14 +31,11 @@ export function NovedadesHomeSection({ novedades }: NovedadesHomeSectionProps) {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div>
-          <div className="flex items-center gap-2 text-amber-500 font-bold text-xs uppercase tracking-widest mb-3">
-            <Newspaper size={16} />
-            <span>Comunicados & Noticias</span>
-          </div>
-          <h2 className="text-3xl sm:text-5xl font-black text-white uppercase italic tracking-tight">
+          <h2 className="text-3xl md:text-4xl font-bold text-white font-serif mb-3">
             Últimas Novedades
           </h2>
-          <p className="text-zinc-400 text-sm sm:text-base mt-2 max-w-xl">
+          <div className="w-20 h-1 bg-cat-gold rounded-full"></div>
+          <p className="text-zinc-400 text-sm sm:text-base mt-5 max-w-xl">
             Entérate de las actividades, noticias y acontecimientos recientes de la comunidad del CAT.
           </p>
         </div>

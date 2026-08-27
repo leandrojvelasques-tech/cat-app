@@ -212,9 +212,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Novedades CAT Section */}
-      <NovedadesHomeSection novedades={latestNovedades} />
-
       {/* Próximos Eventos - Agenda Tanguera */}
       <section id="eventos" className="bg-[#131313] py-24 md:py-32 px-6 md:px-16">
         <div className="max-w-7xl mx-auto">
@@ -342,12 +339,18 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Novedades CAT Section */}
+      <NovedadesHomeSection novedades={latestNovedades} />
+
       {/* Sobre Nosotros */}
       <section id="nosotros" className="bg-[#1b2621] py-24 md:py-32 px-6 md:px-16 relative">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-24">
             <div className="space-y-6">
-              <h2 className="text-3xl md:text-4xl font-bold text-cat-gold font-serif">Sobre Nosotros</h2>
+              <div>
+                <h2 className="text-3xl md:text-4xl font-bold text-white font-serif mb-3">Sobre Nosotros</h2>
+                <div className="w-20 h-1 bg-cat-gold rounded-full"></div>
+              </div>
               <p className="text-base md:text-lg text-zinc-300 leading-relaxed font-light">
                 Somos una asociación civil sin fines de lucro dedicada a promover y difundir el Tango en sus diversas expresiones artísticas, culturales y sociales en Comodoro Rivadavia. Desde nuestra fundación el 13 de noviembre de 2002, trabajamos para crear un espacio de pertenencia para todos los amantes del 2x4.
               </p>
