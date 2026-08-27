@@ -24,10 +24,13 @@ export default async function CalendarioAnualPage() {
 
   for (const occurrence of occurrences) {
     const date = occurrence.date
-    const key = `${date.getFullYear()}-${date.getMonth()}`
+    const key = `${date.getFullYear()}-${String(date.getMonth()).padStart(2, "0")}`
     const serialized = { ...occurrence, date: date.toISOString() }
     groupedMonths.set(key, [...(groupedMonths.get(key) || []), serialized])
   }
+
+  const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth()).padStart(2, "0")}`
+  if (!groupedMonths.has(currentMonthKey)) groupedMonths.set(currentMonthKey, [])
 
   const months: CalendarMonth[] = [...groupedMonths.entries()]
     .sort(([a], [b]) => a.localeCompare(b))

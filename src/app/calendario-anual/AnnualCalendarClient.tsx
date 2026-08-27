@@ -136,7 +136,7 @@ export function AnnualCalendarClient({ initialMonths }: { initialMonths: Calenda
       </div>
     </div>
 
-    {!isPrintingFullCalendar && <div className="print:hidden"><div className="mb-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{landingEvents.map((event) => <EventCard key={event.eventId} event={event} />)}</div><MonthGrid month={selectedMonth} /></div>}
+    {!isPrintingFullCalendar && <div className="print:hidden"><MonthGrid month={selectedMonth} /><div className="mt-10"><h2 className="mb-5 font-serif text-2xl font-bold text-white">Eventos de {monthLabel(selectedMonth)}</h2><div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{landingEvents.map((event) => <EventCard key={event.eventId} event={event} />)}</div></div></div>}
     {isPrintingFullCalendar && <div className="grid gap-8 print:grid-cols-1">{initialMonths.map((month) => <MonthGrid key={month.key} month={month} />)}</div>}
   </>
 }
