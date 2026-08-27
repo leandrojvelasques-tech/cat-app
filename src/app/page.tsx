@@ -18,7 +18,7 @@ import {
 import { EscuelitaCarousel } from "./EscuelitaCarousel"
 import { NovedadesHomeSection } from "./NovedadesHomeSection"
 import { OfficialLogo } from "@/components/OfficialLogo"
-import { getNextEventDate, isEventCurrentlyActive, isEventOccurrenceWithinWindow, isExternalEvent } from "@/lib/event-utils"
+import { getDayName, getNextEventDate, isEventCurrentlyActive, isEventOccurrenceWithinWindow, isExternalEvent } from "@/lib/event-utils"
 import { Repeat, Sparkles as SparklesIcon } from "lucide-react"
 import { getCurrentFeeAmount } from "@/lib/fee-utils"
 
@@ -45,15 +45,20 @@ export default async function Home() {
   })
 
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
+  const agendaWindowEnd = new Date(todayStart)
+  agendaWindowEnd.setDate(agendaWindowEnd.getDate() + 30)
+  agendaWindowEnd.setHours(23, 59, 59, 999)
 
   const upcomingEvents = allPublicEvents
     .map(evt => ({
       ...evt,
       computedDate: getNextEventDate(evt, now)
     }))
-    .filter(evt => isEventCurrentlyActive(evt, now) && isEventOccurrenceWithinWindow(evt, evt.computedDate) && evt.computedDate >= todayStart)
+    .filter(evt => {
+      if (!isEventCurrentlyActive(evt, now) || !isEventOccurrenceWithinWindow(evt, evt.computedDate) || evt.computedDate < todayStart) return false
+      return evt.isRecurring || evt.computedDate <= agendaWindowEnd
+    })
     .sort((a, b) => a.computedDate.getTime() - b.computedDate.getTime())
-    .slice(0, 6)
 
   // Obtener docentes del mes
   const docentesSetting = await db.setting.findUnique({
@@ -218,81 +223,20 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-end mb-16">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white font-serif mb-3">Agenda Tanguera</h2>
+              <h2 className="text-3xl md:text-4xl font-bold text-white font-serif mb-3">Agenda Tanguera del mes</h2>
               <div className="w-20 h-1 bg-cat-gold rounded-full"></div>
+              <p className="mt-5 max-w-2xl text-sm leading-relaxed text-zinc-400">
+                Milongas habituales y eventos especiales de los próximos 30 días. Las actividades recurrentes se muestran una sola vez con su día habitual.
+              </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {upcomingEvents.length === 0 ? (
-              // Fallback / Mock events
-              <>
-                {/* Evento 1 */}
-                <div className="group border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] p-5 rounded-2xl transition-all shadow-xl">
-                  <div className="relative aspect-[4/5] overflow-hidden rounded-xl mb-6">
-                    <div 
-                      className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" 
-                      style={{ 
-                        backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuCnrWO03v9cI5Z1tDdFLaGnsP5EEmYjL6Onw2iSNZ8aSahDME-gZ6EaH9Yt3ep5DRw6X9TskI141KP2le4Jt2oAOFWFGqcLBzSKnQeBNJUvRWf4pd8Q8yAVDE8R6ymwNU9pp5dOWLkFWDbhwdN6rZflrrJ2aRKTmOhbO1pXCHiehk9dnFM93Y3Ns6nI83eQKOq-wKtju03cL8PuVEG5sbNQhjpP3Cc_onfhs9rMiU-CHZ7LBVTyzkAuYLTsU1dLl-H5dlLOaez9JjBo')` 
-                      }}
-                    />
-                    <div className="absolute top-4 left-4 bg-gradient-to-tr from-cat-gold to-cat-bronze px-3 py-1.5 rounded-lg flex flex-col items-center shadow-lg text-zinc-950 font-bold">
-                      <span className="text-[10px] uppercase font-bold leading-none">AGO</span>
-                      <span className="text-lg leading-none mt-1">15</span>
-                    </div>
-                  </div>
-                  <h4 className="text-xl font-bold text-white mb-3">Gran Milonga Mensual</h4>
-                  <p className="text-zinc-400 text-xs font-light leading-relaxed mb-6">Ven a disfrutar de una noche mágica con orquesta en vivo, exhibición de bailarines y la mejor selección del DJ de la casa.</p>
-                  <Link href="/asociate" className="text-cat-gold font-bold text-sm flex items-center gap-2 hover:translate-x-1 transition-transform">
-                    <span>Asociate para descuentos</span>
-                    <ArrowRight size={14} />
-                  </Link>
-                </div>
-
-                {/* Evento 2 */}
-                <div className="group border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] p-5 rounded-2xl transition-all shadow-xl">
-                  <div className="relative aspect-[4/5] overflow-hidden rounded-xl mb-6">
-                    <div 
-                      className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" 
-                      style={{ 
-                        backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuDcaZ6DsjtSAbzouBKtCmPuEL8xbbFrN4C4iHIdhCIre-vyT2lXYuONA6S0Ag-Gspy6gUHNUcEWrnSJX1eH1oxI-UuJ1taogmfNnud1CF89P9V6Z5JN-wBAvGZolFCgHJLqYeeKRg9Q3j634o1E-QDUbWbbtCBSQIYB-AZqq0BQkkHTkZu_7mwLR9dOyYuBRcZf3_cWJ1N6RahMwLwyTHe8f-wKxP28LcdSvv_1ilkjpPIh0ScVOpvjTM3lQDDtLfs1yJjIQphBLGSd')` 
-                      }}
-                    />
-                    <div className="absolute top-4 left-4 bg-gradient-to-tr from-cat-gold to-cat-bronze px-3 py-1.5 rounded-lg flex flex-col items-center shadow-lg text-zinc-950 font-bold">
-                      <span className="text-[10px] uppercase font-bold leading-none">SET</span>
-                      <span className="text-lg leading-none mt-1">05</span>
-                    </div>
-                  </div>
-                  <h4 className="text-xl font-bold text-white mb-3">Seminario Intensivo</h4>
-                  <p className="text-zinc-400 text-xs font-light leading-relaxed mb-6">Clases especiales dictadas por campeones mundiales. Técnica, musicalidad y dinámicas complejas para todos los niveles.</p>
-                  <Link href="/asociate" className="text-cat-gold font-bold text-sm flex items-center gap-2 hover:translate-x-1 transition-transform">
-                    <span>Inscribirse al seminario</span>
-                    <ArrowRight size={14} />
-                  </Link>
-                </div>
-
-                {/* Evento 3 */}
-                <div className="group border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] p-5 rounded-2xl transition-all shadow-xl">
-                  <div className="relative aspect-[4/5] overflow-hidden rounded-xl mb-6">
-                    <div 
-                      className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" 
-                      style={{ 
-                        backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuCt32-Z0M5fUlWeJ1R8cXJ_1J2-Ted5B_7JppULaISy2U_n-4KIM7vUyfgU7CcPq8_n6EMM7THGqZu7VeE9PTIvdEeIKk5iLVeFiiNx2_OluDTqOhoyZKLwX0oTL0v9ufhs5zU8wE1k1N5-gPss2jKK7rt9-cRYjzCHUwPm3p1-5uCgpO72FMCOf8bbwJSsJ-NRrDLfZF90B7UU0XwKt_DrntlAfWodYh7OzXhAB-uva2JvqB_ko44FAFP3B-lSwHtPVQWHc7nWbxcT')` 
-                      }}
-                    />
-                    <div className="absolute top-4 left-4 bg-gradient-to-tr from-cat-gold to-cat-bronze px-3 py-1.5 rounded-lg flex flex-col items-center shadow-lg text-zinc-950 font-bold">
-                      <span className="text-[10px] uppercase font-bold leading-none">OCT</span>
-                      <span className="text-lg leading-none mt-1">12</span>
-                    </div>
-                  </div>
-                  <h4 className="text-xl font-bold text-white mb-3">Preliminar Regional</h4>
-                  <p className="text-zinc-400 text-xs font-light leading-relaxed mb-6">La gran competencia patagónica oficial para clasificar directamente al Campeonato Mundial de Tango BA.</p>
-                  <Link href="/asociate" className="text-cat-gold font-bold text-sm flex items-center gap-2 hover:translate-x-1 transition-transform">
-                    <span>Más detalles</span>
-                    <ArrowRight size={14} />
-                  </Link>
-                </div>
-              </>
+              <div className="col-span-full rounded-2xl border border-dashed border-white/10 bg-white/[0.02] px-6 py-12 text-center">
+                <p className="text-sm text-zinc-400">No hay eventos especiales en los próximos 30 días.</p>
+                <p className="mt-2 text-xs text-zinc-500">Consultá el calendario anual para ver toda la programación cargada.</p>
+              </div>
             ) : (
               upcomingEvents.map((event) => {
                 const day = event.computedDate.getDate()
@@ -332,6 +276,9 @@ export default async function Home() {
                       />
                     </div>
                     <h4 className="text-xl font-bold text-white mb-2">{event.title}</h4>
+                    {event.isRecurring && event.recurrenceDay !== null && event.recurrenceDay !== undefined && (
+                      <p className="mb-2 text-xs font-bold uppercase tracking-wider text-cat-gold">Todos los {getDayName(event.recurrenceDay).toLowerCase()}</p>
+                    )}
                     <p className="text-zinc-400 text-xs font-light leading-relaxed mb-6 line-clamp-3">
                       {event.description || "Disfrutá de este gran evento de tango."}
                     </p>
