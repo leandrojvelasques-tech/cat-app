@@ -22,10 +22,11 @@ export function SocioCarnetToggle({ member, awards, attendedMilongas, calculated
             <CreditCard size={24} />
           </div>
           <div>
-            <h2 className="text-xl md:text-2xl font-black text-white italic uppercase tracking-tighter flex items-center gap-2">
-              Carnet Digital CAT
+            <h2 className="font-serif text-xl font-bold leading-tight text-white md:text-2xl">
+              Carnet digital CAT
             </h2>
-            <p className="text-xs text-zinc-400">
+            <div className="mt-2 h-1 w-12 rounded-full bg-cat-gold" />
+            <p className="mt-3 text-xs text-zinc-400">
               Presente su carnet interactivo para acceder a los beneficios y milongas
             </p>
           </div>

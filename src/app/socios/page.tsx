@@ -18,6 +18,7 @@ import { getMemberDebt } from "@/app/actions/billing"
 import { getNextEventDate, getDayName, isEventCurrentlyActive, isEventOccurrenceWithinWindow, isExternalEvent } from "@/lib/event-utils"
 import { getMemberCommunications } from "@/app/actions/member-communications"
 import { SocioCommunicationsSection } from "./SocioCommunicationsSection"
+import { SocioAgendaSection } from "./SocioAgendaSection"
 
 export default async function PortalSocioPage() {
   const session = await auth()
@@ -174,6 +175,12 @@ export default async function PortalSocioPage() {
         calculatedStatus={calculatedStatus}
       />
 
+      <SocioAgendaSection
+        filteredEvents={filteredEvents}
+        registrations={registrations}
+        member={member}
+      />
+
       {/* 3. Control de Morosidad y Pago de Cuotas (Solo si registra deuda) */}
       {debtData.total > 0 && (
         <section id="pagar" className="scroll-mt-24">
@@ -191,7 +198,8 @@ export default async function PortalSocioPage() {
 
       <SocioCommunicationsSection communications={communicationsForSocio} />
 
-      {/* 5. Agenda de Milongas & Eventos (Mes Actual + Próximo Mes) */}
+      {/* Legacy agenda markup retained temporarily while the extracted responsive section is validated. */}
+      {false && (
       <div className="bg-white/5 border border-white/10 p-8 md:p-10 rounded-[48px] backdrop-blur-md shadow-2xl space-y-8">
          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
@@ -343,6 +351,7 @@ export default async function PortalSocioPage() {
             </div>
          </div>
       </div>
+      )}
 
       {/* 5. Historial de Pagos y Ficha de Socio en Desplegables */}
       <section id="pagos" className="scroll-mt-24">

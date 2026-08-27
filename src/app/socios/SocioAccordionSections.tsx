@@ -49,8 +49,8 @@ export function SocioAccordionSections({ member, isAlDia }: SocioAccordionSectio
               <History size={22} />
             </div>
             <div>
-              <h3 className="text-xl font-black text-white italic uppercase tracking-tighter flex items-center gap-3">
-                Historial de Cuotas
+              <h3 className="font-serif text-xl font-bold leading-tight text-white md:text-2xl">
+                Historial de cuotas
               </h3>
               <p className="text-xs text-zinc-500 font-medium mt-0.5">
                 {member.fees.length} pagos registrados {isAlDia ? "• Estado: Al Día" : "• Pago pendiente"}
@@ -136,8 +136,8 @@ export function SocioAccordionSections({ member, isAlDia }: SocioAccordionSectio
               <User size={22} />
             </div>
             <div>
-              <h3 className="text-xl font-black text-white italic uppercase tracking-tighter flex items-center gap-3">
-                Mis Datos de Ficha
+              <h3 className="font-serif text-xl font-bold leading-tight text-white md:text-2xl">
+                Mis datos de ficha
               </h3>
               <p className="text-xs text-zinc-500 font-medium mt-0.5">
                 DNI {member.dni} • {member.email || "Sin Email"}
@@ -180,8 +180,8 @@ export function SocioAccordionSections({ member, isAlDia }: SocioAccordionSectio
                 <Shield size={22} />
               </div>
               <div>
-                <h3 className="text-xl font-black text-white italic uppercase tracking-tighter flex items-center gap-3">
-                  Gestión Institucional
+                <h3 className="font-serif text-xl font-bold leading-tight text-white md:text-2xl">
+                  Gestión institucional
                 </h3>
                 <p className="text-xs text-zinc-500 font-medium mt-0.5">
                   {member.boardHistory[0].position} ({member.boardHistory[0].periodStart}{member.boardHistory[0].periodEnd ? ` - ${member.boardHistory[0].periodEnd}` : ' - Presente'})
