@@ -47,13 +47,16 @@ function EventCard({ event }: { event: SerializableOccurrence }) {
   const eventDate = new Date(event.date)
   const recurringDay = eventDate.toLocaleDateString("es-AR", { weekday: "long" })
   const schedule = event.isRecurring ? `Todos los ${recurringDay}` : eventDate.toLocaleDateString("es-AR", { day: "numeric", month: "long", year: "numeric" })
+  const accent = event.isExternal ? "purple" : event.isRecurring ? "gold" : "coral"
+  const badge = event.isExternal ? "Difusión externa" : event.isRecurring ? "Recurrente" : "Evento especial"
 
   return (
-    <Link href={`/eventos/${event.eventId}`} className="group overflow-hidden rounded-3xl border border-white/10 bg-[#18211d] shadow-xl shadow-black/20 transition-all hover:-translate-y-1 hover:border-cat-gold/40">
+    <Link href={`/eventos/${event.eventId}`} className={`group overflow-hidden rounded-3xl border bg-[#18211d] shadow-xl shadow-black/20 transition-all hover:-translate-y-1 ${accent === "coral" ? "border-[#d7795e]/45 hover:border-[#e79a82]" : accent === "purple" ? "border-purple-400/30 hover:border-purple-300" : "border-cat-gold/30 hover:border-cat-gold"}`}>
       <div className="relative aspect-[4/5] overflow-hidden bg-zinc-900">
         {event.eventBanner ? <img src={event.eventBanner} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" /> : <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#59412c] via-[#1b2621] to-[#131313] px-8 text-center font-serif text-2xl font-bold text-cat-gold">Centro Amigos del Tango</div>}
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent p-5 pt-16">
-          <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.18em] text-cat-gold">{event.isRecurring && <Repeat size={11} />} {schedule}</span>
+          <span className={`mb-2 inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[9px] font-black uppercase tracking-[0.14em] ${accent === "coral" ? "border-[#d7795e]/60 bg-[#d7795e]/20 text-[#ffc0ad]" : accent === "purple" ? "border-purple-300/50 bg-purple-500/20 text-purple-200" : "border-cat-gold/50 bg-cat-gold/20 text-cat-gold"}`}>{event.isRecurring && <Repeat size={10} />} {badge}</span>
+          <span className={`flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.18em] ${accent === "coral" ? "text-[#ffc0ad]" : accent === "purple" ? "text-purple-200" : "text-cat-gold"}`}>{schedule}</span>
         </div>
       </div>
       <div className="p-5">
@@ -82,8 +85,9 @@ function MonthGrid({ month }: { month: CalendarMonth }) {
       <div className="grid grid-cols-7 gap-px bg-white/10">
         {monthDays(month).map((date, index) => {
           const events = date ? eventsByDay.get(dateKey(date)) || [] : []
+          const hasSpecialEvent = events.some((event) => !event.isRecurring)
           return <div key={date ? dateKey(date) : `empty-${index}`} className={`min-h-36 bg-[#151b18] p-2 md:min-h-44 md:p-3 ${date ? "" : "bg-[#111512]"}`}>
-            {date && <><span className={`mb-3 flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${events.length ? "bg-cat-gold text-zinc-950" : "text-zinc-500"}`}>{date.getDate()}</span><div className="space-y-1.5">{events.map((event) => <Link key={`${event.eventId}-${event.date}`} href={`/eventos/${event.eventId}`} className="block rounded-xl border border-white/10 bg-white/5 px-2.5 py-2 text-xs leading-tight text-zinc-200 transition-colors hover:border-cat-gold/50 hover:bg-cat-gold/10"><span className="mb-1 flex items-center gap-1 text-[10px] font-bold text-cat-gold">{event.time || ""} {event.isRecurring && <Repeat size={10} />}</span><span className="line-clamp-3">{event.title}</span></Link>)}</div></>}
+            {date && <><span className={`mb-3 flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${events.length ? hasSpecialEvent ? "bg-[#d7795e] text-zinc-950" : "bg-cat-gold text-zinc-950" : "text-zinc-500"}`}>{date.getDate()}</span><div className="space-y-1.5">{events.map((event) => <Link key={`${event.eventId}-${event.date}`} href={`/eventos/${event.eventId}`} className={`block rounded-xl border px-2.5 py-2 text-xs leading-tight text-zinc-200 transition-colors ${event.isRecurring ? "border-cat-gold/25 bg-cat-gold/5 hover:border-cat-gold/60 hover:bg-cat-gold/10" : event.isExternal ? "border-purple-400/35 bg-purple-500/10 hover:border-purple-300 hover:bg-purple-500/20" : "border-[#d7795e]/50 bg-[#d7795e]/10 hover:border-[#e79a82] hover:bg-[#d7795e]/20"}`}><span className={`mb-1 flex items-center gap-1 text-[10px] font-bold ${event.isRecurring ? "text-cat-gold" : event.isExternal ? "text-purple-200" : "text-[#ffc0ad]"}`}>{event.time || ""} {event.isRecurring ? <Repeat size={10} /> : <span className="rounded border border-current px-1 text-[8px] uppercase">Único</span>}</span><span className="line-clamp-3">{event.title}</span></Link>)}</div></>}
           </div>
         })}
       </div>
