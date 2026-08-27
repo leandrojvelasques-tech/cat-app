@@ -35,12 +35,13 @@ export function EscuelitaCarousel({ photos, docentes, teachersList = [] }: Escue
         {/* Información (Col span 5) */}
         <div className="lg:col-span-5 space-y-8">
           <div>
-            <span className="px-3 py-1 text-[10px] font-black tracking-widest bg-cat-gold/10 text-cat-gold rounded-full border border-cat-gold/20 uppercase">
+            <h2 className="text-3xl md:text-4xl font-bold text-white font-serif">
               Escuela del CAT
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-white font-serif mt-4">
-              Aprender Tango es <span className="bg-gradient-to-r from-cat-gold to-cat-bronze bg-clip-text text-transparent">Gratuito</span>
             </h2>
+            <div className="w-20 h-1 bg-cat-gold rounded-full mt-4" />
+            <p className="text-cat-gold text-base md:text-lg font-semibold mt-5">
+              Aprender tango gratuito
+            </p>
             <p className="text-zinc-400 text-sm md:text-base mt-4 font-light leading-relaxed">
               Fomentamos la cultura y abrimos la pista a toda la comunidad de Comodoro Rivadavia. Profesores socios del Centro Amigos del Tango rotan voluntariamente cada mes para brindar clases abiertas a todos los niveles, desde principiantes absolutos.
             </p>

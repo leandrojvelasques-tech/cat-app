@@ -558,7 +558,7 @@ export default async function Home() {
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="text-cat-gold shrink-0 w-4 h-4" />
-                <span className="text-xs text-zinc-500">+54 297 123 4567</span>
+                <a href="tel:+5492975295100" className="text-xs text-zinc-500 hover:text-white transition-colors">+54 9 297 529-5100</a>
               </li>
             </ul>
           </div>
