@@ -25,7 +25,7 @@ export default async function CalendarioAnualPage() {
   for (const occurrence of occurrences) {
     const date = occurrence.date
     const key = `${date.getFullYear()}-${String(date.getMonth()).padStart(2, "0")}`
-    const serialized = { ...occurrence, date: date.toISOString() }
+    const serialized = { ...occurrence, date: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}` }
     groupedMonths.set(key, [...(groupedMonths.get(key) || []), serialized])
   }
 

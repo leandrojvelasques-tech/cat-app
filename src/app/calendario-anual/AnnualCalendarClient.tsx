@@ -28,6 +28,11 @@ function dateKey(date: Date): string {
   return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, "0"), String(date.getDate()).padStart(2, "0")].join("-")
 }
 
+function parseCalendarDate(value: string): Date {
+  const [year, month, day] = value.split("-").map(Number)
+  return new Date(year, month - 1, day)
+}
+
 function monthLabel(month: CalendarMonth): string {
   const label = new Date(month.year, month.month, 1).toLocaleDateString("es-AR", { month: "long", year: "numeric" })
   return label.charAt(0).toUpperCase() + label.slice(1)
@@ -44,7 +49,7 @@ function monthDays(month: CalendarMonth): Array<Date | null> {
 }
 
 function EventCard({ event }: { event: SerializableOccurrence }) {
-  const eventDate = new Date(event.date)
+  const eventDate = parseCalendarDate(event.date)
   const recurringDay = eventDate.toLocaleDateString("es-AR", { weekday: "long" })
   const schedule = event.isRecurring ? `Todos los ${recurringDay}` : eventDate.toLocaleDateString("es-AR", { day: "numeric", month: "long", year: "numeric" })
   const accent = event.isExternal ? "purple" : event.isRecurring ? "gold" : "coral"
@@ -71,12 +76,13 @@ function EventCard({ event }: { event: SerializableOccurrence }) {
 function MonthGrid({ month }: { month: CalendarMonth }) {
   const eventsByDay = new Map<string, SerializableOccurrence[]>()
   month.occurrences.forEach((event) => {
-    const key = dateKey(new Date(event.date))
+    const key = event.date
     eventsByDay.set(key, [...(eventsByDay.get(key) || []), event])
   })
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-white/10 bg-[#18211d]/75 shadow-2xl shadow-black/20 print:break-inside-avoid">
+    <>
+      <section className="hidden overflow-hidden rounded-3xl border border-white/10 bg-[#18211d]/75 shadow-2xl shadow-black/20 md:block print:block print:break-inside-avoid">
       <div className="flex items-center justify-between border-b border-white/10 px-5 py-5 md:px-7">
         <h2 className="font-serif text-2xl font-bold text-white md:text-3xl">{monthLabel(month)}</h2>
         <span className="text-[10px] font-black uppercase tracking-[0.18em] text-cat-gold">{month.occurrences.length} {month.occurrences.length === 1 ? "actividad" : "actividades"}</span>
@@ -91,7 +97,36 @@ function MonthGrid({ month }: { month: CalendarMonth }) {
           </div>
         })}
       </div>
-    </section>
+      </section>
+      <section className="overflow-hidden rounded-3xl border border-white/10 bg-[#18211d]/75 shadow-2xl shadow-black/20 md:hidden print:hidden">
+        <div className="flex items-center justify-between border-b border-white/10 px-5 py-5">
+          <h2 className="font-serif text-2xl font-bold text-white">{monthLabel(month)}</h2>
+          <span className="text-right text-[10px] font-black uppercase tracking-[0.14em] text-cat-gold">{month.occurrences.length} {month.occurrences.length === 1 ? "actividad" : "actividades"}</span>
+        </div>
+        <div className="divide-y divide-white/10">
+          {monthDays(month).filter((date): date is Date => Boolean(date && eventsByDay.has(dateKey(date)))).map((date) => {
+            const events = eventsByDay.get(dateKey(date)) || []
+            const hasSpecialEvent = events.some((event) => !event.isRecurring)
+            return <div key={dateKey(date)} className="flex gap-4 px-4 py-4">
+              <div className="flex w-12 shrink-0 flex-col items-center gap-1 pt-1">
+                <span className={`flex h-10 w-10 items-center justify-center rounded-full text-base font-black ${hasSpecialEvent ? "bg-[#d7795e] text-zinc-950" : "bg-cat-gold text-zinc-950"}`}>{date.getDate()}</span>
+                <span className="text-[9px] font-black uppercase tracking-wider text-zinc-500">{date.toLocaleDateString("es-AR", { weekday: "short" }).replace(".", "")}</span>
+              </div>
+              <div className="min-w-0 flex-1 space-y-2">
+                {events.map((event) => <Link key={`${event.eventId}-${event.date}`} href={`/eventos/${event.eventId}`} className={`block rounded-2xl border px-3.5 py-3 transition-colors ${event.isRecurring ? "border-cat-gold/25 bg-cat-gold/5 hover:border-cat-gold/60 hover:bg-cat-gold/10" : event.isExternal ? "border-purple-400/35 bg-purple-500/10 hover:border-purple-300 hover:bg-purple-500/20" : "border-[#d7795e]/50 bg-[#d7795e]/10 hover:border-[#e79a82] hover:bg-[#d7795e]/20"}`}>
+                  <div className={`flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-wider ${event.isRecurring ? "text-cat-gold" : event.isExternal ? "text-purple-200" : "text-[#ffc0ad]"}`}>
+                    <span>{event.time || "Horario a confirmar"}</span>
+                    <span className="rounded border border-current px-1.5 py-0.5 text-[8px]">{event.isRecurring ? "Habitual" : event.isExternal ? "Difusión" : "Único"}</span>
+                  </div>
+                  <p className="mt-1 text-sm font-bold leading-snug text-white">{event.title}</p>
+                </Link>)}
+              </div>
+            </div>
+          })}
+          {month.occurrences.length === 0 && <p className="px-5 py-10 text-center text-sm text-zinc-500">No hay actividades cargadas para este mes.</p>}
+        </div>
+      </section>
+    </>
   )
 }
 
