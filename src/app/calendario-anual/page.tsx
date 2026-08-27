@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { CalendarDays, Clock3, Mail, Repeat, Sparkles } from "lucide-react"
+import { CalendarDays, Clock3, MessageCircle, Repeat, Sparkles } from "lucide-react"
 import { db } from "@/lib/db"
 import { getCalendarEventOccurrences } from "@/lib/event-utils"
 import { AnnualCalendarClient, type CalendarMonth, type SerializableOccurrence } from "./AnnualCalendarClient"
@@ -63,9 +63,9 @@ export default async function CalendarioAnualPage() {
         <div className="mb-10 flex flex-col gap-4 rounded-3xl border border-cat-gold/20 bg-cat-gold/5 px-5 py-5 md:flex-row md:items-center md:justify-between md:px-6">
           <div>
             <p className="text-sm font-bold text-white">¿Tenés un evento de tango que no figura?</p>
-            <p className="mt-1 text-sm leading-relaxed text-zinc-400">Mandanos la información para que podamos incorporarlo al calendario.</p>
+            <p className="mt-1 text-sm leading-relaxed text-zinc-400">Escribinos al WhatsApp oficial del CAT y mandanos la información para incorporarlo al calendario.</p>
           </div>
-          <a href="mailto:info@centroamigosdeltango.com?subject=Evento%20de%20tango%20para%20el%20calendario" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-cat-gold px-4 text-xs font-black text-zinc-950 transition-colors hover:brightness-110"><Mail size={16} /> Enviar evento</a>
+          <a href="https://wa.me/5492975295100?text=Hola%20CAT%2C%20tengo%20un%20evento%20de%20tango%20para%20sumar%20al%20calendario." target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 text-xs font-black text-zinc-950 transition-colors hover:bg-emerald-400"><MessageCircle size={16} /> WhatsApp del CAT</a>
         </div>
         <AnnualCalendarClient initialMonths={months} />
       </div>
