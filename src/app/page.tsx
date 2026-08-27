@@ -144,6 +144,7 @@ export default async function Home() {
             <Link href="/" className="text-cat-gold font-bold pb-0.5 border-b border-cat-gold text-sm transition-colors">Inicio</Link>
             <Link href="#novedades" className="text-zinc-400 hover:text-white text-sm transition-colors">Novedades</Link>
             <Link href="#eventos" className="text-zinc-400 hover:text-white text-sm transition-colors">Agenda Tanguera</Link>
+            <Link href="/calendario-anual" className="text-cat-gold hover:text-amber-300 text-sm transition-colors">Calendario anual</Link>
             <Link href="#nosotros" className="text-zinc-400 hover:text-white text-sm transition-colors">Nosotros</Link>
             <Link href="/clases" className="text-amber-400 font-bold hover:text-amber-300 text-sm transition-colors flex items-center gap-1.5 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/20">
               <BookOpen size={14} />

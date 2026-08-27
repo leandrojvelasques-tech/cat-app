@@ -79,13 +79,41 @@ export function EventForm({ initialData, isEditing = false }: EventFormProps) {
 
   const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setBannerPreview(reader.result as string)
+    if (!file) return
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Seleccioná una imagen válida en formato JPG, PNG o WebP.")
+      e.target.value = ""
+      return
+    }
+
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("La imagen no puede superar los 8 MB.")
+      e.target.value = ""
+      return
+    }
+
+    const objectUrl = URL.createObjectURL(file)
+    const image = new Image()
+    image.onload = () => {
+      const ratio = image.width / image.height
+      URL.revokeObjectURL(objectUrl)
+      if (Math.abs(ratio - 0.8) > 0.03) {
+        toast.error("La imagen debe ser vertical, en proporción 4:5. Recomendado: 1080 × 1350 px.")
+        e.target.value = ""
+        return
       }
+
+      const reader = new FileReader()
+      reader.onloadend = () => setBannerPreview(reader.result as string)
       reader.readAsDataURL(file)
     }
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      toast.error("No se pudo leer la imagen seleccionada.")
+      e.target.value = ""
+    }
+    image.src = objectUrl
   }
 
   const formatDateForInput = (date: any) => {

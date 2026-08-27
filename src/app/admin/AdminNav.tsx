@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Users, CreditCard, LayoutDashboard, Settings, Calendar, ShieldCheck, BookOpen, MessageSquareText } from "lucide-react"
+import { Users, CreditCard, LayoutDashboard, Settings, Calendar, CalendarDays, ShieldCheck, BookOpen, MessageSquareText } from "lucide-react"
 
 export function AdminNav({ role }: { role?: string }) {
   const pathname = usePathname()
@@ -12,6 +12,7 @@ export function AdminNav({ role }: { role?: string }) {
     { href: "/admin/estado-socios", icon: Users, label: "Panel de Socios" },
     { href: "/admin/cuotas", icon: CreditCard, label: "Caja" },
     { href: "/admin/eventos", icon: Calendar, label: "Eventos" },
+    { href: "/calendario-anual", icon: CalendarDays, label: "Calendario anual" },
     { href: "/admin/clases-comodoro", icon: BookOpen, label: "Clases de Tango" },
     ...(role === "ADMIN" || role === "SUPERADMIN" || role === "BOARD" || role === "PRESIDENT" ? [{ href: "/admin/comunicaciones", icon: MessageSquareText, label: "Comunicaciones" }] : []),
     // Usuarios now lives inside Ajustes (configuracion)
