@@ -18,7 +18,7 @@ import {
 import { EscuelitaCarousel } from "./EscuelitaCarousel"
 import { NovedadesHomeSection } from "./NovedadesHomeSection"
 import { OfficialLogo } from "@/components/OfficialLogo"
-import { getNextEventDate, getDayName, isEventCurrentlyActive, isEventOccurrenceWithinWindow, isExternalEvent } from "@/lib/event-utils"
+import { getNextEventDate, isEventCurrentlyActive, isEventOccurrenceWithinWindow, isExternalEvent } from "@/lib/event-utils"
 import { Repeat, Sparkles as SparklesIcon } from "lucide-react"
 import { getCurrentFeeAmount } from "@/lib/fee-utils"
 
@@ -296,6 +296,7 @@ export default async function Home() {
               upcomingEvents.map((event) => {
                 const day = event.computedDate.getDate()
                 const month = event.computedDate.toLocaleString("es-ES", { month: "short" }).toUpperCase()
+                const weekday = event.computedDate.toLocaleString("es-ES", { weekday: "long" }).toUpperCase()
                 
                 return (
                   <Link
@@ -303,6 +304,24 @@ export default async function Home() {
                     href={`/eventos/${event.id}`}
                     className="group block border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] p-5 rounded-2xl transition-all shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cat-gold focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1210]"
                   >
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1">
+                      <div className="inline-flex items-center gap-2 rounded-lg border border-cat-gold/30 bg-cat-gold/10 px-3 py-2 text-cat-gold shadow-sm">
+                        <Calendar size={14} aria-hidden="true" />
+                        <span className="text-[10px] font-black uppercase tracking-wider">{weekday}</span>
+                        <span className="h-3 w-px bg-cat-gold/40" aria-hidden="true" />
+                        <span className="text-sm font-black leading-none">{day}</span>
+                        <span className="text-[10px] font-black uppercase tracking-wider">{month.replace(".", "")}</span>
+                      </div>
+                      {isExternalEvent(event) ? (
+                        <div className="inline-flex items-center gap-1 rounded-lg border border-purple-500/40 bg-purple-950/80 px-2.5 py-1.5 text-[9px] font-extrabold text-purple-300 shadow-sm">
+                          <SparklesIcon size={10} /> DIFUSIÓN
+                        </div>
+                      ) : event.isRecurring ? (
+                        <div className="inline-flex items-center gap-1 rounded-lg border border-cat-gold/30 bg-zinc-950/80 px-2.5 py-1.5 text-[9px] font-extrabold text-cat-gold shadow-sm">
+                          <Repeat size={10} /> RECURRENTE
+                        </div>
+                      ) : null}
+                    </div>
                     <div className="relative aspect-[4/5] overflow-hidden rounded-xl mb-6">
                       <div 
                         className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105 bg-zinc-800" 
@@ -310,19 +329,6 @@ export default async function Home() {
                           backgroundImage: event.eventBanner ? `url(${event.eventBanner})` : `url('https://lh3.googleusercontent.com/aida-public/AB6AXuCnrWO03v9cI5Z1tDdFLaGnsP5EEmYjL6Onw2iSNZ8aSahDME-gZ6EaH9Yt3ep5DRw6X9TskI141KP2le4Jt2oAOFWFGqcLBzSKnQeBNJUvRWf4pd8Q8yAVDE8R6ymwNU9pp5dOWLkFWDbhwdN6rZflrrJ2aRKTmOhbO1pXCHiehk9dnFM93Y3Ns6nI83eQKOq-wKtju03cL8PuVEG5sbNQhjpP3Cc_onfhs9rMiU-CHZ7LBVTyzkAuYLTsU1dLl-H5dlLOaez9JjBo')` 
                         }}
                       />
-                      <div className="absolute top-4 left-4 bg-gradient-to-tr from-cat-gold to-cat-bronze px-3 py-1.5 rounded-lg flex flex-col items-center shadow-lg text-zinc-950 font-bold">
-                        <span className="text-[10px] uppercase font-bold leading-none">{month.replace(".", "")}</span>
-                        <span className="text-lg leading-none mt-1">{day}</span>
-                      </div>
-                      {isExternalEvent(event) ? (
-                        <div className="absolute top-4 right-4 bg-purple-950/90 backdrop-blur-md px-2.5 py-1 rounded-lg text-[9px] font-extrabold text-purple-300 border border-purple-500/40 flex items-center gap-1 shadow-lg">
-                          <SparklesIcon size={10} /> 📢 DIFUSIÓN
-                        </div>
-                      ) : event.isRecurring ? (
-                        <div className="absolute top-4 right-4 bg-zinc-950/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-[9px] font-extrabold text-cat-gold border border-cat-gold/30 flex items-center gap-1">
-                          <Repeat size={10} /> Todos los {getDayName(event.recurrenceDay)}
-                        </div>
-                      ) : null}
                     </div>
                     <h4 className="text-xl font-bold text-white mb-2">{event.title}</h4>
                     <p className="text-zinc-400 text-xs font-light leading-relaxed mb-6 line-clamp-3">
