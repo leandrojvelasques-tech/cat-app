@@ -57,9 +57,16 @@ function EventCard({ event }: { event: SerializableOccurrence }) {
 
   return (
     <Link href={`/eventos/${event.eventId}`} className={`group overflow-hidden rounded-3xl border bg-[#18211d] shadow-xl shadow-black/20 transition-all hover:-translate-y-1 ${accent === "coral" ? "border-[#d7795e]/45 hover:border-[#e79a82]" : accent === "purple" ? "border-purple-400/30 hover:border-purple-300" : "border-cat-gold/30 hover:border-cat-gold"}`}>
+      <div className="flex flex-wrap items-center gap-2 px-5 pb-3 pt-5 md:hidden">
+        <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] ${event.isRecurring ? "border-cat-gold/50 bg-cat-gold/10 text-cat-gold" : "border-[#d7795e]/60 bg-[#d7795e]/15 text-[#ffc0ad]"}`}>
+          {event.isRecurring && <Repeat size={10} />}
+          {event.isRecurring ? schedule : "Evento especial"}
+        </span>
+        {!event.isRecurring && <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">{schedule}</span>}
+      </div>
       <div className="relative aspect-[4/5] overflow-hidden bg-zinc-900">
         {event.eventBanner ? <img src={event.eventBanner} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" /> : <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#59412c] via-[#1b2621] to-[#131313] px-8 text-center font-serif text-2xl font-bold text-cat-gold">Centro Amigos del Tango</div>}
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent p-5 pt-16">
+        <div className="absolute inset-x-0 bottom-0 hidden bg-gradient-to-t from-black/90 via-black/30 to-transparent p-5 pt-16 md:block">
           <span className={`mb-2 inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[9px] font-black uppercase tracking-[0.14em] ${accent === "coral" ? "border-[#d7795e]/60 bg-[#d7795e]/20 text-[#ffc0ad]" : accent === "purple" ? "border-purple-300/50 bg-purple-500/20 text-purple-200" : "border-cat-gold/50 bg-cat-gold/20 text-cat-gold"}`}>{event.isRecurring && <Repeat size={10} />} {badge}</span>
           <span className={`flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.18em] ${accent === "coral" ? "text-[#ffc0ad]" : accent === "purple" ? "text-purple-200" : "text-cat-gold"}`}>{schedule}</span>
         </div>
