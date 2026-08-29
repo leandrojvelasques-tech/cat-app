@@ -4,6 +4,7 @@ import Link from "next/link"
 import { SociosFilters } from "./SociosFilters"
 import { getPaymentStatus, getSocietaryStatus, getStatusBadgeStyles, getMemberBajaReason, getBajaReasonStyles, formatDNI } from "@/lib/member-utils"
 import { SendMemberAccessButton } from "./components/SendMemberAccessButton"
+import { format } from "date-fns"
 
 export default async function SociosPage({
   searchParams,
@@ -65,7 +66,13 @@ export default async function SociosPage({
         orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }]
       },
       eventRegistrations: true,
-      user: { select: { email: true } }
+      communications: {
+        where: { type: "TEMPORARY_ACCESS" },
+        orderBy: { sentAt: "desc" },
+        take: 1,
+        select: { sentAt: true, status: true },
+      },
+      user: { select: { email: true, firstLoginAt: true, lastLoginAt: true, loginCount: true, mustChangePassword: true } }
     }
   } as any) as any[]
 
@@ -166,13 +173,14 @@ export default async function SociosPage({
                 <th className="py-5 text-xs font-bold uppercase tracking-widest text-zinc-500">DNI</th>
                 <th className="py-5 text-xs font-bold uppercase tracking-widest text-zinc-500">Último Pago</th>
                 <th className="py-5 text-xs font-bold uppercase tracking-widest text-zinc-500">Estado</th>
+                <th className="py-5 text-xs font-bold uppercase tracking-widest text-zinc-500">Acceso portal</th>
                 <th className="py-5 pr-6 text-right text-xs font-bold uppercase tracking-widest text-zinc-500">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-20 text-center text-zinc-500 italic">
+                  <td colSpan={6} className="py-20 text-center text-zinc-500 italic">
                     No se encontraron socios con esos filtros.
                   </td>
                 </tr>
@@ -225,6 +233,16 @@ export default async function SociosPage({
                               {bajaReason}
                             </span>
                           )}
+                        </div>
+                      </td>
+                      <td className="py-4">
+                        <div className="flex flex-col gap-1 text-[10px]">
+                          <span className={`font-black uppercase ${member.user ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                            {member.user ? (member.user.lastLoginAt ? 'Ingresó alguna vez' : 'Usuario creado') : 'Sin usuario'}
+                          </span>
+                          {member.user?.lastLoginAt && <span className="text-zinc-500">Último ingreso: {format(new Date(member.user.lastLoginAt), 'dd/MM/yyyy HH:mm')}</span>}
+                          {member.user && !member.user.lastLoginAt && <span className="text-zinc-500">Nunca ingresó</span>}
+                          {member.communications?.[0] && <span className="text-zinc-600">Acceso enviado: {format(new Date(member.communications[0].sentAt), 'dd/MM/yyyy')}</span>}
                         </div>
                       </td>
                       <td className="py-4 pr-6 text-right">

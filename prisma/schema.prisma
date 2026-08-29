@@ -18,6 +18,9 @@ model User {
   mustChangePassword Boolean   @default(false)
   resetToken         String?   @unique
   resetTokenExpires  DateTime?
+  firstLoginAt       DateTime?
+  lastLoginAt        DateTime?
+  loginCount         Int       @default(0)
   member             Member?
 
   // Track registrations recorded by this user

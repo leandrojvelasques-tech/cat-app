@@ -48,7 +48,7 @@ export default async function FichaSocioPage(props: any) {
       championshipResults: { include: { championship: true } },
       boardHistory: { orderBy: { periodStart: "desc" } },
       honoraryAchievements: { orderBy: [{ sortOrder: "asc" }, { eventDate: "asc" }, { createdAt: "asc" }] },
-      user: { select: { email: true } }
+      user: { select: { email: true, firstLoginAt: true, lastLoginAt: true, loginCount: true, mustChangePassword: true } }
     }
   }) as any
 
@@ -125,6 +125,12 @@ export default async function FichaSocioPage(props: any) {
               })()}
             </div>
             <p className="text-zinc-500 font-bold uppercase tracking-widest text-[10px] mt-1">Socio #{member.memberNumber}</p>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-wider">
+              <span className={`rounded-lg border px-2.5 py-1 ${member.user ? (member.user.lastLoginAt ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" : "border-amber-500/20 bg-amber-500/10 text-amber-400") : "border-white/10 bg-white/5 text-zinc-500"}`}>
+                {member.user ? (member.user.lastLoginAt ? "Ingresó alguna vez" : "Usuario creado · nunca ingresó") : "Sin usuario"}
+              </span>
+              {member.user?.lastLoginAt && <span className="text-zinc-500">Último acceso: {format(new Date(member.user.lastLoginAt), "dd/MM/yyyy HH:mm")}</span>}
+            </div>
           </div>
         </div>
 

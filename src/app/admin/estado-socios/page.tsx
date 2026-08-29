@@ -69,7 +69,13 @@ export default async function EstadoSociosPage({
           orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }]
         },
         eventRegistrations: true,
-        user: { select: { email: true } }
+        communications: {
+          where: { type: "TEMPORARY_ACCESS" },
+          orderBy: { sentAt: 'desc' },
+          take: 1,
+          select: { sentAt: true, status: true },
+        },
+        user: { select: { email: true, firstLoginAt: true, lastLoginAt: true, loginCount: true, mustChangePassword: true } }
       },
       orderBy: { memberNumber: "asc" },
       take: 50 // Limit to avoid massive renders on short queries
@@ -130,7 +136,16 @@ export default async function EstadoSociosPage({
       paymentDate: fee.paymentDate ? fee.paymentDate.toISOString() : null,
       createdAt: fee.createdAt ? fee.createdAt.toISOString() : null,
       updatedAt: fee.updatedAt ? fee.updatedAt.toISOString() : null,
-    }))
+    })),
+    user: member.user ? {
+      ...member.user,
+      firstLoginAt: member.user.firstLoginAt?.toISOString() || null,
+      lastLoginAt: member.user.lastLoginAt?.toISOString() || null,
+    } : null,
+    communications: member.communications?.map((communication: any) => ({
+      ...communication,
+      sentAt: communication.sentAt.toISOString(),
+    })) || []
   }))
 
   return (

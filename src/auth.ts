@@ -25,6 +25,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   session: { strategy: "jwt" },
   callbacks: {
+    async signIn({ user }) {
+      if (!user.id) return false
+
+      const now = new Date()
+      const currentUser = await db.user.findUnique({
+        where: { id: user.id },
+        select: { firstLoginAt: true },
+      })
+
+      if (!currentUser) return false
+
+      await db.user.update({
+        where: { id: user.id },
+        data: {
+          firstLoginAt: currentUser.firstLoginAt ?? now,
+          lastLoginAt: now,
+          loginCount: { increment: 1 },
+        },
+      })
+
+      return true
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id

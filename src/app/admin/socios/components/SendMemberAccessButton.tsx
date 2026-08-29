@@ -54,10 +54,10 @@ export function SendMemberAccessButton({
         type="button"
         onClick={() => setIsOpen(true)}
         disabled={Boolean(unavailableReason)}
-        title={unavailableReason || "Generar y enviar una nueva clave temporal"}
+        title={unavailableReason || (username ? "Regenerar la clave temporal e invalidar la actual" : "Crear la cuenta y enviar el acceso inicial")}
         className="inline-flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-amber-500/20 disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-amber-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
       >
-        <KeyRound size={13} /> Enviar acceso
+        <KeyRound size={13} /> {username ? "Regenerar clave" : "Crear acceso"}
       </button>
 
       {isOpen && typeof document !== "undefined" && createPortal(
@@ -74,7 +74,7 @@ export function SendMemberAccessButton({
                   <KeyRound size={19} />
                 </div>
                 <div>
-                  <h2 id={`access-title-${memberId}`} className="font-bold text-white">Enviar nuevo acceso</h2>
+                  <h2 id={`access-title-${memberId}`} className="font-bold text-white">{username ? "Regenerar acceso" : "Crear acceso"}</h2>
                   <p className="text-xs text-zinc-500">Portal de Socios</p>
                 </div>
               </div>
@@ -92,7 +92,7 @@ export function SendMemberAccessButton({
 
               <div className="flex gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs leading-relaxed text-amber-200">
                 <ShieldAlert className="mt-0.5 shrink-0" size={17} />
-                <p>La clave actual dejará de funcionar. Se generará una clave temporal y el socio deberá cambiarla en su próximo ingreso.</p>
+                <p>{username ? "La clave actual dejará de funcionar. Se generará una nueva clave temporal y el socio deberá cambiarla en su próximo ingreso." : "Se creará una cuenta vinculada a este socio y se generará una clave temporal para su primer ingreso."}</p>
               </div>
 
               {result && (
@@ -111,7 +111,7 @@ export function SendMemberAccessButton({
               {!result?.success && (
                 <button type="button" onClick={handleSend} disabled={isPending} className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-black hover:bg-amber-400 disabled:cursor-wait disabled:opacity-60">
                   {isPending ? <Loader2 className="animate-spin" size={15} /> : <KeyRound size={15} />}
-                  {isPending ? "Enviando..." : result ? "Reintentar" : "Generar y enviar"}
+                  {isPending ? "Procesando..." : result ? "Reintentar" : username ? "Regenerar y enviar" : "Crear y enviar"}
                 </button>
               )}
             </div>

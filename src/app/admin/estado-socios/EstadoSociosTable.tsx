@@ -21,7 +21,7 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
   const [sendResult, setSendResult] = useState<{ success: boolean; sentCount: number; skippedCount: number } | null>(null)
 
   // Filters
-  const [filterStatus, setFilterStatus] = useState<string>("ALL")
+  const [filterStatuses, setFilterStatuses] = useState<string[]>([])
   const [filterMissing, setFilterMissing] = useState<string>("ALL") // ALL, NO_EMAIL, NO_PHONE, NO_CONTACT
 
   // Sorts
@@ -81,12 +81,11 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
   // 1. Filter displayed members
   let displayedMembers = [...initialMembers]
 
-  if (filterStatus !== "ALL") {
+  if (filterStatuses.length > 0) {
     displayedMembers = displayedMembers.filter(m => {
-      if (filterStatus === "AL DIA") return m.calculatedStatus === "AL DIA"
-      if (filterStatus === "EN MORA") return m.calculatedStatus === "EN MORA"
-      if (filterStatus === "SUSPENDIDOS") return m.calculatedStatus === "SUSPENDIDO"
-      return true
+      return filterStatuses.some(status => status === "SUSPENDIDOS"
+        ? m.calculatedStatus === "SUSPENDIDO"
+        : m.calculatedStatus === status)
     })
   }
 
@@ -147,6 +146,18 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
   // Count valid emails among selected
   const selectedMembersWithEmail = initialMembers.filter(m => selectedIds.includes(m.id) && m.email)
   const selectedCountWithoutEmail = selectedIds.length - selectedMembersWithEmail.length
+
+  function getPortalAccessLabel(member: any) {
+    if (!member.user) return { label: "Sin usuario", className: "text-zinc-500" }
+    if (member.user.lastLoginAt) return { label: "Ingresó alguna vez", className: "text-emerald-400" }
+    return { label: "Usuario creado · Nunca ingresó", className: "text-amber-400" }
+  }
+
+  function toggleStatusFilter(status: string) {
+    setFilterStatuses(prev => prev.includes(status)
+      ? prev.filter(item => item !== status)
+      : [...prev, status])
+  }
 
   function handleSendBatch() {
     if (selectedIds.length === 0) return
@@ -229,9 +240,9 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Card Al Día */}
         <div 
-          onClick={() => setFilterStatus(prev => prev === "AL DIA" ? "ALL" : "AL DIA")}
+          onClick={() => toggleStatusFilter("AL DIA")}
           className={`cursor-pointer p-5 rounded-[24px] flex flex-col justify-center items-center border transition-all hover:scale-[1.02] active:scale-95 ${
-            filterStatus === 'AL DIA'
+            filterStatuses.includes('AL DIA')
               ? 'bg-emerald-950/80 border-emerald-500 shadow-xl shadow-emerald-500/20 ring-2 ring-emerald-500/50'
               : 'bg-emerald-900/10 border-emerald-500/10 hover:border-emerald-500/30'
           }`}
@@ -241,15 +252,15 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
           </div>
           <span className="text-xs uppercase font-bold tracking-widest text-emerald-500/80 mt-1">Socios Al Día</span>
           <span className="text-[9px] text-zinc-400 mt-2 uppercase font-black tracking-widest">
-            {filterStatus === 'AL DIA' ? '✓ Filtrando Al Día (clic para quitar)' : 'Filtrar por Al Día'}
+            {filterStatuses.includes('AL DIA') ? '✓ Incluido en el filtro' : 'Clic para incluir Al Día'}
           </span>
         </div>
 
         {/* Card En Mora */}
         <div 
-          onClick={() => setFilterStatus(prev => prev === "EN MORA" ? "ALL" : "EN MORA")}
+          onClick={() => toggleStatusFilter("EN MORA")}
           className={`cursor-pointer p-5 rounded-[24px] flex flex-col justify-center items-center border transition-all hover:scale-[1.02] active:scale-95 ${
-            filterStatus === 'EN MORA'
+            filterStatuses.includes('EN MORA')
               ? 'bg-amber-950/80 border-amber-500 shadow-xl shadow-amber-500/20 ring-2 ring-amber-500/50'
               : 'bg-amber-900/10 border-amber-500/10 hover:border-amber-500/30'
           }`}
@@ -259,15 +270,15 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
           </div>
           <span className="text-xs uppercase font-bold tracking-widest text-amber-500/80 mt-1">En Mora (90 días)</span>
           <span className="text-[9px] text-zinc-400 mt-2 uppercase font-black tracking-widest">
-            {filterStatus === 'EN MORA' ? '✓ Filtrando En Mora (clic para quitar)' : 'Filtrar por En Mora'}
+            {filterStatuses.includes('EN MORA') ? '✓ Incluido en el filtro' : 'Clic para incluir En Mora'}
           </span>
         </div>
 
         {/* Card Suspendidos */}
         <div 
-          onClick={() => setFilterStatus(prev => prev === "SUSPENDIDOS" ? "ALL" : "SUSPENDIDOS")}
+          onClick={() => toggleStatusFilter("SUSPENDIDOS")}
           className={`cursor-pointer p-5 rounded-[24px] flex flex-col justify-center items-center border transition-all hover:scale-[1.02] active:scale-95 ${
-            filterStatus === 'SUSPENDIDOS'
+            filterStatuses.includes('SUSPENDIDOS')
               ? 'bg-zinc-800/90 border-white/40 shadow-xl ring-2 ring-white/30'
               : 'bg-zinc-900/20 border-white/10 hover:border-white/20'
           }`}
@@ -277,7 +288,7 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
           </div>
           <span className="text-xs uppercase font-bold tracking-widest text-zinc-400 mt-1">Suspendidos (+3 cuotas)</span>
           <span className="text-[9px] text-zinc-400 mt-2 uppercase font-black tracking-widest">
-            {filterStatus === 'SUSPENDIDOS' ? '✓ Filtrando Suspendidos (clic para quitar)' : 'Filtrar por Suspendidos'}
+            {filterStatuses.includes('SUSPENDIDOS') ? '✓ Incluido en el filtro' : 'Clic para incluir Suspendidos'}
           </span>
         </div>
       </div>
@@ -287,13 +298,14 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
         <div className="flex flex-wrap items-center gap-3">
           {/* Status Filter */}
           <div className="flex flex-col gap-1">
-            <span className="text-[9px] uppercase font-black tracking-widest text-zinc-500 ml-1">Filtrar por Estado</span>
+            <span className="text-[9px] uppercase font-black tracking-widest text-zinc-500 ml-1">Filtrar por Estado · varios</span>
             <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
+              value={filterStatuses}
+              multiple
+              size={3}
+              onChange={(e) => setFilterStatuses(Array.from(e.target.selectedOptions, option => option.value))}
               className="bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-xs text-zinc-300 font-bold focus:outline-none focus:border-amber-500/50 cursor-pointer"
             >
-              <option value="ALL">Todos los Estados</option>
               <option value="AL DIA">Solo Al Día</option>
               <option value="EN MORA">Solo En Mora</option>
               <option value="SUSPENDIDOS">Solo Suspendidos</option>
@@ -404,13 +416,14 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
                     {paymentSort === "OLDEST" && <span className="text-[8px] text-amber-500">Antiguos</span>}
                   </button>
                 </th>
+                <th className="py-5 text-xs font-bold uppercase tracking-widest text-zinc-500">Acceso portal</th>
                 <th className="py-5 pr-6 text-right text-xs font-bold uppercase tracking-widest text-zinc-500">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {displayedMembers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-20 text-center text-zinc-500 italic">
+                  <td colSpan={6} className="py-20 text-center text-zinc-500 italic">
                     Ningún socio coincide con los filtros aplicados.
                   </td>
                 </tr>
@@ -480,6 +493,19 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
                             </span>
                           )}
                         </div>
+                      </td>
+                      <td className="py-4">
+                        {(() => {
+                          const access = getPortalAccessLabel(member)
+                          return (
+                            <div className="flex flex-col gap-1 text-[10px]">
+                              <span className={`font-black uppercase ${access.className}`}>{access.label}</span>
+                              {member.user?.lastLoginAt && <span className="text-zinc-500">Último ingreso: {new Date(member.user.lastLoginAt).toLocaleDateString('es-AR')}</span>}
+                              {member.user?.loginCount > 0 && <span className="text-zinc-600">{member.user.loginCount} ingreso(s)</span>}
+                              {member.communications?.[0] && <span className="text-zinc-600">Acceso enviado: {new Date(member.communications[0].sentAt).toLocaleDateString('es-AR')}</span>}
+                            </div>
+                          )
+                        })()}
                       </td>
                       <td className="py-4 pr-6 text-right">
                         <div className="flex justify-end gap-2">
