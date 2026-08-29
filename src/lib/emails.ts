@@ -116,6 +116,7 @@ function buildEmailLayout(contentHtml: string) {
         
         <!-- Header -->
         <div style="background: linear-gradient(135deg, #1b2621 0%, #131313 100%); padding: 24px 32px; text-align: center; border-bottom: 3px solid #A6702E;">
+          <img src="${getBaseUrl()}/images/brand/logo-cat-white.jpg" alt="Centro Amigos del Tango" style="display: block; width: auto; height: 58px; max-width: 220px; object-fit: contain; margin: 0 auto 12px; border-radius: 6px;" />
           <h1 style="color: #F2A81D; margin: 0; font-size: 22px; font-weight: 800; tracking-wide: 1px; font-family: Georgia, serif;">
             Centro Amigos del Tango
           </h1>
@@ -635,7 +636,7 @@ export async function sendPasswordResetEmail(
 }
 
 export async function sendTemporaryMemberAccessEmail(
-  member: { id: string; firstName: string; lastName: string; email: string },
+  member: { id: string; firstName: string; lastName: string; email: string; memberNumber?: string },
   user: { email: string },
   temporaryPassword: string,
   sentBy: string
@@ -645,19 +646,20 @@ export async function sendTemporaryMemberAccessEmail(
   const username = escapeHtml(user.email)
   const password = escapeHtml(temporaryPassword)
   const subject = "Datos de acceso al Portal de Socios — Centro Amigos del Tango"
-  const content = `
-    <p>Estimado/a <strong>${memberName}</strong>:</p>
-    <p>A continuación te enviamos la información para acceder al Portal de Socios del Centro Amigos del Tango.</p>
-    <div style="background-color: #fafafa; border: 1px solid #e4e4e7; border-left: 4px solid #F2A81D; padding: 16px 20px; border-radius: 12px; margin: 20px 0;">
-      <p style="margin: 4px 0;"><strong>Usuario:</strong> ${username}</p>
-      <p style="margin: 4px 0;"><strong>Clave temporal:</strong> <code style="background: #e4e4e7; padding: 3px 7px; border-radius: 4px; font-family: monospace;">${password}</code></p>
-    </div>
-    <p>Al ingresar, el sistema te solicitará crear una nueva contraseña personal.</p>
-    <div style="margin: 24px 0; text-align: center;">
+  const setting = await db.setting.findUnique({ where: { key: "msg_acceso_portal" } })
+  const rawTemplate = setting?.value || `Hola {nombre}:\n\nTe enviamos los datos para acceder al nuevo Portal de Socios del Centro Amigos del Tango.\n\nDesde el portal vas a poder consultar tu estado de cuenta, revisar tus cuotas, enviar comprobantes de pago y recibir información institucional.\n\nUsuario: {username}\nClave temporal: {password}\n\nIngresá desde: {url_login}\n\nAl ingresar por primera vez, el sistema te va a solicitar que cambies la clave temporal por una contraseña personal.\n\n¡Gracias por seguir formando parte de nuestra comunidad!`
+  const formattedContent = processTemplateText(rawTemplate, {
+    nombre: memberName,
+    socio: escapeHtml(member.memberNumber || ""),
+    username,
+    password,
+    url_login: escapeHtml(loginUrl),
+  })
+  const content = `${formattedContent}
+    <div style="margin: 26px 0 18px; text-align: center;">
       <a href="${loginUrl}" style="background-color: #A6702E; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block;">Ingresar al Portal de Socios</a>
     </div>
-    <p style="font-size: 12px; color: #71717a;">Si no solicitaste estos datos, comunicate con la administración del Centro.</p>
-  `
+    <p style="font-size: 12px; color: #71717a;">Si no solicitaste estos datos, comunicate con la administración del Centro.</p>`
 
   return sendEmail({
     to: member.email,

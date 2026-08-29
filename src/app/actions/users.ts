@@ -100,6 +100,7 @@ export async function sendTemporaryMemberAccess(memberId: string) {
       id: true,
       firstName: true,
       lastName: true,
+      memberNumber: true,
       email: true,
       user: { select: { id: true, email: true } },
     },

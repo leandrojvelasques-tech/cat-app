@@ -8,6 +8,7 @@ import { addBoardMember, removeBoardMember } from "@/app/actions/comision"
 import { getFeeHistory, FeePeriod } from "@/lib/fee-utils"
 import { getAuditLogs, recordAuditLog } from "@/lib/audit-utils"
 import { seedDefaultBenefitsIfEmpty } from "@/app/actions/beneficios"
+import { EmailTemplateField } from "./EmailTemplateField"
 
 
 async function getSetting(key: string, defaultValue: string = "") {
@@ -200,6 +201,7 @@ export default async function SettingsPage() {
   const msgPagoPendienteEvento = await getSetting("msg_pago_pendiente_evento", "¡Hola {nombre}!\n\nConfirmamos que hemos recibido tu solicitud de inscripción y el comprobante de pago para el evento \"{evento}\".\n\nOpción: {opcion}\nMonto registrado: ${monto}\nEstado: En proceso de verificación por Tesorería\n\nNuestra área de Tesorería verificará la información a la brevedad. Una vez aprobada tu transferencia, recibirás la confirmación definitiva de tu lugar.")
   const msgPagoEvento = await getSetting("msg_pago_confirmado_evento", "¡Hola {nombre}!\n\nNos alegra informarte que hemos verificado tu pago y tu inscripción para el evento \"{evento}\" ha sido APROBADA EXITOSAMENTE. 🎉\n\nOpción: {opcion}\nMonto acreditado: ${monto}\nFecha: {fecha}\nLugar: {lugar}\n\n¡Te esperamos en la pista!")
   const msgBienvenida = await getSetting("msg_bienvenida", "¡Bienvenido/a {nombre} al Centro Amigos del Tango! 💃\n\n📌 Tu número de socio es: #{socio}\n\nUsuario de acceso: {username}\nClave temporal: {password}\n\n¡Nos vemos pronto en la pista!")
+  const msgAccesoPortal = await getSetting("msg_acceso_portal", "Hola {nombre}:\n\nTe enviamos los datos para acceder al nuevo Portal de Socios del Centro Amigos del Tango.\n\nDesde el portal vas a poder consultar tu estado de cuenta, revisar tus cuotas, enviar comprobantes de pago y recibir información institucional.\n\nUsuario: {username}\nClave temporal: {password}\n\nAl ingresar por primera vez, el sistema te va a solicitar que cambies la clave temporal por una contraseña personal.\n\n¡Gracias por seguir formando parte de nuestra comunidad!")
   const msgSolicitudInscripcion = await getSetting("msg_solicitud_inscripcion", "¡Hola {nombre}!\n\nAgradecemos tu interés en formar parte del Centro Amigos del Tango.\n\nQueremos confirmarte que hemos recibido tu solicitud de inscripción y el comprobante de pago de tu primera cuota social.\n\nNuestra área de Tesorería verificará la información a la brevedad. Una vez aprobada tu alta, recibirás un nuevo correo electrónico con tu número de socio asignado y tus datos de acceso al Portal de Socios.\n\n¡Esperamos vernos pronto en la pista!")
   const msgMora = await getSetting("msg_mora", "Lamentamos informarle que su cuenta registra una deuda de 3 o más períodos impagos y sus beneficios han quedado suspendidos.")
   const msgBaja = await getSetting("msg_baja", "Por la presente se le notifica que ha sido dado de baja del padrón de socios.")
@@ -532,104 +534,30 @@ export default async function SettingsPage() {
         </section>
 
         {/* Textos de Email */}
-        <section className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md lg:col-span-2 space-y-6">
-          <div className="flex items-center gap-3 border-b border-white/5 pb-4">
-            <Mail className="text-amber-500" size={20} />
-            <h2 className="text-lg font-medium">Plantillas de Email</h2>
+        <section className="bg-gradient-to-br from-white/[0.07] to-white/[0.025] border border-white/10 rounded-3xl p-6 backdrop-blur-md lg:col-span-2 space-y-6">
+          <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
+            <div className="flex items-center gap-3">
+              <Mail className="text-amber-500" size={20} />
+              <div><h2 className="text-lg font-medium text-white">Plantillas de Email</h2><p className="mt-1 text-xs text-zinc-500">Editá el texto y abrí el ojo para revisar cómo lo verá el socio.</p></div>
+            </div>
+            <span className="hidden rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-amber-400 sm:inline-flex">Vista institucional</span>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-xs text-zinc-500 uppercase tracking-wider">Recordatorio Vencimiento</label>
-                <textarea 
-                  name="msg_recordatorio"
-                  defaultValue={msgRecordatorio}
-                  rows={3}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 focus:border-amber-500/50 outline-none text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs text-zinc-500 uppercase tracking-wider">Cuota Vencida</label>
-                <textarea 
-                  name="msg_vencida"
-                  defaultValue={msgVencida}
-                  rows={3}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 focus:border-amber-500/50 outline-none text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs text-zinc-500 uppercase tracking-wider">Solicitud de Inscripción Recibida</label>
-                <textarea 
-                  name="msg_solicitud_inscripcion"
-                  defaultValue={msgSolicitudInscripcion}
-                  rows={4}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 focus:border-amber-500/50 outline-none text-sm"
-                />
-                <p className="text-[9px] text-zinc-600 uppercase font-black italic">Variables: {'{nombre}'}</p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs text-zinc-500 uppercase tracking-wider">Notificación de Baja de Socio</label>
-                <textarea 
-                  name="msg_baja"
-                  defaultValue={msgBaja}
-                  rows={4}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 focus:border-amber-500/50 outline-none text-sm"
-                />
-                <p className="text-[9px] text-zinc-600 uppercase font-black italic">Variables: {'{nombre}'}, {'{socio}'}, {'{fecha}'}</p>
-              </div>
+              <EmailTemplateField name="msg_recordatorio" label="Recordatorio de vencimiento" value={msgRecordatorio} rows={3} accent="gold" />
+              <EmailTemplateField name="msg_vencida" label="Cuota vencida" value={msgVencida} rows={3} accent="wine" />
+              <EmailTemplateField name="msg_solicitud_inscripcion" label="Solicitud de inscripción recibida" value={msgSolicitudInscripcion} rows={4} variables="{nombre}" accent="blue" />
+              <EmailTemplateField name="msg_baja" label="Notificación de baja de socio" value={msgBaja} rows={4} variables="{nombre}, {socio}, {fecha}" accent="wine" />
             </div>
             
             <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-xs text-zinc-500 uppercase tracking-wider">Pago Confirmado (Cuota)</label>
-                <textarea 
-                  name="msg_pago_confirmado_cuota"
-                  defaultValue={msgPagoCuota}
-                  rows={3}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 focus:border-amber-500/50 outline-none text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs text-zinc-500 uppercase tracking-wider">Comprobante de Evento Recibido (Pendiente de Verificación)</label>
-                <textarea 
-                  name="msg_pago_pendiente_evento"
-                  defaultValue={msgPagoPendienteEvento}
-                  rows={4}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 focus:border-amber-500/50 outline-none text-sm"
-                />
-                <p className="text-[9px] text-zinc-600 uppercase font-black italic">Variables: {'{nombre}'}, {'{evento}'}, {'{opcion}'}, {'{monto}'}</p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs text-zinc-500 uppercase tracking-wider">Inscripción a Evento Aprobada (Pago Verificado)</label>
-                <textarea 
-                  name="msg_pago_confirmado_evento"
-                  defaultValue={msgPagoEvento}
-                  rows={4}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 focus:border-amber-500/50 outline-none text-sm"
-                />
-                <p className="text-[9px] text-zinc-600 uppercase font-black italic">Variables: {'{nombre}'}, {'{evento}'}, {'{opcion}'}, {'{monto}'}, {'{fecha}'}, {'{lugar}'}</p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs text-zinc-500 uppercase tracking-wider">Notificación de Morosidad (3 Impagos)</label>
-                <textarea 
-                  name="msg_mora"
-                  defaultValue={msgMora}
-                  rows={4}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 focus:border-amber-500/50 outline-none text-sm"
-                />
-                <p className="text-[9px] text-zinc-600 uppercase font-black italic">Variables: {'{nombre}'}</p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs text-zinc-500 uppercase tracking-wider">Mensaje de Bienvenida (Alta)</label>
-                <textarea 
-                  name="msg_bienvenida"
-                  defaultValue={msgBienvenida}
-                  rows={5}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-zinc-300 focus:border-amber-500/50 outline-none text-sm"
-                />
-                <p className="text-[9px] text-zinc-600 uppercase font-black italic">Variables: {'{nombre}'}, {'{socio}'}, {'{username}'}, {'{password}'}</p>
-              </div>
+              <EmailTemplateField name="msg_pago_confirmado_cuota" label="Pago confirmado (cuota)" value={msgPagoCuota} rows={3} variables="{estado}" accent="green" />
+              <EmailTemplateField name="msg_pago_pendiente_evento" label="Comprobante de evento recibido" value={msgPagoPendienteEvento} rows={4} variables="{nombre}, {evento}, {opcion}, {monto}" accent="blue" />
+              <EmailTemplateField name="msg_pago_confirmado_evento" label="Inscripción a evento aprobada" value={msgPagoEvento} rows={4} variables="{nombre}, {evento}, {opcion}, {monto}, {fecha}, {lugar}" accent="green" />
+              <EmailTemplateField name="msg_mora" label="Notificación de morosidad" value={msgMora} rows={4} variables="{nombre}" accent="wine" />
+              <EmailTemplateField name="msg_bienvenida" label="Mensaje de bienvenida (alta)" value={msgBienvenida} rows={5} variables="{nombre}, {socio}, {username}, {password}" accent="gold" />
+              <EmailTemplateField name="msg_acceso_portal" label="Creación y acceso al Portal de Socios" value={msgAccesoPortal} rows={8} variables="{nombre}, {socio}, {username}, {password}, {url_login}" accent="gold" />
             </div>
           </div>
         </section>
