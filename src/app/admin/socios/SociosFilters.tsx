@@ -2,23 +2,27 @@
 
 import { useRouter, useSearchParams } from "next/navigation"
 import { Search, Filter, ArrowUpDown, Download } from "lucide-react"
-import { useTransition } from "react"
+import { useRef, useState, useTransition } from "react"
 
 export function SociosFilters() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("query")?.toString() || "")
 
   const handleSearch = (term: string) => {
+    setSearchTerm(term)
+    if (searchTimer.current) clearTimeout(searchTimer.current)
     const params = new URLSearchParams(searchParams)
     if (term) {
       params.set("query", term)
     } else {
       params.delete("query")
     }
-    startTransition(() => {
-      router.replace(`/admin/socios?${params.toString()}`)
-    })
+    searchTimer.current = setTimeout(() => {
+      startTransition(() => router.replace(`/admin/socios?${params.toString()}`))
+    }, 300)
   }
 
   const handleStatusChange = (status: string) => {
@@ -88,19 +92,20 @@ export function SociosFilters() {
           </button>
         </div>
 
-        <div className="flex flex-wrap md:flex-nowrap gap-2 w-full md:w-auto">
-          <div className="relative flex-1 md:w-72">
+        <div className="flex w-full flex-col gap-3 md:w-auto">
+          <div className="relative w-full shrink-0 md:w-[360px]">
             <Search className={`absolute left-4 top-1/2 -translate-y-1/2 ${isPending ? "text-amber-500 animate-pulse" : "text-zinc-500"}`} size={16} />
             <input 
               type="text"
               placeholder="Buscar socio..."
-              defaultValue={searchParams.get("query")?.toString()}
+              value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
               className="w-full bg-white/5 border border-white/10 focus:border-white/20 rounded-2xl pl-11 pr-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none transition-all shadow-inner"
             />
           </div>
 
           {/* Ordenamiento por N° de Socio / Registro */}
+          <div className="flex flex-wrap gap-2">
           <div className="relative">
             <ArrowUpDown className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={16} />
             <select 
@@ -157,6 +162,7 @@ export function SociosFilters() {
             <Download size={16} />
             <span>Descargar CSV</span>
           </a>
+          </div>
         </div>
       </div>
     </div>

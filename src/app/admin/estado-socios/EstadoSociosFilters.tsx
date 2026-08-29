@@ -2,23 +2,27 @@
 
 import { useRouter, useSearchParams } from "next/navigation"
 import { Search } from "lucide-react"
-import { useTransition } from "react"
+import { useRef, useState, useTransition } from "react"
 
 export function EstadoSociosFilters() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("query")?.toString() || "")
 
   const handleSearch = (term: string) => {
+    setSearchTerm(term)
+    if (searchTimer.current) clearTimeout(searchTimer.current)
     const params = new URLSearchParams(searchParams)
     if (term) {
       params.set("query", term)
     } else {
       params.delete("query")
     }
-    startTransition(() => {
-      router.replace(`/admin/estado-socios?${params.toString()}`)
-    })
+    searchTimer.current = setTimeout(() => {
+      startTransition(() => router.replace(`/admin/estado-socios?${params.toString()}`))
+    }, 300)
   }
 
   const handleSort = (sortOption: string) => {
@@ -39,13 +43,13 @@ export function EstadoSociosFilters() {
     <div className="space-y-6">
       <div className="flex flex-col items-stretch justify-between gap-3 md:flex-row md:items-center md:gap-4">
         <div className="flex w-full flex-col gap-2 md:flex-row">
-          <div className="relative flex-1">
+          <div className="relative w-full min-w-0 md:min-w-[360px] md:flex-1">
             <Search className={`absolute left-4 top-1/2 -translate-y-1/2 ${isPending ? "text-amber-500 animate-pulse" : "text-zinc-500"}`} size={16} />
             <input 
               type="text"
               placeholder="Buscar socio..."
               aria-label="Buscar socio"
-              defaultValue={searchParams.get("query")?.toString()}
+              value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
               className="min-h-11 w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-sm text-white shadow-inner transition-all placeholder:text-zinc-500 focus:border-white/20 focus:outline-none"
             />
