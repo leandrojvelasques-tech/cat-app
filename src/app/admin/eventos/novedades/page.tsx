@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { getNovedades, deleteNovedad, toggleNovedadStatus } from "@/app/actions/novedades"
+import { getNovedades, deleteNovedad, getNovedadMailingSummary, sendNovedadToEligibleMembers, toggleNovedadStatus } from "@/app/actions/novedades"
 import { NovedadFormModal } from "./NovedadFormModal"
 import { 
   Plus, 
@@ -14,7 +14,8 @@ import {
   Lock, 
   ArrowLeft, 
   Sparkles,
-  Eye
+  Eye,
+  Send
 } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -58,6 +59,30 @@ export default function AdminNovedadesPage() {
     } else {
       toast.error(res.error || "Error al actualizar estado")
     }
+  }
+
+  const handleSendToMembers = async (id: string) => {
+    const summary = await getNovedadMailingSummary(id)
+    if (!summary.success) {
+      toast.error(summary.error || "No se pudo preparar el envío")
+      return
+    }
+    if (!summary.isPublished) {
+      toast.error("Publicá la novedad antes de enviarla a socios.")
+      return
+    }
+    const message = summary.sentCount > 0
+      ? `Se enviará a ${summary.recipientCount} socios activos, al día o en mora con mailing habilitado. ${summary.sentCount} ya recibieron esta novedad y no se reenviará. ¿Confirmás el envío pendiente?`
+      : `Se enviará el email de esta novedad a ${summary.recipientCount} socios activos, al día o en mora con mailing habilitado. ¿Confirmás el envío?`
+    if (!confirm(message)) return
+
+    const result = await sendNovedadToEligibleMembers(id)
+    if (!result.success) {
+      toast.error(result.error || "No se pudo enviar la novedad")
+      return
+    }
+    toast.success(`Enviados: ${result.sentCount}. Ya enviados: ${result.skippedCount}. Fallidos: ${result.failedCount}.`)
+    loadData()
   }
 
   return (
@@ -208,6 +233,14 @@ export default function AdminNovedadesPage() {
                   </button>
 
                   <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleSendToMembers(item.id)}
+                      disabled={!item.isPublished}
+                      className="p-2 rounded-xl bg-sky-500/10 text-sky-300 transition-colors hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:opacity-35"
+                      title={item.isPublished ? "Enviar a socios" : "Publicá la novedad antes de enviarla"}
+                    >
+                      <Send size={16} />
+                    </button>
                     <button
                       onClick={() => handleToggleStatus(item.id, item.isPublished)}
                       className={`p-2 rounded-xl transition-colors ${

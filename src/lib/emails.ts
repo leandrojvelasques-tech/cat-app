@@ -169,6 +169,40 @@ function escapeHtml(value: string): string {
   })[character] || character)
 }
 
+export async function sendNovedadNotificationEmail(
+  member: { id: string; firstName: string; lastName: string; email: string | null },
+  novedad: { id: string; title: string; subtitle: string | null; content: string }
+) {
+  if (!member.email) return false
+
+  const novedadUrl = `${getBaseUrl()}/novedades`
+  const title = escapeHtml(novedad.title)
+  const subtitle = novedad.subtitle ? `<p style="margin: 0 0 16px; color: #7c5a2c; font-weight: 700;">${escapeHtml(novedad.subtitle)}</p>` : ""
+  const excerpt = escapeHtml(novedad.content.replace(/\s+/g, " ").trim().slice(0, 260))
+  const content = `
+    <h2 style="color: #1B2621; margin: 0 0 10px; font-family: Georgia, serif;">Hola ${escapeHtml(member.firstName)},</h2>
+    <p>El Centro Amigos del Tango compartió una nueva novedad.</p>
+    <div style="border: 1px solid #e4e4e7; border-left: 4px solid #A6702E; border-radius: 10px; padding: 20px; margin: 22px 0; background: #fffcf8;">
+      <h3 style="margin: 0 0 8px; color: #1B2621; font-size: 20px;">${title}</h3>
+      ${subtitle}
+      <p style="margin: 0; color: #52525b;">${excerpt}${novedad.content.length > 260 ? "…" : ""}</p>
+    </div>
+    <div style="text-align: center; margin: 28px 0 8px;">
+      <a href="${novedadUrl}" style="display: inline-block; background: #A6702E; color: #ffffff; padding: 13px 24px; text-decoration: none; border-radius: 8px; font-weight: 700;">Ver novedad</a>
+    </div>
+  `
+
+  return sendEmail({
+    to: member.email,
+    from: EMAIL_FROM_SOCIOS,
+    subject: `Nueva novedad del CAT: ${novedad.title}`,
+    html: buildEmailLayout(content),
+    memberId: member.id,
+    type: "NOVEDAD_NOTIFICATION",
+    historyContent: `Se envió la novedad: ${novedad.title}`,
+  })
+}
+
 // 1. Solicitud de Inscripción Recibida (Agradecimiento al solicitante)
 export async function sendEnrollmentSubmittedEmail(request: { firstName: string; lastName: string; email: string }) {
   const subject = "Recibimos tu solicitud de inscripción — Centro Amigos del Tango"

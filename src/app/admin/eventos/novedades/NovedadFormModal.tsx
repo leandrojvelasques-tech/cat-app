@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { createNovedad, updateNovedad } from "@/app/actions/novedades"
-import { X, Upload, Link as LinkIcon, Image as ImageIcon, Save, Calendar, Globe, Lock } from "lucide-react"
+import { X, Image as ImageIcon, Save, Globe, Lock, Paperclip } from "lucide-react"
 import { toast } from "sonner"
 
 interface Novedad {
@@ -13,6 +13,7 @@ interface Novedad {
   imageUrl?: string | null
   publishedAt: Date | string
   isPublished: boolean
+  attachments?: { id: string; fileName: string; fileMimeType: string }[]
 }
 
 interface NovedadFormModalProps {
@@ -262,6 +263,24 @@ export function NovedadFormModal({ novedad, onClose, onSuccess }: NovedadFormMod
               required
               className="w-full bg-black/50 border border-white/10 rounded-2xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all font-medium text-sm leading-relaxed"
             />
+          </div>
+
+          <div className="space-y-2 rounded-2xl border border-white/5 bg-black/30 p-4">
+            <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
+              <Paperclip size={16} />
+              Archivos adjuntos
+            </label>
+            <input
+              type="file"
+              name="attachments"
+              multiple
+              accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx,image/jpeg,.jpg,.jpeg,image/png,.png,image/webp,.webp"
+              className="block w-full text-xs text-zinc-400 file:mr-3 file:rounded-xl file:border-0 file:bg-amber-500 file:px-4 file:py-2 file:text-xs file:font-bold file:text-zinc-950 hover:file:bg-amber-400"
+            />
+            <p className="text-[11px] leading-relaxed text-zinc-500">PDF, DOCX, JPG, PNG o WebP. Máximo 10 MB por archivo. Los adjuntos se verán en la novedad publicada.</p>
+            {novedad?.attachments && novedad.attachments.length > 0 && (
+              <p className="text-xs text-emerald-400">Esta novedad ya tiene {novedad.attachments.length} archivo(s) adjunto(s).</p>
+            )}
           </div>
 
           {/* Footer Actions */}

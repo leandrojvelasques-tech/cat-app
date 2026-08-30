@@ -32,7 +32,8 @@ export default async function Home() {
   const latestNovedades = await db.novedad.findMany({
     where: { isPublished: true },
     orderBy: { publishedAt: "desc" },
-    take: 3
+    take: 3,
+    include: { attachments: { select: { id: true, fileName: true, fileMimeType: true } } }
   })
 
   // Obtener eventos reales públicos y calcular fecha próxima (incluyendo recurrentes)

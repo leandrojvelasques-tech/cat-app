@@ -14,6 +14,7 @@ interface Novedad {
   content: string
   imageUrl?: string | null
   publishedAt: Date | string
+  attachments?: { id: string; fileName: string; fileMimeType: string }[]
 }
 
 interface NovedadesHomeSectionProps {

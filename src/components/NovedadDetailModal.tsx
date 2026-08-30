@@ -1,6 +1,6 @@
 "use client"
 
-import { X, Calendar, Newspaper, Share2 } from "lucide-react"
+import { X, Calendar, Newspaper, Paperclip } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 
@@ -11,6 +11,7 @@ interface Novedad {
   content: string
   imageUrl?: string | null
   publishedAt: Date | string
+  attachments?: { id: string; fileName: string; fileMimeType: string }[]
 }
 
 interface NovedadDetailModalProps {
@@ -91,6 +92,24 @@ export function NovedadDetailModal({ novedad, onClose }: NovedadDetailModalProps
           <div className="prose prose-invert max-w-none text-zinc-300 text-base sm:text-lg leading-relaxed whitespace-pre-line font-sans">
             {novedad.content}
           </div>
+
+          {novedad.attachments && novedad.attachments.length > 0 && (
+            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
+              <p className="mb-3 text-xs font-bold uppercase tracking-wider text-amber-400">Archivos adjuntos</p>
+              <div className="flex flex-wrap gap-2">
+                {novedad.attachments.map((attachment) => (
+                  <a
+                    key={attachment.id}
+                    href={`/api/novedades/${novedad.id}/archivos/${attachment.id}`}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/15"
+                  >
+                    <Paperclip size={15} className="text-amber-400" />
+                    {attachment.fileName}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Footer actions */}
           <div className="pt-6 border-t border-white/5 flex items-center justify-between">

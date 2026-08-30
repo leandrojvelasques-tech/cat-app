@@ -1,7 +1,21 @@
 "use server"
 
 import { db } from "@/lib/db"
+import { auth } from "@/auth"
+import { sendNovedadNotificationEmail } from "@/lib/emails"
+import { calculateMemberStatus } from "@/lib/member-utils"
+import { validateInstitutionalFile } from "@/lib/security-utils"
 import { revalidatePath } from "next/cache"
+
+const MANAGEMENT_ROLES = ["ADMIN", "SUPERADMIN", "BOARD", "PRESIDENT"]
+
+async function requireNovedadesAccess() {
+  const session = await auth()
+  if (!session?.user || !MANAGEMENT_ROLES.includes(session.user.role)) {
+    throw new Error("No tiene permisos para gestionar novedades.")
+  }
+  return session.user
+}
 
 async function parseNovedadImageField(formData: FormData): Promise<string | null> {
   const fileOrString = formData.get("imageFile")
@@ -28,8 +42,39 @@ async function parseNovedadImageField(formData: FormData): Promise<string | null
   return null
 }
 
+async function persistNovedadAttachments(novedadId: string, formData: FormData) {
+  const files = formData.getAll("attachments").filter((file): file is File => file instanceof File && file.size > 0)
+
+  for (const file of files) {
+    const buffer = Buffer.from(await file.arrayBuffer())
+    const validation = await validateInstitutionalFile(buffer, file.name, file.type)
+    if (!validation.isValid || !validation.safeFileName || !validation.mimeType) {
+      throw new Error(validation.error || "No se pudo validar uno de los archivos adjuntos.")
+    }
+
+    await db.novedadAttachment.create({
+      data: {
+        novedadId,
+        fileName: file.name.slice(0, 255),
+        storageName: validation.safeFileName,
+        fileMimeType: validation.mimeType,
+        fileData: buffer,
+      },
+    })
+  }
+}
+
+function revalidateNovedadPaths() {
+  revalidatePath("/")
+  revalidatePath("/novedades")
+  revalidatePath("/admin/eventos")
+  revalidatePath("/admin/eventos/novedades")
+  revalidatePath("/socios")
+}
+
 export async function createNovedad(formData: FormData) {
   try {
+    await requireNovedadesAccess()
     const title = formData.get("title") as string
     const subtitle = (formData.get("subtitle") as string) || null
     const content = formData.get("content") as string
@@ -44,7 +89,7 @@ export async function createNovedad(formData: FormData) {
 
     const publishedAt = publishedAtStr ? new Date(publishedAtStr) : new Date()
 
-    await db.novedad.create({
+    const novedad = await db.novedad.create({
       data: {
         title,
         subtitle,
@@ -54,14 +99,11 @@ export async function createNovedad(formData: FormData) {
         isPublished
       }
     })
+    await persistNovedadAttachments(novedad.id, formData)
 
-    revalidatePath("/")
-    revalidatePath("/novedades")
-    revalidatePath("/admin/eventos")
-    revalidatePath("/admin/eventos/novedades")
-    revalidatePath("/socios")
+    revalidateNovedadPaths()
 
-    return { success: true }
+    return { success: true, id: novedad.id }
   } catch (error: any) {
     console.error("Error creating Novedad:", error)
     return { success: false, error: error.message || "Error al crear la novedad." }
@@ -70,6 +112,7 @@ export async function createNovedad(formData: FormData) {
 
 export async function updateNovedad(id: string, formData: FormData) {
   try {
+    await requireNovedadesAccess()
     const title = formData.get("title") as string
     const subtitle = (formData.get("subtitle") as string) || null
     const content = formData.get("content") as string
@@ -94,12 +137,9 @@ export async function updateNovedad(id: string, formData: FormData) {
         isPublished
       }
     })
+    await persistNovedadAttachments(id, formData)
 
-    revalidatePath("/")
-    revalidatePath("/novedades")
-    revalidatePath("/admin/eventos")
-    revalidatePath("/admin/eventos/novedades")
-    revalidatePath("/socios")
+    revalidateNovedadPaths()
 
     return { success: true }
   } catch (error: any) {
@@ -110,15 +150,12 @@ export async function updateNovedad(id: string, formData: FormData) {
 
 export async function deleteNovedad(id: string) {
   try {
+    await requireNovedadesAccess()
     await db.novedad.delete({
       where: { id }
     })
 
-    revalidatePath("/")
-    revalidatePath("/novedades")
-    revalidatePath("/admin/eventos")
-    revalidatePath("/admin/eventos/novedades")
-    revalidatePath("/socios")
+    revalidateNovedadPaths()
 
     return { success: true }
   } catch (error: any) {
@@ -129,16 +166,13 @@ export async function deleteNovedad(id: string) {
 
 export async function toggleNovedadStatus(id: string, isPublished: boolean) {
   try {
+    await requireNovedadesAccess()
     await db.novedad.update({
       where: { id },
       data: { isPublished }
     })
 
-    revalidatePath("/")
-    revalidatePath("/novedades")
-    revalidatePath("/admin/eventos")
-    revalidatePath("/admin/eventos/novedades")
-    revalidatePath("/socios")
+    revalidateNovedadPaths()
 
     return { success: true }
   } catch (error: any) {
@@ -152,11 +186,79 @@ export async function getNovedades(onlyPublished = true, take?: number) {
     const novedades = await db.novedad.findMany({
       where: onlyPublished ? { isPublished: true } : undefined,
       orderBy: { publishedAt: "desc" },
-      take: take
+      take: take,
+      include: { attachments: { select: { id: true, fileName: true, fileMimeType: true } } },
     })
     return novedades
   } catch (error) {
     console.error("Error getting Novedades:", error)
     return []
+  }
+}
+
+async function getEligibleNovedadRecipients() {
+  const members = await db.member.findMany({
+    where: { wantsMailing: true, email: { not: null } },
+    include: { fees: { select: { periodYear: true, periodMonth: true, paymentStatus: true } } },
+  })
+
+  return members.filter((member) => {
+    if (!member.email?.trim()) return false
+    const status = calculateMemberStatus(member)
+    return status === "AL DIA" || status === "EN MORA"
+  })
+}
+
+export async function getNovedadMailingSummary(novedadId: string) {
+  try {
+    await requireNovedadesAccess()
+    const [novedad, recipients, sent] = await Promise.all([
+      db.novedad.findUnique({ where: { id: novedadId }, select: { id: true, title: true, isPublished: true } }),
+      getEligibleNovedadRecipients(),
+      db.novedadMailing.count({ where: { novedadId, status: "SENT" } }),
+    ])
+    if (!novedad) return { success: false, error: "No se encontró la novedad." }
+    return { success: true, title: novedad.title, isPublished: novedad.isPublished, recipientCount: recipients.length, sentCount: sent }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : "No se pudo preparar el envío." }
+  }
+}
+
+export async function sendNovedadToEligibleMembers(novedadId: string) {
+  try {
+    const user = await requireNovedadesAccess()
+    const novedad = await db.novedad.findUnique({ where: { id: novedadId } })
+    if (!novedad) return { success: false, error: "No se encontró la novedad." }
+    if (!novedad.isPublished) return { success: false, error: "Publicá la novedad antes de enviarla a socios." }
+
+    const recipients = await getEligibleNovedadRecipients()
+    let sentCount = 0
+    let skippedCount = 0
+    let failedCount = 0
+
+    for (const member of recipients) {
+      const mailing = await db.novedadMailing.upsert({
+        where: { novedadId_memberId: { novedadId, memberId: member.id } },
+        create: { novedadId, memberId: member.id },
+        update: {},
+      })
+      if (mailing.status === "SENT") {
+        skippedCount++
+        continue
+      }
+
+      const sent = await sendNovedadNotificationEmail(member, novedad)
+      await db.novedadMailing.update({
+        where: { id: mailing.id },
+        data: { status: sent ? "SENT" : "FAILED", sentAt: sent ? new Date() : null },
+      })
+      if (sent) sentCount++
+      else failedCount++
+    }
+
+    return { success: true, sentCount, skippedCount, failedCount }
+  } catch (error) {
+    console.error("Error sending novedad mailing:", error)
+    return { success: false, error: error instanceof Error ? error.message : "No se pudo enviar la novedad." }
   }
 }

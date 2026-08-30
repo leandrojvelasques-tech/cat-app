@@ -109,7 +109,8 @@ export default async function PortalSocioPage() {
   const novedadesForSocio = await db.novedad.findMany({
     where: { isPublished: true },
     orderBy: { publishedAt: "desc" },
-    take: 6
+    take: 6,
+    include: { attachments: { select: { id: true, fileName: true, fileMimeType: true } } }
   })
   const communicationsForSocio = await getMemberCommunications()
 

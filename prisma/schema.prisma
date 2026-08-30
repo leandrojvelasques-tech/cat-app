@@ -69,6 +69,7 @@ model Member {
 
   fees                MembershipFee[]
   communications      Communication[]
+  novedadMailings     NovedadMailing[]
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   avatarUrl           String? // For digital ID
@@ -154,6 +155,36 @@ model Novedad {
   isPublished Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  attachments NovedadAttachment[]
+  mailings    NovedadMailing[]
+}
+
+model NovedadAttachment {
+  id           String   @id @default(uuid())
+  novedadId    String
+  novedad      Novedad  @relation(fields: [novedadId], references: [id], onDelete: Cascade)
+  fileName     String
+  storageName  String
+  fileMimeType String
+  fileData     Bytes
+  createdAt    DateTime @default(now())
+
+  @@index([novedadId])
+}
+
+model NovedadMailing {
+  id         String   @id @default(uuid())
+  novedadId  String
+  novedad    Novedad  @relation(fields: [novedadId], references: [id], onDelete: Cascade)
+  memberId   String
+  member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  status     String   @default("PENDING")
+  sentAt     DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([novedadId, memberId])
+  @@index([novedadId, status])
 }
 
 
