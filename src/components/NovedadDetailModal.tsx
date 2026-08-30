@@ -28,7 +28,7 @@ export function NovedadDetailModal({ novedad, onClose }: NovedadDetailModalProps
 
   return (
     <div
-      className="fixed inset-0 z-[100] isolate overflow-y-auto bg-[#070907]/90 p-4 pt-8 backdrop-blur-md sm:p-8 sm:pt-12 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[9999] isolate overflow-y-auto overscroll-contain bg-[#070907]/90 p-4 pt-20 backdrop-blur-md sm:p-8 sm:pt-12 animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
       aria-label={novedad.title}
