@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { getNovedades, deleteNovedad, getNovedadMailingSummary, sendNovedadToEligibleMembers, toggleNovedadStatus } from "@/app/actions/novedades"
+import { getNovedades, deleteNovedad, getNovedadMailingSummary, sendNovedadToEligibleMembers, sendNovedadPreview, toggleNovedadStatus } from "@/app/actions/novedades"
 import { NovedadFormModal } from "./NovedadFormModal"
 import { 
   Plus, 
@@ -15,7 +15,8 @@ import {
   ArrowLeft, 
   Sparkles,
   Eye,
-  Send
+  Send,
+  Mail
 } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -83,6 +84,15 @@ export default function AdminNovedadesPage() {
     }
     toast.success(`Enviados: ${result.sentCount}. Ya enviados: ${result.skippedCount}. Fallidos: ${result.failedCount}.`)
     loadData()
+  }
+
+  const handleSendPreview = async (id: string, title: string) => {
+    const recipientEmail = window.prompt(`Dirección para la prueba de “${title}”:`, "leandrojvelasques@gmail.com")
+    if (!recipientEmail) return
+    if (!window.confirm(`Enviar sólo esta prueba a ${recipientEmail.trim()}?`)) return
+    const result = await sendNovedadPreview(id, recipientEmail)
+    if (result.success) toast.success(`Prueba enviada sólo a ${result.recipientEmail}.`)
+    else toast.error(result.error || "No se pudo enviar la prueba.")
   }
 
   return (
@@ -240,6 +250,14 @@ export default function AdminNovedadesPage() {
                       title={item.isPublished ? "Enviar a socios" : "Publicá la novedad antes de enviarla"}
                     >
                       <Send size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleSendPreview(item.id, item.title)}
+                      disabled={!item.isPublished}
+                      className="rounded-xl bg-amber-500/10 p-2 text-amber-300 transition-colors hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:opacity-35"
+                      title="Enviar una prueba a una sola dirección"
+                    >
+                      <Mail size={16} />
                     </button>
                     <button
                       onClick={() => handleToggleStatus(item.id, item.isPublished)}

@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db"
 import { auth } from "@/auth"
-import { sendNovedadNotificationEmail } from "@/lib/emails"
+import { sendNovedadNotificationEmail, sendNovedadPreviewEmail as sendPreviewEmail } from "@/lib/emails"
 import { calculateMemberStatus } from "@/lib/member-utils"
 import { validateInstitutionalFile } from "@/lib/security-utils"
 import { revalidatePath } from "next/cache"
@@ -260,5 +260,27 @@ export async function sendNovedadToEligibleMembers(novedadId: string) {
   } catch (error) {
     console.error("Error sending novedad mailing:", error)
     return { success: false, error: error instanceof Error ? error.message : "No se pudo enviar la novedad." }
+  }
+}
+
+export async function sendNovedadPreview(novedadId: string, recipientEmail: string) {
+  try {
+    await requireNovedadesAccess()
+    const email = recipientEmail.trim().toLowerCase()
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return { success: false, error: "La dirección de prueba no es válida." }
+    }
+
+    const novedad = await db.novedad.findUnique({ where: { id: novedadId } })
+    if (!novedad) return { success: false, error: "No se encontró la novedad." }
+    if (!novedad.isPublished) return { success: false, error: "Publicá la novedad antes de enviarla." }
+
+    const sent = await sendPreviewEmail(email, novedad)
+    return sent
+      ? { success: true, recipientEmail: email }
+      : { success: false, error: "El proveedor de correo no confirmó el envío." }
+  } catch (error) {
+    console.error("Error sending novedad preview:", error)
+    return { success: false, error: error instanceof Error ? error.message : "No se pudo enviar la prueba." }
   }
 }
