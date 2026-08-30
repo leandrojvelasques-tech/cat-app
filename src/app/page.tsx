@@ -218,6 +218,9 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Novedades CAT: lo más reciente se muestra antes de la agenda mensual. */}
+      <NovedadesHomeSection novedades={latestNovedades} />
+
       {/* Próximos Eventos - Agenda Tanguera */}
       <section id="eventos" className="bg-[#131313] py-24 md:py-32 px-6 md:px-16">
         <div className="max-w-7xl mx-auto">
@@ -301,9 +304,6 @@ export default async function Home() {
           </div>
         </div>
       </section>
-
-      {/* Novedades CAT Section */}
-      <NovedadesHomeSection novedades={latestNovedades} />
 
       {/* Sobre Nosotros */}
       <section id="nosotros" className="bg-[#1b2621] py-24 md:py-32 px-6 md:px-16 relative">

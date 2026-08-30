@@ -89,17 +89,17 @@ export function NovedadesHomeSection({ novedades }: NovedadesHomeSectionProps) {
               {/* Text Info */}
               <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
                 <div>
-                  <h3 className="text-xl font-black text-white uppercase italic leading-tight group-hover:text-amber-400 transition-colors line-clamp-2">
+                  <h3 className="font-serif text-xl font-bold leading-tight text-white transition-colors group-hover:text-amber-400 line-clamp-2">
                     {item.title}
                   </h3>
 
                   {item.subtitle && (
-                    <p className="text-xs font-semibold text-amber-400/90 mt-1 line-clamp-1">
+                    <p className="mt-2 font-serif text-sm font-bold leading-snug text-amber-400/90 line-clamp-2">
                       {item.subtitle}
                     </p>
                   )}
 
-                  <p className="text-xs text-zinc-400 mt-3 line-clamp-3 leading-relaxed">
+                  <p className="mt-3 text-xs font-light leading-relaxed text-zinc-400 line-clamp-3">
                     {item.content}
                   </p>
                 </div>

@@ -27,8 +27,13 @@ export function NovedadDetailModal({ novedad, onClose }: NovedadDetailModalProps
     : ""
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl bg-[#18181b] border border-white/10 rounded-3xl overflow-hidden shadow-2xl my-8">
+    <div
+      className="fixed inset-0 z-[100] isolate overflow-y-auto bg-[#070907]/90 p-4 pt-8 backdrop-blur-md sm:p-8 sm:pt-12 animate-in fade-in duration-200"
+      role="dialog"
+      aria-modal="true"
+      aria-label={novedad.title}
+    >
+      <div className="relative mx-auto w-full max-w-3xl overflow-hidden rounded-3xl border border-white/10 bg-[#18181b] shadow-2xl">
         
         {/* Header bar / Close button */}
         <div className="absolute top-4 right-4 z-20">
@@ -76,11 +81,11 @@ export function NovedadDetailModal({ novedad, onClose }: NovedadDetailModalProps
 
           {/* Title & Subtitle */}
           <div className="space-y-2">
-            <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight leading-tight uppercase italic">
+            <h2 className="font-serif text-2xl font-bold leading-tight tracking-tight text-white sm:text-4xl">
               {novedad.title}
             </h2>
             {novedad.subtitle && (
-              <p className="text-lg sm:text-xl font-medium text-amber-400/90 leading-snug">
+              <p className="font-serif text-lg font-bold leading-snug text-amber-400/90 sm:text-xl">
                 {novedad.subtitle}
               </p>
             )}
@@ -89,7 +94,7 @@ export function NovedadDetailModal({ novedad, onClose }: NovedadDetailModalProps
           <div className="h-px w-full bg-gradient-to-r from-amber-500/30 via-white/10 to-transparent" />
 
           {/* Formatted Text Body */}
-          <div className="prose prose-invert max-w-none text-zinc-300 text-base sm:text-lg leading-relaxed whitespace-pre-line font-sans">
+          <div className="prose prose-invert max-w-none whitespace-pre-line text-base font-light leading-relaxed text-zinc-300 sm:text-lg">
             {novedad.content}
           </div>
 
