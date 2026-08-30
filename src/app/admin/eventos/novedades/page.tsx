@@ -29,6 +29,7 @@ export default function AdminNovedadesPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingNovedad, setEditingNovedad] = useState<any | null>(null)
   const [previewNovedad, setPreviewNovedad] = useState<any | null>(null)
+  const [previewRecipientEmail, setPreviewRecipientEmail] = useState("")
 
   const loadData = async () => {
     setLoading(true)
@@ -86,10 +87,12 @@ export default function AdminNovedadesPage() {
     loadData()
   }
 
-  const handleSendPreview = async (id: string, title: string) => {
-    const recipientEmail = window.prompt(`Dirección para la prueba de “${title}”:`, "leandrojvelasques@gmail.com")
-    if (!recipientEmail) return
-    if (!window.confirm(`Enviar sólo esta prueba a ${recipientEmail.trim()}?`)) return
+  const handleSendPreview = async (id: string) => {
+    const recipientEmail = previewRecipientEmail.trim()
+    if (!recipientEmail) {
+      toast.error("Ingresá una dirección para enviar la prueba.")
+      return
+    }
     const result = await sendNovedadPreview(id, recipientEmail)
     if (result.success) toast.success(`Prueba enviada sólo a ${result.recipientEmail}.`)
     else toast.error(result.error || "No se pudo enviar la prueba.")
@@ -120,16 +123,28 @@ export default function AdminNovedadesPage() {
         </div>
 
         {/* Action Button */}
-        <button
-          onClick={() => {
-            setEditingNovedad(null)
-            setModalOpen(true)
-          }}
-          className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 hover:brightness-110 text-zinc-950 font-black text-sm transition-all shadow-xl shadow-amber-500/20 active:scale-95 shrink-0"
-        >
-          <Plus size={18} />
-          <span>Nueva Novedad</span>
-        </button>
+        <div className="flex flex-col items-stretch gap-2 sm:items-end">
+          <button
+            onClick={() => {
+              setEditingNovedad(null)
+              setModalOpen(true)
+            }}
+            className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 px-6 py-3 text-sm font-black text-zinc-950 shadow-xl shadow-amber-500/20 transition-all hover:brightness-110 active:scale-95"
+          >
+            <Plus size={18} />
+            <span>Nueva Novedad</span>
+          </button>
+          <label className="flex items-center gap-2 text-xs text-zinc-500">
+            <span>Email de prueba</span>
+            <input
+              type="email"
+              value={previewRecipientEmail}
+              onChange={(event) => setPreviewRecipientEmail(event.target.value)}
+              placeholder="tu@email.com"
+              className="w-52 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-amber-500"
+            />
+          </label>
+        </div>
       </div>
 
       {/* Navigation Subtabs */}
@@ -252,7 +267,7 @@ export default function AdminNovedadesPage() {
                       <Send size={16} />
                     </button>
                     <button
-                      onClick={() => handleSendPreview(item.id, item.title)}
+                      onClick={() => handleSendPreview(item.id)}
                       disabled={!item.isPublished}
                       className="rounded-xl bg-amber-500/10 p-2 text-amber-300 transition-colors hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:opacity-35"
                       title="Enviar una prueba a una sola dirección"
