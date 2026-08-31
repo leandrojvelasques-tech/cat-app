@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import { Calendar, CalendarDays, Plus, Users, Music, ShoppingBag, Share2, Tag, ShieldAlert, ArrowRight, CheckCircle2, Sparkles, BookOpen, Newspaper } from "lucide-react"
+import { Calendar, CalendarDays, Plus, Users, Music, ShoppingBag, Share2, Tag, ShieldAlert, ArrowRight, CheckCircle2, Sparkles, BookOpen } from "lucide-react"
 import Link from "next/link"
 import { EventPreviewModal } from "./components/EventPreviewModal"
 import { isExternalEvent } from "@/lib/event-utils"
@@ -159,14 +159,6 @@ export default async function EventosPage() {
           >
             <CalendarDays size={18} />
             Calendario anual
-          </Link>
-
-          <Link 
-            href="/admin/eventos/novedades" 
-            className="flex items-center gap-2 bg-gradient-to-r from-amber-500/20 to-amber-600/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-4 py-2.5 rounded-xl font-bold transition-all shadow-lg"
-          >
-            <Newspaper size={18} />
-            Novedades CAT
           </Link>
 
           <Link 

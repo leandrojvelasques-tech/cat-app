@@ -30,10 +30,10 @@ export function SocioNovedadesSection({ novedades }: SocioNovedadesSectionProps)
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/10 pb-6">
         <div>
           <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter flex items-center gap-3">
-            <Newspaper size={24} className="text-amber-500" /> Novedades & Comunicados CAT
+            <Newspaper size={24} className="text-amber-500" /> Novedades CAT
           </h2>
           <p className="text-xs text-zinc-400 mt-1">
-            Informaciones oficiales, comunicados y noticias recientes de la asociación
+            Información pública y noticias recientes del Centro Amigos del Tango
           </p>
         </div>
 

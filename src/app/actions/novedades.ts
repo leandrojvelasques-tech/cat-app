@@ -72,6 +72,8 @@ function revalidateNovedadPaths(slug?: string) {
   if (slug) revalidatePath(`/novedades/${slug}`)
   revalidatePath("/admin/eventos")
   revalidatePath("/admin/eventos/novedades")
+  revalidatePath("/admin/comunicaciones")
+  revalidatePath("/admin/comunicaciones/novedades")
   revalidatePath("/socios")
 }
 

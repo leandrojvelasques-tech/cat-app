@@ -146,7 +146,7 @@ export default async function PortalSocioPage() {
         </section>
       )}
 
-      {/* 4. Novedades & Comunicados CAT */}
+      {/* 4. Información pública y comunicaciones privadas */}
       <SocioNovedadesSection novedades={novedadesForSocio} />
 
       <SocioCommunicationsSection communications={communicationsForSocio} />

@@ -106,12 +106,12 @@ export default function AdminNovedadesPage() {
         <div>
           <div className="flex items-center gap-3 mb-2">
             <Link 
-              href="/admin/eventos" 
+              href="/admin/comunicaciones"
               className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
             >
               <ArrowLeft size={18} />
             </Link>
-            <span className="text-xs font-black uppercase tracking-widest text-amber-500">Eventos & Comunicación</span>
+            <span className="text-xs font-black uppercase tracking-widest text-amber-500">Comunicaciones</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-white uppercase italic tracking-tight flex items-center gap-3">
             <Newspaper className="text-amber-500" />
@@ -150,13 +150,13 @@ export default function AdminNovedadesPage() {
       {/* Navigation Subtabs */}
       <div className="flex items-center gap-3 border-b border-white/5 pb-4">
         <Link
-          href="/admin/eventos"
+          href="/admin/comunicaciones"
           className="px-5 py-2.5 rounded-2xl font-bold text-sm text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent transition-all"
         >
-          Agenda de Eventos
+          Centro de Comunicaciones
         </Link>
         <Link
-          href="/admin/eventos/novedades"
+          href="/admin/comunicaciones/novedades"
           className="px-5 py-2.5 rounded-2xl font-bold text-sm bg-amber-500/10 text-amber-400 border border-amber-500/30 shadow-lg shadow-amber-500/10 transition-all flex items-center gap-2"
         >
           <Newspaper size={16} />
