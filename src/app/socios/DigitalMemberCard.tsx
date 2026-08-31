@@ -63,7 +63,7 @@ export function DigitalMemberCard({
   return (
     <article
       aria-label={`Carnet digital de ${member.firstName} ${member.lastName}`}
-      className={`relative mx-auto flex h-[500px] w-full max-w-[360px] flex-col overflow-hidden rounded-[30px] border px-5 py-[18px] shadow-2xl sm:h-auto sm:max-w-none sm:aspect-[1.72/1] sm:px-8 sm:py-7 ${
+      className={`relative mx-auto flex h-[500px] w-full max-w-[360px] flex-col overflow-hidden rounded-[30px] border px-5 py-[18px] shadow-2xl sm:h-auto sm:max-w-[900px] sm:aspect-[1.72/1] sm:px-8 sm:py-7 ${
         isHonorario
           ? "border-amber-500/40 bg-gradient-to-br from-zinc-900 via-amber-950/35 to-yellow-950/25 shadow-amber-900/20"
           : isChampion
