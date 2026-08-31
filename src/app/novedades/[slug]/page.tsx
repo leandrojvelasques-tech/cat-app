@@ -111,11 +111,11 @@ export default async function NovedadPage({ params }: NovedadPageProps) {
         )}
 
         {novedad.imageUrl && (
-          <div className="mt-9 overflow-hidden rounded-3xl border border-white/10 bg-zinc-900 shadow-2xl">
+          <div className="mt-9 aspect-[4/5] overflow-hidden rounded-3xl border border-white/10 bg-zinc-900 shadow-2xl">
             <img
               src={novedad.imageUrl}
               alt={novedad.title}
-              className="max-h-[580px] w-full object-cover"
+              className="h-full w-full object-contain"
             />
           </div>
         )}
