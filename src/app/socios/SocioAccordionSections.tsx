@@ -118,7 +118,7 @@ export function SocioAccordionSections({ member, isAlDia }: SocioAccordionSectio
             <div className="pt-4 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
               <div>
                 <p className="text-zinc-400 text-xs font-medium">¿Necesita asistencia con su estado de cuenta?</p>
-                <p className="text-zinc-600 text-[10px] uppercase font-bold tracking-widest mt-0.5">Comuníquese vía WhatsApp a Secretaría</p>
+                <p className="text-zinc-600 text-[10px] uppercase font-bold tracking-widest mt-0.5">Comuníquese vía WhatsApp a Secretaría: <span className="text-zinc-400 normal-case tracking-normal">+54 9 297 529-5100</span></p>
               </div>
             </div>
           </div>

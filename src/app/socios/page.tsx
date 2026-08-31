@@ -53,7 +53,7 @@ export default async function PortalSocioPage() {
   const isAlDia = calculatedStatus === 'AL DIA'
 
   // Fetch Member Debt / Unpaid months
-  const debtData = await getMemberDebt(member.id)
+  const debtData = await getMemberDebt(member.id, { includeUpcoming: true })
 
   // Fetch Member's Attended Milongas (presente registrado)
   const attendedRegistrations = await db.eventRegistration.findMany({

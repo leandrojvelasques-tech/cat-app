@@ -77,7 +77,17 @@ export async function searchMembers(query: string) {
   })
 }
 
-export async function getMemberDebt(memberId: string) {
+export interface MemberDebtOption {
+  year: number
+  month: number
+  amount: number
+  existingRecord: boolean
+  isAdvance?: boolean
+  isSuspensionRegularization?: boolean
+}
+
+export async function getMemberDebt(memberId: string, options: { includeUpcoming?: boolean } = {}) {
+  const { includeUpcoming = false } = options
   const member = await db.member.findUnique({
     where: { id: memberId },
     include: { fees: true }
@@ -98,7 +108,7 @@ export async function getMemberDebt(memberId: string) {
   const calculatedStatus = calculateMemberStatus(member, now)
   const isSuspended = member.debtStatus === "SUSPENDIDO" || calculatedStatus === "SUSPENDIDO"
 
-  const debtMonths = []
+  const debtMonths: MemberDebtOption[] = []
   let totalDebt = 0
 
   const feeHistory = await getFeeHistory()
@@ -138,14 +148,38 @@ export async function getMemberDebt(memberId: string) {
   }
 
   if (isSuspended) {
-    const cappedDebtMonths = debtMonths.slice(0, 3).map(month => ({
-      ...month,
-      amount: currentFeeAmount
-    }))
-
     return {
-      months: cappedDebtMonths,
-      total: cappedDebtMonths.length * currentFeeAmount
+      months: [{
+        year: currentYear,
+        month: currentMonth,
+        amount: currentFeeAmount * 3,
+        existingRecord: false,
+        isSuspensionRegularization: true
+      }],
+      total: currentFeeAmount * 3
+    }
+  }
+
+  if (includeUpcoming) {
+    let y = currentYear
+    let m = currentMonth
+
+    while (y === currentYear && m <= 12) {
+      const alreadyListed = debtMonths.some(month => month.year === y && month.month === m)
+      const paidRecord = member.fees.find(f => f.periodYear === y && f.periodMonth === m)
+
+      if (!alreadyListed && paidRecord?.paymentStatus !== "PAID") {
+        debtMonths.push({
+          year: y,
+          month: m,
+          amount: currentFeeAmount,
+          existingRecord: !!paidRecord,
+          isAdvance: true
+        })
+        totalDebt += currentFeeAmount
+      }
+
+      m++
     }
   }
 

@@ -10,6 +10,8 @@ export interface DebtMonth {
   year: number
   month: number
   amount: number
+  isAdvance?: boolean
+  isSuspensionRegularization?: boolean
 }
 
 interface SocioDuesPaymentSectionProps {
@@ -37,8 +39,20 @@ export function SocioDuesPaymentSection({
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null)
 
   const toggleMonth = (key: string) => {
+    const monthIndex = debtMonths.findIndex(d => `${d.year}-${d.month}` === key)
+    if (monthIndex < 0) return
+
     setSelectedKeys(prev =>
-      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+      prev.includes(key)
+        ? prev.filter(selectedKey => {
+            const selectedIndex = debtMonths.findIndex(d => `${d.year}-${d.month}` === selectedKey)
+            return selectedIndex < monthIndex
+          })
+        : monthIndex === 0 || debtMonths
+            .slice(0, monthIndex)
+            .every(d => prev.includes(`${d.year}-${d.month}`))
+          ? [...prev, key]
+          : prev
     )
   }
 
@@ -114,6 +128,9 @@ export function SocioDuesPaymentSection({
   const isMora = calculatedStatus === "EN MORA"
   const isSuspendido = calculatedStatus === "SUSPENDIDO"
   const isAlDia = calculatedStatus === "AL DIA" || calculatedStatus === "HONORARIO"
+  const suspensionAmount = debtMonths[0]?.isSuspensionRegularization ? debtMonths[0].amount : 0
+  const currentPeriod = new Date()
+  const currentPeriodLabel = getMonthName(currentPeriod.getMonth() + 1, currentPeriod.getFullYear())
 
   return (
     <div className="space-y-6">
@@ -172,10 +189,10 @@ export function SocioDuesPaymentSection({
               </span>
             </div>
             <h3 className="text-lg md:text-xl font-black text-white tracking-tight leading-snug">
-              Has acumulado 3 cuotas impagas, por lo cual están suspendidos tus beneficios como socio hasta tanto regularices el total adeudado.
+              Para reactivar tu condición de socio, realizá un único pago de regularización por ${suspensionAmount.toLocaleString("es-AR")} —equivalente a tres cuotas al valor vigente—.
             </h3>
             <p className="text-xs text-red-200/80 font-medium">
-              Podés adjuntar tu comprobante de pago seleccionando las cuotas a continuación para levantar la suspensión de forma inmediata.
+              El pago se registrará en {currentPeriodLabel}; no se imputará a meses anteriores. Una vez aprobado por Tesorería, quedarás al día en el mes corriente y se reactivarán tus beneficios.
             </p>
           </div>
         </div>
@@ -208,16 +225,24 @@ export function SocioDuesPaymentSection({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {debtMonths.map(debt => {
               const key = `${debt.year}-${debt.month}`
+              const debtIndex = debtMonths.findIndex(item => `${item.year}-${item.month}` === key)
               const isSelected = selectedKeys.includes(key)
+              const canSelect = debtIndex === 0 || debtMonths
+                .slice(0, debtIndex)
+                .every(item => selectedKeys.includes(`${item.year}-${item.month}`))
 
               return (
                 <div
                   key={key}
                   onClick={() => toggleMonth(key)}
-                  className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                  aria-disabled={!canSelect && !isSelected}
+                  title={!canSelect && !isSelected ? "Primero debe seleccionar las cuotas anteriores" : undefined}
+                  className={`p-4 rounded-2xl border transition-all flex items-center justify-between ${
                     isSelected
                       ? "bg-amber-500/10 border-amber-500/50 shadow-lg shadow-amber-500/10 text-white"
-                      : "bg-white/[0.02] border-white/10 hover:border-white/20 text-zinc-400"
+                      : canSelect
+                      ? "bg-white/[0.02] border-white/10 hover:border-white/20 text-zinc-400 cursor-pointer"
+                      : "bg-white/[0.02] border-white/5 text-zinc-600 cursor-not-allowed opacity-60"
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -228,10 +253,10 @@ export function SocioDuesPaymentSection({
                     </div>
                     <div>
                       <p className="font-black text-sm uppercase italic text-white">
-                        Mes {getMonthName(debt.month, debt.year)}
+                        {debt.isSuspensionRegularization ? `Regularización · ${getMonthName(debt.month, debt.year)}` : `Mes ${getMonthName(debt.month, debt.year)}`}
                       </p>
                       <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold">
-                        Cuota Social Mensual
+                        {debt.isSuspensionRegularization ? "Pago único para levantar la suspensión" : debt.isAdvance ? "Adelanto de cuota social" : "Cuota social pendiente"}
                       </span>
                     </div>
                   </div>

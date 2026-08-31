@@ -56,18 +56,23 @@ export async function submitSocioPaymentProof(formData: FormData) {
       return { success: false, error: "Debe seleccionar al menos una cuota a abonar." }
     }
 
-    const debtData = await getMemberDebt(memberId)
-    const allowedPeriodKeys = new Set(
-      debtData.months.map(period => `${period.year}-${period.month}`)
-    )
-    const hasInvalidPeriod = selectedMonths.some(item =>
-      !item || !allowedPeriodKeys.has(`${item.year}-${item.month}`)
-    )
+    if (!Array.isArray(selectedMonths) || selectedMonths.some(item =>
+      !item || !Number.isInteger(item.year) || !Number.isInteger(item.month)
+    )) {
+      return { success: false, error: "Formato de cuotas inválido." }
+    }
 
-    if (hasInvalidPeriod || selectedMonths.length > 3) {
+    const debtData = await getMemberDebt(memberId, { includeUpcoming: true })
+    const debtKeys = debtData.months.map(period => `${period.year}-${period.month}`)
+    const selectedKeys = selectedMonths.map(item => `${item.year}-${item.month}`)
+    const selectedIndexes = selectedKeys.map(key => debtKeys.indexOf(key))
+    const hasInvalidPeriod = selectedIndexes.some(index => index < 0)
+    const isContinuousSelection = selectedIndexes.every((index, position) => index === position)
+
+    if (hasInvalidPeriod || !isContinuousSelection) {
       return {
         success: false,
-        error: "Sólo puede regularizar las cuotas pendientes habilitadas por el sistema."
+        error: "Debe pagar las cuotas pendientes en orden antes de adelantar meses."
       }
     }
 
@@ -78,6 +83,7 @@ export async function submitSocioPaymentProof(formData: FormData) {
       ...item,
       amount: debtByPeriod.get(`${item.year}-${item.month}`)!.amount
     }))
+    const isSuspensionRegularization = debtData.months[0]?.isSuspensionRegularization === true
 
     let paymentProofUrl: string | null = null
     if (file && file.size > 0) {
@@ -97,9 +103,10 @@ export async function submitSocioPaymentProof(formData: FormData) {
       paymentProofUrl = `data:${validation.mimeType};base64,${buffer.toString("base64")}`
     }
 
-    const proofNote = paymentProofUrl 
-      ? `[COMPROBANTE SOCIO VERIFICACIÓN: ${paymentProofUrl}]\n${userNotes}`
-      : userNotes
+    const regularizationNote = isSuspensionRegularization ? "[REGULARIZACION_SUSPENDIDO]\n" : ""
+    const proofNote = paymentProofUrl
+      ? `${regularizationNote}[COMPROBANTE SOCIO VERIFICACIÓN: ${paymentProofUrl}]\n${userNotes}`
+      : `${regularizationNote}${userNotes}`
 
     // Record fee payment intentions for verification
     for (const item of selectedMonths) {
@@ -112,6 +119,7 @@ export async function submitSocioPaymentProof(formData: FormData) {
           }
         },
         update: {
+          amountDue: item.amount,
           amountPaid: item.amount,
           paymentStatus: "PENDING",
           paymentMethod,

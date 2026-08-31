@@ -159,6 +159,13 @@ export async function approvePendingFeePayment(feeId: string) {
     }
   })
 
+  if (fee.notes?.includes("[REGULARIZACION_SUSPENDIDO]")) {
+    await db.member.update({
+      where: { id: fee.memberId },
+      data: { debtStatus: "AL DIA" }
+    })
+  }
+
   // Enviar email de recibo digital validado al socio desde cobranzas@
   if (fee.member && fee.member.email) {
     try {
