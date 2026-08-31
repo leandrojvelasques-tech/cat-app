@@ -238,9 +238,9 @@ export default async function SociosPage({
                       <td className="py-4">
                         <div className="flex flex-col gap-1 text-[10px]">
                           <span className={`font-black uppercase ${member.user ? 'text-emerald-400' : 'text-zinc-500'}`}>
-                            {member.user ? (member.user.lastLoginAt ? 'Ingresó alguna vez' : 'Usuario creado') : 'Sin usuario'}
+                            {member.user ? 'Usuario creado' : 'Sin usuario'}
                           </span>
-                          {member.user?.lastLoginAt && <span className="text-zinc-500">Último ingreso: {format(new Date(member.user.lastLoginAt), 'dd/MM/yyyy HH:mm')}</span>}
+                          {member.user?.lastLoginAt && <span className="text-zinc-500">Último acceso: {format(new Date(member.user.lastLoginAt), 'dd/MM/yyyy HH:mm')}</span>}
                           {member.user && !member.user.lastLoginAt && <span className="text-zinc-500">Nunca ingresó</span>}
                           {member.communications?.[0] && <span className="text-zinc-600">Acceso enviado: {format(new Date(member.communications[0].sentAt), 'dd/MM/yyyy')}</span>}
                         </div>

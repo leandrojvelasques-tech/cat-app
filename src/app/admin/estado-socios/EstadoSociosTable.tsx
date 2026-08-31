@@ -149,8 +149,8 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
 
   function getPortalAccessLabel(member: any) {
     if (!member.user) return { label: "Sin usuario", className: "text-zinc-500" }
-    if (member.user.lastLoginAt) return { label: "Ingresó alguna vez", className: "text-emerald-400" }
-    return { label: "Usuario creado · Nunca ingresó", className: "text-amber-400" }
+    if (member.user.lastLoginAt) return { label: "Usuario creado", className: "text-emerald-400" }
+    return { label: "Usuario creado", className: "text-amber-400" }
   }
 
   function toggleStatusFilter(status: string) {
@@ -500,7 +500,8 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
                           return (
                             <div className="flex flex-col gap-1 text-[10px]">
                               <span className={`font-black uppercase ${access.className}`}>{access.label}</span>
-                              {member.user?.lastLoginAt && <span className="text-zinc-500">Último ingreso: {new Date(member.user.lastLoginAt).toLocaleDateString('es-AR')}</span>}
+                              {member.user?.lastLoginAt && <span className="text-zinc-500">Último acceso: {new Date(member.user.lastLoginAt).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}</span>}
+                              {member.user && !member.user.lastLoginAt && <span className="text-zinc-500">Nunca ingresó</span>}
                               {member.user?.loginCount > 0 && <span className="text-zinc-600">{member.user.loginCount} ingreso(s)</span>}
                               {member.communications?.[0] && <span className="text-zinc-600">Acceso enviado: {new Date(member.communications[0].sentAt).toLocaleDateString('es-AR')}</span>}
                             </div>
