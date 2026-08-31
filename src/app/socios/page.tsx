@@ -1,9 +1,8 @@
 import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import { redirect } from "next/navigation"
-import Link from "next/link"
-import { Calendar, MapPin, User, AlertCircle, Sparkles, ShieldCheck, Repeat, Music, Gift } from "lucide-react"
-import { calculateMemberStatus, getStatusBadgeStyles } from "@/lib/member-utils"
+import { Calendar, MapPin, AlertCircle, Sparkles, ShieldCheck, Repeat, Music } from "lucide-react"
+import { calculateMemberStatus } from "@/lib/member-utils"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { EditProfileModal } from "./EditProfileModal"
@@ -117,64 +116,17 @@ export default async function PortalSocioPage() {
   return (
     <div className="flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       
-      {/* 1. Header */}
-      <section id="perfil" className="relative grid scroll-mt-24 grid-cols-1 items-center gap-8 overflow-hidden rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur-xl sm:p-8 md:rounded-[36px] md:p-10">
-         <div className="absolute right-0 top-0 w-[400px] h-[400px] bg-amber-500/10 rounded-full blur-[120px] -mr-32 -mt-32" />
-         
-         <div className="relative z-10">
-           <div className="flex items-center gap-6 mb-6">
-              <div className="w-20 h-20 md:w-24 md:h-24 shrink-0 rounded-[28px] overflow-hidden border-4 border-white/5 bg-zinc-800 flex items-center justify-center shadow-2xl relative">
-                {member.avatarUrl ? (
-                  <img src={member.avatarUrl} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <User className="text-zinc-600" size={32} />
-                )}
-              </div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter uppercase italic leading-none mb-3">
-                    Hola, <span className="text-amber-500 font-black">{member.firstName}</span>
-                </h1>
-                <EditProfileModal member={member} />
-              </div>
-           </div>
-
-           <p className="text-zinc-400 text-sm md:text-base mb-6 max-w-sm font-light">
-              Bienvenido a su portal personal del Centro Amigos del Tango.
-           </p>
-           
-           <div className="flex flex-wrap items-center justify-between gap-4 mt-2">
-              <div className="flex gap-4">
-                 <div className="flex flex-col">
-                    <span className="text-[10px] uppercase font-black tracking-widest text-zinc-600 mb-1">Estado Administrativo</span>
-                    <span className={`px-4 py-1 text-[10px] font-black uppercase rounded-lg border shadow-sm ${getStatusBadgeStyles(calculatedStatus)}`}>
-                      {calculatedStatus}
-                    </span>
-                 </div>
-                 <div className="flex flex-col">
-                    <span className="text-[10px] uppercase font-black tracking-widest text-zinc-600 mb-1">Socio Desde</span>
-                    <span className="text-white font-bold text-sm">{format(new Date(member.joinDate), "yyyy")}</span>
-                 </div>
-              </div>
-
-              <Link
-                href="/socios/beneficios"
-                className="flex items-center gap-2 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-zinc-950 px-5 py-2.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-900/30 transition-all hover:scale-105 active:scale-95 group cursor-pointer"
-              >
-                <Gift size={18} className="group-hover:rotate-12 transition-transform" />
-                <span>Beneficios Socios</span>
-              </Link>
-           </div>
-         </div>
+      <section id="perfil" className="scroll-mt-24">
+        <div className="mb-3 flex justify-end sm:mb-4">
+          <EditProfileModal member={member} />
+        </div>
+        <SocioCarnetToggle
+          member={member}
+          awards={[]}
+          attendedMilongas={attendedMilongas}
+          calculatedStatus={calculatedStatus}
+        />
       </section>
-
-
-      {/* 2. Carnet Digital Plegable ("Ver Carnet") */}
-      <SocioCarnetToggle 
-        member={member} 
-        awards={[]} 
-        attendedMilongas={attendedMilongas}
-        calculatedStatus={calculatedStatus}
-      />
 
       <SocioAgendaSection
         filteredEvents={filteredEvents}
