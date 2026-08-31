@@ -2,16 +2,6 @@ export type SocietaryStatus = 'ACTIVO' | 'HONORARIO' | 'BAJA'
 export type PaymentStatus = 'AL DIA' | 'EN MORA' | 'SUSPENDIDO'
 export type CalculatedStatus = PaymentStatus | 'BAJA' | 'HONORARIO'
 
-export function getRecentMembershipPeriods(now: Date = new Date(), count = 3) {
-  return Array.from({ length: count }, (_, index) => {
-    const period = new Date(now.getFullYear(), now.getMonth() - (count - 1 - index), 1)
-    return {
-      year: period.getFullYear(),
-      month: period.getMonth() + 1
-    }
-  })
-}
-
 const LEGACY_BAJA_STATUSES = [
   'DECEASED',
   'RESIGNED',
@@ -117,13 +107,12 @@ export function calculateMemberStatus(member: any, now: Date = new Date()): Calc
   const unpaidMonths = expectedMonths.filter(em => !hasPaid(em.month, em.year))
   const debtMonths = unpaidMonths.length
 
-  // 2. EN MORA: Pagó Mayo o Abril, o debe menos de 3 meses en total
-  if (debtMonths > 0 && debtMonths <= 3) {
+  // 2. EN MORA: puede deber una o dos cuotas y conserva sus beneficios.
+  if (debtMonths > 0 && debtMonths < 3) {
     return 'EN MORA'
   }
 
-  // 3. INACTIVO: Pagó al menos una cuota en 2026 (Enero, Febrero, Marzo)
-  // 4. SUSPENDIDO: No registra ningún pago en 2026
+  // 3. SUSPENDIDO: debe tres o más cuotas.
   return 'SUSPENDIDO'
 }
 

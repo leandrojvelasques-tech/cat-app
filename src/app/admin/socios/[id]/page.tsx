@@ -13,7 +13,8 @@ import { es } from "date-fns/locale"
 import { getPaymentStatus, getSocietaryStatus, getStatusBadgeStyles, getMemberBajaReason, getBajaReasonStyles, formatDNI } from "@/lib/member-utils"
 import { ApproveFeePaymentButton } from "../../cuotas/ApproveFeePaymentButton"
 import { HonoraryAchievementsManager } from "./HonoraryAchievementsManager"
-import { getFeeHistory, getFeeAmountForPeriod } from "@/lib/fee-utils"
+import { getMemberDebt } from "@/app/actions/billing"
+import { getFeeHistory } from "@/lib/fee-utils"
 import { SendMemberAccessButton } from "../components/SendMemberAccessButton"
 
 interface CommunicationSummary {
@@ -68,19 +69,10 @@ export default async function FichaSocioPage(props: any) {
   const isInactive = societaryStatus === 'BAJA'
   const isHonorary = societaryStatus === 'HONORARIO'
   const feeHistory = await getFeeHistory()
-  const feeAmount = getFeeAmountForPeriod(now.getFullYear(), now.getMonth() + 1, member.isFamilyDiscount, feeHistory)
-  
-  // Dynamic Debt Calculation (matching business logic)
-  const START_DATE = new Date(2026, 0, 1)
-  const joinDate = member.joinDate ? new Date(member.joinDate) : START_DATE
-  const trackFrom = joinDate > START_DATE ? joinDate : START_DATE
-  let monthsExpected = (now.getFullYear() - trackFrom.getFullYear()) * 12 + (now.getMonth() - trackFrom.getMonth()) + 1
-  if (now.getDate() <= 10) {
-    monthsExpected = Math.max(0, monthsExpected - 1)
-  }
+  const debtData = await getMemberDebt(member.id)
+  const unpaidMonths = debtData.months.length
+  const totalDebt = debtData.total
   const paidMonthsCount = member.fees.filter((f: any) => f.paymentStatus === "PAID").length
-  const unpaidMonths = Math.max(0, monthsExpected - paidMonthsCount)
-  const totalDebt = unpaidMonths * feeAmount
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-5xl mx-auto pb-20">
@@ -185,7 +177,7 @@ export default async function FichaSocioPage(props: any) {
                  <span className="text-zinc-600 font-mono text-xs italic">ARS</span>
               </div>
               <p className="text-[10px] text-zinc-500 mt-2 font-medium">
-                {unpaidMonths === 0 ? "Cuotas al día" : `Debe ${unpaidMonths} cuotas de $${feeAmount.toLocaleString()}`}
+                {unpaidMonths === 0 ? "Cuotas al día" : `Debe ${unpaidMonths} ${unpaidMonths === 1 ? "cuota" : "cuotas"} pendientes`}
               </p>
               
               {totalDebt > 0 && (

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { getFeeHistory, getFeeAmountForPeriod } from "@/lib/fee-utils"
-import { calculateMemberStatus, getRecentMembershipPeriods } from "@/lib/member-utils"
+import { calculateMemberStatus } from "@/lib/member-utils"
 import { sendPaymentValidatedEmail } from "@/lib/emails"
 import { writeFileSync, existsSync, mkdirSync } from "fs"
 import { join } from "path"
@@ -97,31 +97,23 @@ export async function getMemberDebt(memberId: string) {
   const currentMonth = now.getMonth() + 1
   const calculatedStatus = calculateMemberStatus(member, now)
   const isSuspended = member.debtStatus === "SUSPENDIDO" || calculatedStatus === "SUSPENDIDO"
-  const recentPeriodKeys = new Set(
-    isSuspended
-      ? getRecentMembershipPeriods(now).map(period => `${period.year}-${period.month}`)
-      : []
-  )
 
   const debtMonths = []
   let totalDebt = 0
 
   const feeHistory = await getFeeHistory()
+  const currentFeeAmount = getFeeAmountForPeriod(
+    currentYear,
+    currentMonth,
+    member.isFamilyDiscount,
+    feeHistory
+  )
 
   // Iterate from track date to now
   let y = trackYear
   let m = trackMonth
 
   while (y < currentYear || (y === currentYear && m <= currentMonth)) {
-    if (isSuspended && !recentPeriodKeys.has(`${y}-${m}`)) {
-      m++
-      if (m > 12) {
-        m = 1
-        y++
-      }
-      continue
-    }
-
     const paidRecord = member.fees.find(f => f.periodYear === y && f.periodMonth === m)
     const expectedFeeForMonth = getFeeAmountForPeriod(y, m, member.isFamilyDiscount, feeHistory)
 
@@ -141,7 +133,19 @@ export async function getMemberDebt(memberId: string) {
     m++
     if (m > 12) {
       m = 1
-      y++
+    y++
+    }
+  }
+
+  if (isSuspended) {
+    const cappedDebtMonths = debtMonths.slice(0, 3).map(month => ({
+      ...month,
+      amount: currentFeeAmount
+    }))
+
+    return {
+      months: cappedDebtMonths,
+      total: cappedDebtMonths.length * currentFeeAmount
     }
   }
 
