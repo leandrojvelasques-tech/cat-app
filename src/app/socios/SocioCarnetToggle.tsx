@@ -2,11 +2,16 @@
 
 import { useState } from "react"
 import { CreditCard, ChevronDown, ChevronUp, Sparkles } from "lucide-react"
-import { DigitalMemberCard, AttendedMilonga } from "./DigitalMemberCard"
+import {
+  AttendedMilonga,
+  DigitalMemberCard,
+  DigitalMemberCardMember,
+  MemberAward,
+} from "./DigitalMemberCard"
 
 interface SocioCarnetToggleProps {
-  member: any
-  awards: any[]
+  member: DigitalMemberCardMember
+  awards: MemberAward[]
   attendedMilongas: AttendedMilonga[]
   calculatedStatus?: string
 }
@@ -15,7 +20,7 @@ export function SocioCarnetToggle({ member, awards, attendedMilongas, calculated
   const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-[40px] p-6 md:p-8 backdrop-blur-xl shadow-2xl space-y-6">
+    <div className="space-y-5 rounded-[30px] border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur-xl sm:p-6 md:p-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center shrink-0 shadow-lg">
@@ -26,18 +31,18 @@ export function SocioCarnetToggle({ member, awards, attendedMilongas, calculated
               Carnet digital CAT
             </h2>
             <div className="mt-2 h-1 w-12 rounded-full bg-cat-gold" />
-            <p className="mt-3 text-xs text-zinc-400">
-              Presente su carnet interactivo para acceder a los beneficios y milongas
+            <p className="mt-3 text-xs leading-relaxed text-zinc-400">
+              Presente su carnet para acceder a los beneficios y milongas
             </p>
           </div>
         </div>
 
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-amber-500/20 to-amber-500/10 hover:from-amber-500/30 hover:to-amber-500/20 border border-amber-500/30 text-amber-400 font-black text-xs uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-95 shadow-md"
+          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/20 to-amber-500/10 px-5 py-3 text-xs font-semibold text-amber-400 shadow-md transition-all hover:from-amber-500/30 hover:to-amber-500/20 active:scale-[0.98] sm:w-auto"
         >
           <Sparkles size={16} />
-          {isOpen ? "Ocultar Carnet" : "Ver mi Carnet Digital"}
+          {isOpen ? "Ocultar carnet" : "Ver mi carnet"}
           {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </button>
       </div>
