@@ -147,6 +147,7 @@ model Announcement {
 
 model Novedad {
   id          String    @id @default(uuid())
+  slug        String    @unique
   title       String
   subtitle    String?
   content     String

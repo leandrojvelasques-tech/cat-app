@@ -5,10 +5,10 @@ import Link from "next/link"
 import { Newspaper, Calendar, ArrowLeft, Search, ArrowRight } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { NovedadDetailModal } from "@/components/NovedadDetailModal"
 
 interface Novedad {
   id: string
+  slug: string
   title: string
   subtitle?: string | null
   content: string
@@ -23,7 +23,6 @@ interface NovedadesArchiveClientProps {
 
 export function NovedadesArchiveClient({ initialNovedades }: NovedadesArchiveClientProps) {
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedNovedad, setSelectedNovedad] = useState<Novedad | null>(null)
 
   const filteredNovedades = initialNovedades.filter((item) => {
     const term = searchTerm.toLowerCase()
@@ -105,9 +104,9 @@ export function NovedadesArchiveClient({ initialNovedades }: NovedadesArchiveCli
                 : ""
 
               return (
-                <div
+                <Link
                   key={item.id}
-                  onClick={() => setSelectedNovedad(item)}
+                  href={`/novedades/${item.slug}`}
                   className="bg-[#18181b] border border-white/10 rounded-3xl overflow-hidden flex flex-col justify-between hover:border-amber-500/50 hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-300 group cursor-pointer"
                 >
                   {/* Image */}
@@ -155,22 +154,13 @@ export function NovedadesArchiveClient({ initialNovedades }: NovedadesArchiveCli
                       <ArrowRight size={14} className="ml-1" />
                     </div>
                   </div>
-                </div>
+                </Link>
               )
             })}
           </div>
         )}
 
       </main>
-
-      {/* Modal Detail */}
-      {selectedNovedad && (
-        <NovedadDetailModal
-          novedad={selectedNovedad}
-          onClose={() => setSelectedNovedad(null)}
-        />
-      )}
-
     </div>
   )
 }

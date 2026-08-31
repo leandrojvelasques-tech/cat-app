@@ -5,7 +5,9 @@ import { auth } from "@/auth"
 import { sendNovedadNotificationEmail, sendNovedadPreviewEmail as sendPreviewEmail } from "@/lib/emails"
 import { calculateMemberStatus } from "@/lib/member-utils"
 import { validateInstitutionalFile } from "@/lib/security-utils"
+import { slugify } from "@/lib/slug-utils"
 import { revalidatePath } from "next/cache"
+import { randomUUID } from "crypto"
 
 const MANAGEMENT_ROLES = ["ADMIN", "SUPERADMIN", "BOARD", "PRESIDENT"]
 
@@ -64,12 +66,26 @@ async function persistNovedadAttachments(novedadId: string, formData: FormData) 
   }
 }
 
-function revalidateNovedadPaths() {
+function revalidateNovedadPaths(slug?: string) {
   revalidatePath("/")
   revalidatePath("/novedades")
+  if (slug) revalidatePath(`/novedades/${slug}`)
   revalidatePath("/admin/eventos")
   revalidatePath("/admin/eventos/novedades")
   revalidatePath("/socios")
+}
+
+async function createUniqueNovedadSlug(title: string) {
+  const baseSlug = slugify(title).slice(0, 110) || "novedad"
+  let candidate = baseSlug
+  let suffix = 2
+
+  while (await db.novedad.findUnique({ where: { slug: candidate }, select: { id: true } })) {
+    candidate = `${baseSlug}-${suffix}`
+    suffix += 1
+  }
+
+  return candidate
 }
 
 export async function createNovedad(formData: FormData) {
@@ -89,8 +105,11 @@ export async function createNovedad(formData: FormData) {
 
     const publishedAt = publishedAtStr ? new Date(publishedAtStr) : new Date()
 
+    const slug = await createUniqueNovedadSlug(title)
     const novedad = await db.novedad.create({
       data: {
+        id: randomUUID(),
+        slug,
         title,
         subtitle,
         content,
@@ -101,12 +120,12 @@ export async function createNovedad(formData: FormData) {
     })
     await persistNovedadAttachments(novedad.id, formData)
 
-    revalidateNovedadPaths()
+    revalidateNovedadPaths(novedad.slug)
 
-    return { success: true, id: novedad.id }
-  } catch (error: any) {
+    return { success: true, id: novedad.id, slug: novedad.slug }
+  } catch (error) {
     console.error("Error creating Novedad:", error)
-    return { success: false, error: error.message || "Error al crear la novedad." }
+    return { success: false, error: error instanceof Error ? error.message : "Error al crear la novedad." }
   }
 }
 
@@ -126,7 +145,7 @@ export async function updateNovedad(id: string, formData: FormData) {
     const imageUrl = await parseNovedadImageField(formData)
     const publishedAt = publishedAtStr ? new Date(publishedAtStr) : new Date()
 
-    await db.novedad.update({
+    const novedad = await db.novedad.update({
       where: { id },
       data: {
         title,
@@ -139,45 +158,45 @@ export async function updateNovedad(id: string, formData: FormData) {
     })
     await persistNovedadAttachments(id, formData)
 
-    revalidateNovedadPaths()
+    revalidateNovedadPaths(novedad.slug)
 
     return { success: true }
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error updating Novedad:", error)
-    return { success: false, error: error.message || "Error al actualizar la novedad." }
+    return { success: false, error: error instanceof Error ? error.message : "Error al actualizar la novedad." }
   }
 }
 
 export async function deleteNovedad(id: string) {
   try {
     await requireNovedadesAccess()
-    await db.novedad.delete({
+    const novedad = await db.novedad.delete({
       where: { id }
     })
 
-    revalidateNovedadPaths()
+    revalidateNovedadPaths(novedad.slug)
 
     return { success: true }
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error deleting Novedad:", error)
-    return { success: false, error: error.message || "Error al eliminar la novedad." }
+    return { success: false, error: error instanceof Error ? error.message : "Error al eliminar la novedad." }
   }
 }
 
 export async function toggleNovedadStatus(id: string, isPublished: boolean) {
   try {
     await requireNovedadesAccess()
-    await db.novedad.update({
+    const novedad = await db.novedad.update({
       where: { id },
       data: { isPublished }
     })
 
-    revalidateNovedadPaths()
+    revalidateNovedadPaths(novedad.slug)
 
     return { success: true }
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error toggling Novedad status:", error)
-    return { success: false, error: error.message || "Error al cambiar el estado." }
+    return { success: false, error: error instanceof Error ? error.message : "Error al cambiar el estado." }
   }
 }
 
@@ -226,7 +245,7 @@ export async function getNovedadMailingSummary(novedadId: string) {
 
 export async function sendNovedadToEligibleMembers(novedadId: string) {
   try {
-    const user = await requireNovedadesAccess()
+    await requireNovedadesAccess()
     const novedad = await db.novedad.findUnique({ where: { id: novedadId } })
     if (!novedad) return { success: false, error: "No se encontró la novedad." }
     if (!novedad.isPublished) return { success: false, error: "Publicá la novedad antes de enviarla a socios." }

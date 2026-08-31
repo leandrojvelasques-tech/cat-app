@@ -172,10 +172,10 @@ function escapeHtml(value: string): string {
 async function sendNovedadEmail(
   to: string,
   greetingName: string,
-  novedad: { id: string; title: string; subtitle: string | null; content: string },
+  novedad: { id: string; slug: string; title: string; subtitle: string | null; content: string },
   memberId?: string,
 ) {
-  const novedadUrl = `${getBaseUrl()}/novedades`
+  const novedadUrl = `${getBaseUrl()}/novedades/${novedad.slug}`
   const title = escapeHtml(novedad.title)
   const subtitle = novedad.subtitle ? `<p style="margin: 0 0 16px; color: #7c5a2c; font-weight: 700;">${escapeHtml(novedad.subtitle)}</p>` : ""
   const excerpt = escapeHtml(novedad.content.replace(/\s+/g, " ").trim().slice(0, 260))
@@ -205,7 +205,7 @@ async function sendNovedadEmail(
 
 export async function sendNovedadNotificationEmail(
   member: { id: string; firstName: string; lastName: string; email: string | null },
-  novedad: { id: string; title: string; subtitle: string | null; content: string }
+  novedad: { id: string; slug: string; title: string; subtitle: string | null; content: string }
 ) {
   if (!member.email) return false
   return sendNovedadEmail(member.email, member.firstName, novedad, member.id)
@@ -213,7 +213,7 @@ export async function sendNovedadNotificationEmail(
 
 export async function sendNovedadPreviewEmail(
   email: string,
-  novedad: { id: string; title: string; subtitle: string | null; content: string },
+  novedad: { id: string; slug: string; title: string; subtitle: string | null; content: string },
 ) {
   return sendNovedadEmail(email, "Leandro", novedad)
 }

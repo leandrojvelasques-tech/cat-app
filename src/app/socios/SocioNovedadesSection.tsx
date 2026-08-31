@@ -1,14 +1,13 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
-import { Newspaper, Calendar, ArrowRight, Sparkles } from "lucide-react"
+import { Newspaper, Calendar, ArrowRight } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { NovedadDetailModal } from "@/components/NovedadDetailModal"
 
 interface Novedad {
   id: string
+  slug: string
   title: string
   subtitle?: string | null
   content: string
@@ -22,8 +21,6 @@ interface SocioNovedadesSectionProps {
 }
 
 export function SocioNovedadesSection({ novedades }: SocioNovedadesSectionProps) {
-  const [selectedNovedad, setSelectedNovedad] = useState<Novedad | null>(null)
-
   if (!novedades || novedades.length === 0) return null
 
   return (
@@ -57,9 +54,9 @@ export function SocioNovedadesSection({ novedades }: SocioNovedadesSectionProps)
             : ""
 
           return (
-            <div
+            <Link
               key={item.id}
-              onClick={() => setSelectedNovedad(item)}
+              href={`/novedades/${item.slug}`}
               className="bg-[#18181b] border border-white/10 rounded-3xl overflow-hidden flex flex-col justify-between hover:border-amber-500/50 hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-300 group cursor-pointer"
             >
               {/* Image */}
@@ -107,19 +104,10 @@ export function SocioNovedadesSection({ novedades }: SocioNovedadesSectionProps)
                   <ArrowRight size={14} className="ml-1" />
                 </div>
               </div>
-            </div>
+            </Link>
           )
         })}
       </div>
-
-      {/* Modal */}
-      {selectedNovedad && (
-        <NovedadDetailModal
-          novedad={selectedNovedad}
-          onClose={() => setSelectedNovedad(null)}
-        />
-      )}
-
     </div>
   )
 }
