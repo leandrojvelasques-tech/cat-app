@@ -5,6 +5,7 @@ import { ArrowRight, GraduationCap, CreditCard, CalendarDays, Users, UserCheck, 
 import { calculateMemberStatus, getPaymentStatus, getSocietaryStatus, PaymentStatus } from "@/lib/member-utils"
 import { PendingApprovalsSection } from "./components/PendingApprovalsSection"
 import { MemberDailyStatusChart } from "./components/MemberDailyStatusChart"
+import { MemberPortalAccessChart } from "./components/MemberPortalAccessChart"
 import { finalizePastEvents } from "@/lib/event-status"
 
 export default async function AdminDashboard() {
@@ -107,6 +108,12 @@ export default async function AdminDashboard() {
     label: string
     days: { day: number; count: number }[]
   }[] = []
+  const portalAccessSeries: {
+    key: string
+    label: string
+    uniqueMembers: number
+    days: { day: number; count: number }[]
+  }[] = []
 
   const iterDate = new Date(startYear, startMonth, 1)
   const endDate = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -182,6 +189,30 @@ export default async function AdminDashboard() {
       key: `${y}-${String(monthNum).padStart(2, "0")}`,
       label: `${label} ${y}`,
       days: dailyCounts,
+    })
+
+    const loginEvents = await db.memberLoginEvent.findMany({
+      where: {
+        loggedAt: { gte: startOfMonth, lte: endOfMonth },
+        user: { member: { isNot: null } },
+      },
+      select: { userId: true, loggedAt: true },
+    })
+    const uniqueMembersByDay = new Map<number, Set<string>>()
+    loginEvents.forEach(event => {
+      const day = new Date(event.loggedAt).getDate()
+      const members = uniqueMembersByDay.get(day) || new Set<string>()
+      members.add(event.userId)
+      uniqueMembersByDay.set(day, members)
+    })
+    portalAccessSeries.push({
+      key: `${y}-${String(monthNum).padStart(2, "0")}`,
+      label: `${label} ${y}`,
+      uniqueMembers: new Set(loginEvents.map(event => event.userId)).size,
+      days: Array.from({ length: daysInMonth }, (_, index) => ({
+        day: index + 1,
+        count: uniqueMembersByDay.get(index + 1)?.size || 0,
+      })),
     })
 
     iterDate.setMonth(iterDate.getMonth() + 1)
@@ -280,6 +311,7 @@ export default async function AdminDashboard() {
       />
 
       <MemberDailyStatusChart series={dailyStatusSeries} />
+      <MemberPortalAccessChart series={portalAccessSeries} />
 
       {/* GRÁFICOS INICIANDO ESTRICTAMENTE DESDE JULIO 2026 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

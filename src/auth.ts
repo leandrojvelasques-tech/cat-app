@@ -45,6 +45,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         },
       })
 
+      if (currentUser) {
+        await db.memberLoginEvent.create({ data: { userId: user.id } })
+      }
+
       return true
     },
     async jwt({ token, user }) {

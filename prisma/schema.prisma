@@ -22,6 +22,7 @@ model User {
   lastLoginAt        DateTime?
   loginCount         Int       @default(0)
   member             Member?
+  loginEvents        MemberLoginEvent[]
 
   // Track registrations recorded by this user
   recordedRegistrations EventRegistration[] @relation("RecordedBy")
@@ -79,6 +80,16 @@ model Member {
   honoraryAchievements HonoraryAchievement[]
   boardHistory        BoardHistory[]
   buffetPurchases     BuffetSale[]         @relation("BuffetBuyer")
+}
+
+model MemberLoginEvent {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  loggedAt  DateTime @default(now())
+
+  @@index([loggedAt])
+  @@index([userId, loggedAt])
 }
 
 model HonoraryAchievement {
