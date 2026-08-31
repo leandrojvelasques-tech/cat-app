@@ -5,6 +5,7 @@ import { auth } from "@/auth"
 import { revalidatePath } from "next/cache"
 import { validateAndSanitizeFile } from "@/lib/security-utils"
 import { sendFeePaymentPendingEmail } from "@/lib/emails"
+import { calculateMemberStatus, getRecentMembershipPeriods } from "@/lib/member-utils"
 
 export async function submitSocioPaymentProof(formData: FormData) {
   try {
@@ -26,7 +27,18 @@ export async function submitSocioPaymentProof(formData: FormData) {
     // Check if the current user owns this member record or is admin
     const userMember = await db.member.findUnique({
       where: { id: memberId },
-      select: { id: true, userId: true, firstName: true, lastName: true, memberNumber: true }
+      select: {
+        id: true,
+        userId: true,
+        firstName: true,
+        lastName: true,
+        memberNumber: true,
+        type: true,
+        status: true,
+        debtStatus: true,
+        joinDate: true,
+        fees: true
+      }
     })
 
     if (!userMember) {
@@ -46,6 +58,24 @@ export async function submitSocioPaymentProof(formData: FormData) {
 
     if (!selectedMonths || selectedMonths.length === 0) {
       return { success: false, error: "Debe seleccionar al menos una cuota a abonar." }
+    }
+
+    const calculatedStatus = calculateMemberStatus(userMember, new Date())
+    const isSuspended = userMember.debtStatus === "SUSPENDIDO" || calculatedStatus === "SUSPENDIDO"
+    if (isSuspended) {
+      const allowedPeriodKeys = new Set(
+        getRecentMembershipPeriods().map(period => `${period.year}-${period.month}`)
+      )
+      const hasOlderPeriod = selectedMonths.some(item =>
+        !item || !allowedPeriodKeys.has(`${item.year}-${item.month}`)
+      )
+
+      if (hasOlderPeriod || selectedMonths.length > 3) {
+        return {
+          success: false,
+          error: "Un socio suspendido sólo puede regularizar las tres cuotas más recientes."
+        }
+      }
     }
 
     let paymentProofUrl: string | null = null

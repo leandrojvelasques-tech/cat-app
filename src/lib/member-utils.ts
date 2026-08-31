@@ -2,6 +2,16 @@ export type SocietaryStatus = 'ACTIVO' | 'HONORARIO' | 'BAJA'
 export type PaymentStatus = 'AL DIA' | 'EN MORA' | 'SUSPENDIDO'
 export type CalculatedStatus = PaymentStatus | 'BAJA' | 'HONORARIO'
 
+export function getRecentMembershipPeriods(now: Date = new Date(), count = 3) {
+  return Array.from({ length: count }, (_, index) => {
+    const period = new Date(now.getFullYear(), now.getMonth() - (count - 1 - index), 1)
+    return {
+      year: period.getFullYear(),
+      month: period.getMonth() + 1
+    }
+  })
+}
+
 const LEGACY_BAJA_STATUSES = [
   'DECEASED',
   'RESIGNED',

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { getFeeHistory, getFeeAmountForPeriod } from "@/lib/fee-utils"
+import { calculateMemberStatus, getRecentMembershipPeriods } from "@/lib/member-utils"
 import { sendPaymentValidatedEmail } from "@/lib/emails"
 import { writeFileSync, existsSync, mkdirSync } from "fs"
 import { join } from "path"
@@ -94,6 +95,13 @@ export async function getMemberDebt(memberId: string) {
   const now = new Date()
   const currentYear = now.getFullYear()
   const currentMonth = now.getMonth() + 1
+  const calculatedStatus = calculateMemberStatus(member, now)
+  const isSuspended = member.debtStatus === "SUSPENDIDO" || calculatedStatus === "SUSPENDIDO"
+  const recentPeriodKeys = new Set(
+    isSuspended
+      ? getRecentMembershipPeriods(now).map(period => `${period.year}-${period.month}`)
+      : []
+  )
 
   const debtMonths = []
   let totalDebt = 0
@@ -105,6 +113,15 @@ export async function getMemberDebt(memberId: string) {
   let m = trackMonth
 
   while (y < currentYear || (y === currentYear && m <= currentMonth)) {
+    if (isSuspended && !recentPeriodKeys.has(`${y}-${m}`)) {
+      m++
+      if (m > 12) {
+        m = 1
+        y++
+      }
+      continue
+    }
+
     const paidRecord = member.fees.find(f => f.periodYear === y && f.periodMonth === m)
     const expectedFeeForMonth = getFeeAmountForPeriod(y, m, member.isFamilyDiscount, feeHistory)
 
