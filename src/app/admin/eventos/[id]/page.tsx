@@ -8,6 +8,7 @@ import { DeleteEventButton } from "../components/DeleteEventButton"
 import { ApproveRegistrationButton } from "../components/ApproveRegistrationButton"
 import { DeleteRegistrationButton } from "../components/DeleteRegistrationButton"
 import { EventPreviewModal } from "../components/EventPreviewModal"
+import { CopyPublicEventLink } from "../components/CopyPublicEventLink"
 import { PresenceButton } from "@/app/admin/components/PresenceButton"
 import { getEffectiveEventPrices } from "@/lib/event-utils"
 import { finalizePastEvents } from "@/lib/event-status"
@@ -86,6 +87,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                   eventTitle={event.title}
                   isFree={event.isFree}
                   buttonClassName="flex items-center gap-2 bg-amber-500/20 hover:bg-amber-500/30 backdrop-blur-md text-amber-300 px-4 py-2.5 rounded-xl font-bold transition-all text-sm border border-amber-500/30"
+               />
+               <CopyPublicEventLink
+                  eventId={event.id}
+                  eventSlug={event.slug}
+                  className="flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white px-4 py-2.5 rounded-xl font-medium transition-all text-sm border border-white/10"
                />
                <Link 
                   href={`/admin/eventos/${event.id}/editar`}

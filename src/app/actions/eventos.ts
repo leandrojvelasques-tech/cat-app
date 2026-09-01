@@ -12,6 +12,26 @@ import {
 import { validateAndSanitizeFile } from "@/lib/security-utils"
 import { writeFileSync, existsSync, mkdirSync } from "fs"
 import { join } from "path"
+import { slugify } from "@/lib/slug-utils"
+
+async function createUniqueEventSlug(title: string, excludeEventId?: string) {
+  const baseSlug = slugify(title) || "evento"
+  let candidate = baseSlug
+  let suffix = 2
+
+  while (await db.event.findFirst({
+    where: {
+      slug: candidate,
+      ...(excludeEventId ? { NOT: { id: excludeEventId } } : {}),
+    },
+    select: { id: true },
+  })) {
+    candidate = `${baseSlug}-${suffix}`
+    suffix += 1
+  }
+
+  return candidate
+}
 
 async function parseBannerField(formData: FormData): Promise<string | null> {
   const fileOrString = formData.get("eventBanner")
@@ -117,8 +137,11 @@ export async function createEvent(prevState: any, formData: FormData) {
       return { error: "Configurá un día y un horario válidos para la recurrencia semanal." }
     }
 
+    const slug = await createUniqueEventSlug(title)
+
     await db.event.create({
       data: {
+        slug,
         title,
         description,
         startDate: parsedStartDate,
@@ -256,6 +279,11 @@ export async function updateEvent(id: string, prevState: any, formData: FormData
       return { error: "Configurá un día y un horario válidos para la recurrencia semanal." }
     }
 
+    const currentEvent = await db.event.findUnique({
+      where: { id },
+      select: { slug: true },
+    })
+
     const updateData: any = {
       title,
       description,
@@ -295,6 +323,10 @@ export async function updateEvent(id: string, prevState: any, formData: FormData
       priceSocioClassLoose,
       priceNonSocioClassLoose,
       eventBanner
+    }
+
+    if (!currentEvent?.slug) {
+      updateData.slug = await createUniqueEventSlug(title, id)
     }
 
     await db.event.update({
@@ -375,7 +407,7 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
     return { success: false, error: "Evento no encontrado" }
   }
 
-  const paymentMethod = (formData.get("paymentMethod") as string) || "CASH"
+  const requestedPaymentMethod = (formData.get("paymentMethod") as string) || "CASH"
   const proofFile = formData.get("paymentProof") as File | string | null
 
   let paymentProofUrl: string | null = null
@@ -421,6 +453,9 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
   }
 
   const { amountPaid, registrationType, selectedClassIds } = selection
+  const isComplimentaryReservation = amountPaid === 0
+  const paymentMethod = isComplimentaryReservation ? "MEMBER_INCLUDED" : requestedPaymentMethod
+  const paymentStatus = isComplimentaryReservation ? "PAID" : "PENDING"
 
   const existing = await db.eventRegistration.findFirst({
     where: {
@@ -428,8 +463,6 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
       memberId: member.id
     }
   })
-
-  const paymentStatus = "PENDING"
 
   if (existing) {
     await db.eventRegistration.update({
@@ -439,8 +472,8 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
         selectedClassIds,
         amountPaid,
         paymentMethod,
-        paymentProof: paymentProofUrl || existing.paymentProof,
-        paymentStatus: "PENDING"
+        paymentProof: isComplimentaryReservation ? null : paymentProofUrl || existing.paymentProof,
+        paymentStatus
       }
     })
 
@@ -459,7 +492,7 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
       })
     ]
 
-    if (member.email && (paymentProofUrl || paymentMethod === "TRANSFER")) {
+    if (!isComplimentaryReservation && member.email && (paymentProofUrl || paymentMethod === "TRANSFER")) {
       emailPromises.push(
         sendAttendeePendingProofEmail({
           firstName: member.firstName,
@@ -478,7 +511,12 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
     revalidatePath(`/admin/eventos/${eventId}`)
     revalidatePath("/socios")
     revalidatePath(`/eventos/${eventId}`)
-    return { success: true, message: "Inscripción actualizada correctamente. Tu comprobante está en verificación por Tesorería." }
+    return {
+      success: true,
+      message: isComplimentaryReservation
+        ? "Reserva actualizada sin cargo para socio."
+        : "Inscripción actualizada correctamente. Tu comprobante está en verificación por Tesorería.",
+    }
   }
 
   await db.eventRegistration.create({
@@ -495,7 +533,7 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
       amountPaid,
       paymentStatus: paymentStatus,
       paymentMethod: paymentMethod,
-      paymentProof: paymentProofUrl
+      paymentProof: isComplimentaryReservation ? null : paymentProofUrl
     }
   })
 
@@ -514,7 +552,7 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
     })
   ]
 
-  if (member.email && (paymentProofUrl || paymentMethod === "TRANSFER")) {
+  if (!isComplimentaryReservation && member.email && (paymentProofUrl || paymentMethod === "TRANSFER")) {
     emailPromises.push(
       sendAttendeePendingProofEmail({
         firstName: member.firstName,
@@ -533,7 +571,12 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
   revalidatePath(`/admin/eventos/${eventId}`)
   revalidatePath("/socios")
   revalidatePath(`/eventos/${eventId}`)
-  return { success: true, message: "¡Reserva realizada con éxito con Tarifa Socio!" }
+  return {
+    success: true,
+    message: isComplimentaryReservation
+      ? "¡Reserva sin cargo para socio confirmada!"
+      : "¡Reserva realizada con éxito con Tarifa Socio!",
+  }
 }
 
 export async function getSocioEventRegistrations(memberId: string) {

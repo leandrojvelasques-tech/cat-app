@@ -200,8 +200,8 @@ export function PublicEventCheckoutModal({ event }: PublicEventCheckoutModalProp
             
             {/* Header */}
             {event.eventBanner && (
-              <div className="relative w-full h-32 overflow-hidden border-b border-white/10 shrink-0 bg-zinc-950">
-                <img src={event.eventBanner} alt={event.title} className="w-full h-full object-cover" />
+              <div className="relative w-full h-36 sm:h-32 overflow-hidden border-b border-white/10 shrink-0 bg-zinc-950">
+                <img src={event.eventBanner} alt={event.title} className="w-full h-full object-cover object-center" />
                 <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent" />
               </div>
             )}

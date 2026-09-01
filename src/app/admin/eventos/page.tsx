@@ -2,6 +2,7 @@ import { db } from "@/lib/db"
 import { Calendar, CalendarDays, Plus, Users, Music, ShoppingBag, Share2, Tag, ShieldAlert, ArrowRight, CheckCircle2, Sparkles, BookOpen } from "lucide-react"
 import Link from "next/link"
 import { EventPreviewModal } from "./components/EventPreviewModal"
+import { CopyPublicEventLink } from "./components/CopyPublicEventLink"
 import { isExternalEvent } from "@/lib/event-utils"
 import { finalizePastEvents } from "@/lib/event-status"
 
@@ -113,7 +114,7 @@ export default async function EventosPage() {
         </div>
 
         <div className="space-y-2 pt-2 border-t border-white/5">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <a
               href={waShareUrl}
               target="_blank"
@@ -131,6 +132,8 @@ export default async function EventosPage() {
               isFree={event.isFree}
               buttonText="Previsualizar"
             />
+
+            <CopyPublicEventLink eventId={event.id} eventSlug={event.slug} />
           </div>
 
           <Link

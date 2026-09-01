@@ -91,6 +91,7 @@ export function SocioEventRegisterModal({ event, member, registration }: SocioEv
   }
 
   const currentPrice = getCurrentPrice()
+  const isComplimentaryReservation = currentPrice === 0
 
   const toggleLooseClass = (classId: string) => {
     setSelectedClassIds((currentIds) =>
@@ -138,8 +139,8 @@ export function SocioEventRegisterModal({ event, member, registration }: SocioEv
     formData.append("includeCombo", (registrationType === "COMBO_CLASES").toString())
     formData.append("includeMilonga", (registrationType === "MILONGA").toString())
     formData.append("selectedClassIds", JSON.stringify(registrationType === "CLASE_SUELTA" ? selectedClassIds : []))
-    formData.append("paymentMethod", paymentMethod)
-    if (file) {
+    formData.append("paymentMethod", isComplimentaryReservation ? "MEMBER_INCLUDED" : paymentMethod)
+    if (!isComplimentaryReservation && file) {
       formData.append("paymentProof", file)
     }
 
@@ -380,8 +381,8 @@ export function SocioEventRegisterModal({ event, member, registration }: SocioEv
                       </div>
                     </div>
 
-                    {/* Payment Method Selector */}
-                    <div className="space-y-3">
+                    {/* Socios con una reserva sin cargo no deben elegir ni acreditar un pago. */}
+                    {!isComplimentaryReservation ? <div className="space-y-3">
                       <label className="text-[10px] uppercase font-black tracking-widest text-zinc-500 ml-1">Modalidad de Pago</label>
                       <div className="grid grid-cols-2 gap-3">
                         <button
@@ -416,10 +417,14 @@ export function SocioEventRegisterModal({ event, member, registration }: SocioEv
                           </div>
                         </button>
                       </div>
-                    </div>
+                    </div> : (
+                      <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-xs font-bold text-emerald-300">
+                        Esta reserva está incluida para socios CAT. No requiere pago ni comprobante.
+                      </div>
+                    )}
 
                     {/* Transfer Proof Uploader if Transfer selected */}
-                    {paymentMethod === "TRANSFER" && (
+                    {!isComplimentaryReservation && paymentMethod === "TRANSFER" && (
                       <div className="space-y-4 bg-black/60 p-5 rounded-2xl border border-white/10 animate-in fade-in duration-200">
                         <div className="bg-amber-500/10 border border-amber-500/20 p-3.5 rounded-xl text-[11px] text-amber-300 space-y-1 font-mono">
                           <p className="font-bold uppercase text-[10px] text-amber-400">Datos Bancarios CAT:</p>
