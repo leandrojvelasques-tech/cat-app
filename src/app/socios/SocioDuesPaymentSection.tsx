@@ -324,7 +324,7 @@ export function SocioDuesPaymentSection({
                   <p className="font-bold text-white">Centro Amigos del Tango</p>
                 </div>
                 <div>
-                  <span className="text-zinc-500 text-[10px]">Alias MercadoPago / CBU:</span>
+                  <span className="text-zinc-500 text-[10px]">Alias bancario / CBU:</span>
                   <p className="font-bold text-amber-400 select-all">CENTRO.AMIGOS.TANGO</p>
                 </div>
               </div>
@@ -356,9 +356,8 @@ export function SocioDuesPaymentSection({
                   onChange={(e) => setPaymentMethod(e.target.value)}
                   className="w-full bg-zinc-950 border border-white/10 rounded-2xl p-3 text-white text-sm focus:border-amber-500 outline-none"
                 >
-                  <option value="TRANSFER">Transferencia Bancaria / MercadoPago</option>
+                  <option value="TRANSFER">Transferencia Bancaria</option>
                   <option value="CASH">Efectivo en Sede Central</option>
-                  <option value="DEPOSIT">Depósito Bancario</option>
                 </select>
               </div>
 

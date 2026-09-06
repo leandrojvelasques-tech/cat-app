@@ -8,6 +8,7 @@ import { calculateMemberStatus } from "@/lib/member-utils"
 import { sendPaymentValidatedEmail } from "@/lib/emails"
 import { writeFileSync, existsSync, mkdirSync } from "fs"
 import { join } from "path"
+import { isSupportedPaymentMethod } from "@/lib/payment-methods"
 
 export async function getActiveEvents() {
   const [events, settings] = await Promise.all([
@@ -195,6 +196,10 @@ export async function processMemberPayment(memberId: string, formData: FormData)
   
   const payload = JSON.parse(payloadString)
   const file = formData.get("paymentProof") as File | null
+
+  if (!isSupportedPaymentMethod(payload.paymentMethod)) {
+    throw new Error("El medio de pago seleccionado no está disponible. Elegí efectivo o transferencia.")
+  }
 
   let finalNotes = payload.notes || ""
   if (file && file.size > 0) {

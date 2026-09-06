@@ -84,7 +84,7 @@ export function CobranzasFilters({ currentMonth, currentYear, currentQuery, curr
              className="bg-white/5 border border-white/10 text-white px-6 py-4 rounded-[24px] text-xs font-black uppercase tracking-widest focus:outline-none cursor-pointer hover:bg-white/10 transition-all min-w-[160px] appearance-none"
            >
              <option value="all" className="bg-zinc-900">Todos los medios</option>
-             <option value="TRANSFERENCIA" className="bg-zinc-900">Transferencia / MP</option>
+             <option value="TRANSFERENCIA" className="bg-zinc-900">Transferencia</option>
              <option value="EFECTIVO" className="bg-zinc-900">Efectivo</option>
            </select>
         </div>

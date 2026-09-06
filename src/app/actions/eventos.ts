@@ -13,6 +13,7 @@ import { validateAndSanitizeFile } from "@/lib/security-utils"
 import { writeFileSync, existsSync, mkdirSync } from "fs"
 import { join } from "path"
 import { slugify } from "@/lib/slug-utils"
+import { isSupportedPaymentMethod } from "@/lib/payment-methods"
 
 async function createUniqueEventSlug(title: string, excludeEventId?: string) {
   const baseSlug = slugify(title) || "evento"
@@ -454,6 +455,9 @@ export async function registerSocioForEvent(eventId: string, formData: FormData)
 
   const { amountPaid, registrationType, selectedClassIds } = selection
   const isComplimentaryReservation = amountPaid === 0
+  if (!isComplimentaryReservation && !isSupportedPaymentMethod(requestedPaymentMethod)) {
+    return { success: false, error: "El medio de pago seleccionado no está disponible. Elegí efectivo o transferencia." }
+  }
   const paymentMethod = isComplimentaryReservation ? "MEMBER_INCLUDED" : requestedPaymentMethod
   const paymentStatus = isComplimentaryReservation ? "PAID" : "PENDING"
 

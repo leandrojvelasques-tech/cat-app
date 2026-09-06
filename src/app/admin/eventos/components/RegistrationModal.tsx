@@ -13,6 +13,7 @@ interface Member {
   email: string | null
   phone: string | null
   status: string
+  paymentStatus?: string
 }
 
 export function RegistrationModal({ event, onClose }: { event: any, onClose: () => void }) {
@@ -25,7 +26,8 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
   
   const prices = getEffectiveEventPrices(event)
 
-  const getPriceForType = (type: string, isSocio: boolean) => {
+  const getPriceForType = (type: string, isSocio: boolean, isMemberUpToDate = false) => {
+    if (isSocio && isMemberUpToDate) return 0
     if (type === "COMBO_CLASES") return isSocio ? prices.comboSocio : prices.comboNonSocio
     if (type === "CLASE_SUELTA") return isSocio ? prices.classLooseSocio : prices.classLooseNonSocio
     return isSocio ? prices.milongaSocio : prices.milongaNonSocio
@@ -66,8 +68,8 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
 
   const selectMember = (m: Member) => {
     setSelectedMember(m)
-    const isSocio = m.status === 'ACTIVE'
-    const price = getPriceForType(formData.registrationType, isSocio)
+    const isSocio = true
+    const price = getPriceForType(formData.registrationType, isSocio, m.paymentStatus === "AL DIA")
     setFormData({
       ...formData,
       firstName: m.firstName,
@@ -83,10 +85,12 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
   }
 
   const handleTypeChange = (type: string) => {
-    const isSocio = selectedMember?.status === 'ACTIVE'
-    const price = getPriceForType(type, isSocio)
+    const isSocio = Boolean(selectedMember)
+    const price = getPriceForType(type, isSocio, selectedMember?.paymentStatus === "AL DIA")
     setFormData(prev => ({ ...prev, registrationType: type, amountPaid: price }))
   }
+
+  const isSelectedMemberUpToDate = selectedMember?.paymentStatus === "AL DIA"
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -139,7 +143,9 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
                       <div className="text-sm font-bold text-white group-hover:text-amber-500">{m.firstName} {m.lastName}</div>
                       <div className="text-[10px] text-zinc-500">DNI: {m.dni}</div>
                     </div>
-                    <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/20 font-bold">SOCIO ACTIVO</span>
+                    <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/20 font-bold">
+                      {m.paymentStatus === "AL DIA" ? "SOCIO AL DÍA" : m.paymentStatus || "SOCIO ACTIVO"}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -152,7 +158,9 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
                   <div className="p-2 bg-amber-500/20 rounded-full text-amber-500"><User size={20} /></div>
                   <div>
                     <div className="text-sm font-bold text-amber-500">{selectedMember.firstName} {selectedMember.lastName}</div>
-                    <div className="text-[10px] text-amber-600/60 uppercase font-bold">Inscripción con Tarifa Socio</div>
+                    <div className="text-[10px] text-amber-600/60 uppercase font-bold">
+                      {isSelectedMemberUpToDate ? "Socio al día · inscripción sin cargo" : "Inscripción con Tarifa Socio"}
+                    </div>
                   </div>
                </div>
                <button type="button" onClick={() => setSelectedMember(null)} className="text-[10px] text-zinc-500 hover:text-white underline">CAMBIAR</button>
@@ -307,29 +315,37 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
              </div>
 
              <div className="space-y-4">
-                <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-widest">Pago y Estado</label>
+                <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-widest">
+                  {isSelectedMemberUpToDate ? "Inscripción sin cargo" : "Pago y Estado"}
+                </label>
                 <div className="bg-black/40 border border-white/10 rounded-2xl p-4 space-y-4">
                    <div className="flex items-center justify-between border-b border-white/5 pb-3">
                       <span className="text-xs text-zinc-400">Importe</span>
-                      <div className="relative">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px]">$</span>
-                        <input 
-                          name="amountPaid" 
-                          type="number" 
-                          value={formData.amountPaid}
-                          onChange={(e) => setFormData({...formData, amountPaid: parseFloat(e.target.value) || 0})}
-                          className="bg-zinc-900 border border-white/10 rounded-lg pl-5 pr-2 py-1 text-sm text-emerald-400 font-bold w-24 outline-none focus:border-emerald-500/50" 
-                        />
-                      </div>
+                      {isSelectedMemberUpToDate ? (
+                        <>
+                          <input type="hidden" name="amountPaid" value="0" />
+                          <span className="text-sm text-emerald-400 font-bold">$ 0</span>
+                        </>
+                      ) : (
+                        <div className="relative">
+                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-600 text-[10px]">$</span>
+                          <input
+                            name="amountPaid"
+                            type="number"
+                            value={formData.amountPaid}
+                            onChange={(e) => setFormData({...formData, amountPaid: parseFloat(e.target.value) || 0})}
+                            className="bg-zinc-900 border border-white/10 rounded-lg pl-5 pr-2 py-1 text-sm text-emerald-400 font-bold w-24 outline-none focus:border-emerald-500/50"
+                          />
+                        </div>
+                      )}
                    </div>
                    
-                   <div className="space-y-3">
+                   {!isSelectedMemberUpToDate && <div className="space-y-3">
                       <div className="flex items-center gap-2">
                          <CreditCard size={14} className="text-zinc-600" />
                          <select name="paymentMethod" className="bg-zinc-800 border border-white/10 rounded-lg text-xs text-zinc-200 px-2 py-1.5 outline-none w-full shadow-lg">
                             <option value="CASH" className="bg-zinc-800">Efectivo</option>
                             <option value="TRANSFER" className="bg-zinc-800">Transferencia / Alias</option>
-                            <option value="MP" className="bg-zinc-800">Mercado Pago</option>
                          </select>
                       </div>
                       <div className="flex items-center gap-2">
@@ -339,7 +355,7 @@ export function RegistrationModal({ event, onClose }: { event: any, onClose: () 
                             <option value="PENDING" className="bg-zinc-800">PENDIENTE / RESERVA</option>
                           </select>
                       </div>
-                   </div>
+                   </div>}
                 </div>
              </div>
           </div>

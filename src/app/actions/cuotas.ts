@@ -7,6 +7,7 @@ import { auth } from "@/auth"
 import { writeFileSync, existsSync, mkdirSync } from "fs"
 import { join } from "path"
 import { getFeeHistory, getFeeAmountForPeriod } from "@/lib/fee-utils"
+import { isSupportedPaymentMethod } from "@/lib/payment-methods"
 
 export async function createPayment(memberId: string, formData: FormData) {
   const session = await auth()
@@ -35,6 +36,10 @@ export async function createPayment(memberId: string, formData: FormData) {
   const paymentMethod = formData.get("paymentMethod") as string
   const notes = formData.get("notes") as string
   const file = formData.get("paymentProof") as File | null
+
+  if (!isSupportedPaymentMethod(paymentMethod)) {
+    throw new Error("El medio de pago seleccionado no está disponible. Elegí efectivo o transferencia.")
+  }
 
   // Ensure upload directory exists
   const uploadDir = join(process.cwd(), "public", "uploads")

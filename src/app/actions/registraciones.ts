@@ -15,6 +15,8 @@ import {
   parseSelectedClassIds,
   resolveEventRegistrationSelection,
 } from "@/lib/event-registration-selection"
+import { getPaymentStatus } from "@/lib/member-utils"
+import { isSupportedPaymentMethod } from "@/lib/payment-methods"
 
 export async function registerAttendee(formData: FormData) {
   try {
@@ -29,15 +31,45 @@ export async function registerAttendee(formData: FormData) {
     const email = formData.get("email") as string
     const phone = formData.get("phone") as string
     const registrationType = formData.get("registrationType") as string
-    const amountPaid = parseFloat(formData.get("amountPaid") as string) || 0
-    const paymentStatus = (formData.get("paymentStatus") as string) || "PAID"
-    const paymentMethod = formData.get("paymentMethod") as string
+    const requestedAmountPaid = parseFloat(formData.get("amountPaid") as string) || 0
+    const requestedPaymentStatus = (formData.get("paymentStatus") as string) || "PAID"
+    const requestedPaymentMethod = ((formData.get("paymentMethod") as string) || "CASH").trim()
     const source = (formData.get("source") as string) || "MANAGEMENT"
     const file = formData.get("paymentProof") as File | null
     const realPaymentDateStr = formData.get("realPaymentDate") as string | null
 
     // Parse real payment date if provided by staff; null means "use createdAt as reference"
     const realPaymentDate = realPaymentDateStr ? new Date(realPaymentDateStr) : null
+
+    const member = memberId
+      ? await db.member.findUnique({
+          where: { id: memberId },
+          select: {
+            id: true,
+            type: true,
+            status: true,
+            debtStatus: true,
+            joinDate: true,
+            fees: { select: { periodMonth: true, periodYear: true, paymentStatus: true } }
+          }
+        })
+      : null
+
+    if (memberId && !member) {
+      return { error: "El socio seleccionado ya no está disponible." }
+    }
+
+    const isMemberUpToDate = Boolean(member && getPaymentStatus(member) === "AL DIA")
+    if (!isMemberUpToDate && !isSupportedPaymentMethod(requestedPaymentMethod)) {
+      return { error: "El medio de pago seleccionado no está disponible. Elegí efectivo o transferencia." }
+    }
+    if (!['PAID', 'PENDING'].includes(requestedPaymentStatus)) {
+      return { error: "El estado de pago seleccionado no es válido." }
+    }
+
+    const amountPaid = isMemberUpToDate ? 0 : Math.max(requestedAmountPaid, 0)
+    const paymentStatus = isMemberUpToDate ? "PAID" : requestedPaymentStatus
+    const paymentMethod = isMemberUpToDate ? "MEMBER_INCLUDED" : requestedPaymentMethod
 
     let paymentProofUrl = null
     if (file && file.size > 0) {
@@ -66,7 +98,7 @@ export async function registerAttendee(formData: FormData) {
         paymentStatus,
         paymentMethod,
         source,
-        paymentProof: paymentProofUrl,
+        paymentProof: isMemberUpToDate ? null : paymentProofUrl,
         recordedById: userId,
         realPaymentDate,
       },
@@ -83,7 +115,7 @@ export async function registerAttendee(formData: FormData) {
         registrationType,
         amountPaid,
         paymentMethod,
-        paymentProof: paymentProofUrl
+        paymentProof: isMemberUpToDate ? null : paymentProofUrl
       }).catch(err => console.error("Error sending event registration alert email:", err))
     }
 
@@ -118,6 +150,10 @@ export async function registerPublicAttendee(formData: FormData) {
     })
     if (!event || !event.isPublic) {
       return { success: false, error: "El evento no existe o ya no está disponible." }
+    }
+
+    if (!event.isFree && !isSupportedPaymentMethod(paymentMethod)) {
+      return { success: false, error: "El medio de pago seleccionado no está disponible. Elegí efectivo o transferencia." }
     }
 
     const { amountPaid, registrationType, selectedClassIds } = resolveEventRegistrationSelection(

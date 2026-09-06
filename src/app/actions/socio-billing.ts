@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { validateAndSanitizeFile } from "@/lib/security-utils"
 import { sendFeePaymentPendingEmail } from "@/lib/emails"
 import { getMemberDebt } from "./billing"
+import { isSupportedPaymentMethod } from "@/lib/payment-methods"
 
 export async function submitSocioPaymentProof(formData: FormData) {
   try {
@@ -19,6 +20,10 @@ export async function submitSocioPaymentProof(formData: FormData) {
     const paymentMethod = (formData.get("paymentMethod") as string) || "TRANSFER"
     const userNotes = (formData.get("notes") as string) || ""
     const file = formData.get("paymentProof") as File | null
+
+    if (!isSupportedPaymentMethod(paymentMethod)) {
+      return { success: false, error: "El medio de pago seleccionado no está disponible. Elegí efectivo o transferencia." }
+    }
 
     if (!memberId || !selectedMonthsStr) {
       return { success: false, error: "Faltan datos obligatorios para el registro de pago." }

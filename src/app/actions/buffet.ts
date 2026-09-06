@@ -3,6 +3,7 @@
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { isSupportedPaymentMethod } from "@/lib/payment-methods"
 
 export async function createBuffetProduct(formData: FormData) {
   const name = formData.get("name") as string
@@ -68,6 +69,10 @@ export async function registerBuffetSale({
   buyerName?: string
   buyerId?: string
 }) {
+  if (paymentMethod !== "A_COBRAR" && !isSupportedPaymentMethod(paymentMethod)) {
+    throw new Error("El medio de pago seleccionado no está disponible. Elegí efectivo o transferencia.")
+  }
+
   await db.buffetSale.create({
     data: {
       event: { connect: { id: eventId } },

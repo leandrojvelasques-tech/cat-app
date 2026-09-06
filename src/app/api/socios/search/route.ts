@@ -1,5 +1,6 @@
 import { db } from "@/lib/db"
 import { NextResponse } from "next/server"
+import { getPaymentStatus } from "@/lib/member-utils"
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -28,9 +29,28 @@ export async function GET(req: Request) {
       dni: true,
       email: true,
       phone: true,
-      status: true
+      status: true,
+      type: true,
+      debtStatus: true,
+      joinDate: true,
+      fees: {
+        select: {
+          periodMonth: true,
+          periodYear: true,
+          paymentStatus: true
+        }
+      }
     }
   })
 
-  return NextResponse.json(members)
+  return NextResponse.json(members.map(member => ({
+    id: member.id,
+    firstName: member.firstName,
+    lastName: member.lastName,
+    dni: member.dni,
+    email: member.email,
+    phone: member.phone,
+    status: member.status,
+    paymentStatus: getPaymentStatus(member)
+  })))
 }

@@ -30,7 +30,6 @@ const TYPE_META: Record<string, { label: string; icon: React.ReactNode; color: s
 
 const PAYMENT_METHODS = [
   { value: "CASH", label: "💵 Efectivo" },
-  { value: "MERCADOPAGO", label: "💙 Mercado Pago" },
   { value: "TRANSFER", label: "🏦 Transferencia" },
   { value: "A_COBRAR", label: "📋 A Cobrar" },
 ]

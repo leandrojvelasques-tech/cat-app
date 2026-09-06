@@ -9,7 +9,7 @@ const formatCurrency = (v: number) =>
 const PaymentMethodLabels: Record<string, string> = {
   CASH: "Efectivo",
   TRANSFER: "Transferencia",
-  MERCADOPAGO: "Mercado Pago",
+  MERCADOPAGO: "Otro medio",
   A_COBRAR: "A Cobrar",
   PENDING: "Pendiente",
 }

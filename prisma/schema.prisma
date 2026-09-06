@@ -420,7 +420,7 @@ model BuffetSale {
 
   amountTotal   Float
   amountPaid    Float
-  paymentMethod String // CASH, TRANSFER, MERCADOPAGO, A_COBRAR
+  paymentMethod String // CASH, TRANSFER, legacy values, A_COBRAR
 
   buyerName String?
   buyerId   String?
