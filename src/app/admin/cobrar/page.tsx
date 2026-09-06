@@ -2,7 +2,13 @@ import CobrarWizard from "./CobrarWizard"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 
-export default function CobrarPage() {
+export default async function CobrarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ socioId?: string }>
+}) {
+  const { socioId } = await searchParams
+
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center gap-4">
@@ -20,7 +26,7 @@ export default function CobrarPage() {
 
       <div className="bg-zinc-900/30 border border-white/5 rounded-[40px] p-6 md:p-12 min-h-[600px] backdrop-blur-3xl relative overflow-hidden">
          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-600 via-red-800 to-amber-600 opacity-20"></div>
-         <CobrarWizard />
+         <CobrarWizard initialMemberId={socioId} />
       </div>
     </div>
   )

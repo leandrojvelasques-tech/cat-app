@@ -24,13 +24,13 @@ const TangoShoe = ({ size = 24, className = "" }: { size?: number, className?: s
     <path d="M4 15H9" />
   </svg>
 )
-import { searchMembers, getMemberDebt, processMemberPayment, getActiveEvents } from "@/app/actions/billing"
+import { searchMembers, getMemberForBilling, getMemberDebt, processMemberPayment, getActiveEvents } from "@/app/actions/billing"
 import { registerAttendee } from "@/app/actions/registraciones"
 import Link from "next/link"
 
 type Step = 'CATEGORY' | 'SEARCH_MEMBER' | 'DEBT_SELECTION' | 'PAYMENT' | 'EVENT_SELECTION' | 'EVENT_FORM' | 'SUCCESS'
 
-export default function CobrarWizard() {
+export default function CobrarWizard({ initialMemberId }: { initialMemberId?: string }) {
   const [step, setStep] = useState<Step>('SEARCH_MEMBER')
   const [category, setCategory] = useState<'CUOTA' | 'EVENTO' | null>('CUOTA')
   
@@ -66,6 +66,31 @@ export default function CobrarWizard() {
   const [isEventMemberSearchOpen, setIsEventMemberSearchOpen] = useState(false)
   const [eventMemberQuery, setEventMemberQuery] = useState("")
   const [eventMemberResults, setEventMemberResults] = useState<any[]>([])
+  const [errorMessage, setErrorMessage] = useState("")
+
+  useEffect(() => {
+    if (!initialMemberId) return
+
+    let cancelled = false
+    const loadInitialMember = async () => {
+      try {
+        const member = await getMemberForBilling(initialMemberId)
+        if (!member) throw new Error("El socio no está disponible.")
+        const data = await getMemberDebt(member.id)
+        if (cancelled) return
+        setCategory("CUOTA")
+        setSelectedMember(member)
+        setDebts(data)
+        setSelectedMonths([])
+        setStep("DEBT_SELECTION")
+      } catch (error) {
+        if (!cancelled) setErrorMessage(error instanceof Error ? error.message : "No se pudo cargar el estado de deuda.")
+      }
+    }
+
+    void loadInitialMember()
+    return () => { cancelled = true }
+  }, [initialMemberId])
 
   // Search members logic for Event
   useEffect(() => {
@@ -130,6 +155,7 @@ export default function CobrarWizard() {
 
   const handleProcessPayment = async () => {
     setLoading(true)
+    setErrorMessage("")
     try {
       if (category === 'CUOTA') {
         const formData = new FormData()
@@ -142,7 +168,8 @@ export default function CobrarWizard() {
         }))
         if (paymentProof) formData.append("paymentProof", paymentProof)
         
-        await processMemberPayment(selectedMember.id, formData)
+        const result = await processMemberPayment(selectedMember.id, formData)
+        if (!result?.success) throw new Error("No se pudo registrar el cobro.")
       } else if (category === 'EVENTO') {
         const formData = new FormData()
         formData.append("eventId", selectedEvent.id)
@@ -159,11 +186,13 @@ export default function CobrarWizard() {
         formData.append("realPaymentDate", realPaymentDate)
         if (paymentProof) formData.append("paymentProof", paymentProof)
         
-        await registerAttendee(formData)
+        const result = await registerAttendee(formData)
+        if (!result?.success) throw new Error(result?.error || "No se pudo registrar la inscripción.")
       }
       setStep('SUCCESS')
     } catch (e) {
-      console.error(e)
+      console.error("Error registrando cobro:", e)
+      setErrorMessage(e instanceof Error ? e.message : "No se pudo registrar el cobro.")
     } finally {
       setLoading(false)
     }
@@ -171,6 +200,11 @@ export default function CobrarWizard() {
 
   return (
     <div className="max-w-3xl mx-auto py-8">
+      {errorMessage && (
+        <div role="alert" className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-sm text-red-200">
+          {errorMessage}
+        </div>
+      )}
       {/* Stepper Progress Indicator */}
       <div className="flex items-center justify-between mb-12 px-4 max-w-xl mx-auto">
          {[1, 2, 3].map((num) => (

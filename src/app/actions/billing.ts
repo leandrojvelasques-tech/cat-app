@@ -1,7 +1,6 @@
 "use server"
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { getFeeHistory, getFeeAmountForPeriod } from "@/lib/fee-utils"
 import { calculateMemberStatus } from "@/lib/member-utils"
@@ -75,6 +74,26 @@ export async function searchMembers(query: string) {
       ]
     },
     take: 10
+  })
+}
+
+export async function getMemberForBilling(memberId: string) {
+  if (!memberId) return null
+
+  return await db.member.findUnique({
+    where: { id: memberId },
+    select: {
+      id: true,
+      memberNumber: true,
+      firstName: true,
+      lastName: true,
+      dni: true,
+      email: true,
+      phone: true,
+      avatarUrl: true,
+      status: true,
+      type: true,
+    },
   })
 }
 
@@ -197,6 +216,10 @@ export async function processMemberPayment(memberId: string, formData: FormData)
   const payload = JSON.parse(payloadString)
   const file = formData.get("paymentProof") as File | null
 
+  if (!memberId || !Array.isArray(payload.selectedMonths) || payload.selectedMonths.length === 0) {
+    throw new Error("Debe seleccionar al menos una cuota.")
+  }
+
   if (!isSupportedPaymentMethod(payload.paymentMethod)) {
     throw new Error("El medio de pago seleccionado no está disponible. Elegí efectivo o transferencia.")
   }
@@ -221,27 +244,31 @@ export async function processMemberPayment(memberId: string, formData: FormData)
     finalNotes = `[COMPROBANTE: /uploads/${uniqueName}]\n${finalNotes}`
   }
 
-  // Logic to create multiple MembershipFee records
-  for (const item of payload.selectedMonths) {
-    // Parse the real payment date if provided; fallback to registration date (now)
-    const realPaymentDate = payload.realPaymentDate ? new Date(payload.realPaymentDate) : null
-    // Check if partial fee exists to update, else create
-    await db.membershipFee.upsert({
+  const realPaymentDate = payload.realPaymentDate ? new Date(payload.realPaymentDate) : null
+  if (realPaymentDate && Number.isNaN(realPaymentDate.getTime())) {
+    throw new Error("La fecha real de pago no es válida.")
+  }
+
+  const paymentDate = new Date()
+
+  // Keep a multi-month collection all-or-nothing so a later failure cannot
+  // leave only part of the payment visible in the member account or cash box.
+  await db.$transaction(payload.selectedMonths.map((item: { year: number; month: number; amount: number }) => db.membershipFee.upsert({
       where: {
         memberId_periodYear_periodMonth: {
           memberId,
           periodYear: item.year,
-          periodMonth: item.month
-        }
+          periodMonth: item.month,
+        },
       },
       update: {
         amountPaid: { increment: item.amount },
-        paymentStatus: 'PAID', // Assuming selecting it pays it fully for now
+        paymentStatus: 'PAID',
         paymentMethod: payload.paymentMethod,
-        paymentDate: new Date(),
+        paymentDate,
         realPaymentDate,
         notes: finalNotes,
-        recordedById: userId
+        recordedById: userId,
       },
       create: {
         memberId,
@@ -251,13 +278,12 @@ export async function processMemberPayment(memberId: string, formData: FormData)
         amountPaid: item.amount,
         paymentStatus: 'PAID',
         paymentMethod: payload.paymentMethod,
-        paymentDate: new Date(),
+        paymentDate,
         realPaymentDate,
         notes: finalNotes,
-        recordedById: userId
-      }
-    })
-  }
+        recordedById: userId,
+      },
+    })))
 
   // Enviar email de confirmación de pago de cuota al socio
   try {
@@ -275,5 +301,6 @@ export async function processMemberPayment(memberId: string, formData: FormData)
 
   revalidatePath("/admin/cuotas")
   revalidatePath(`/admin/socios/${memberId}`)
-  redirect("/admin/cuotas")
+  revalidatePath("/admin")
+  return { success: true }
 }
