@@ -5,6 +5,10 @@ import { writeFileSync, existsSync, mkdirSync } from "fs"
 import { join } from "path"
 import { sendEnrollmentSubmittedEmail, sendNewEnrollmentAlertToBoard } from "@/lib/emails"
 import { getCurrentFeeAmount } from "@/lib/fee-utils"
+import { arePotentialSamePerson } from "@/lib/member-utils"
+import { auth } from "@/auth"
+
+const ENROLLMENT_MANAGEMENT_ROLES = ["ADMIN", "BOARD", "SUPERADMIN"]
 
 
 export async function submitEnrollmentRequest(formData: FormData) {
@@ -23,8 +27,33 @@ export async function submitEnrollmentRequest(formData: FormData) {
       return { success: false, error: "Todos los campos obligatorios (*) y el comprobante de pago son necesarios." }
     }
 
-    // Para demos y pruebas, permitimos registrar múltiples solicitudes incluso con el mismo DNI/email.
-    // La verificación de DNI único se mantiene al momento de aprobar el alta en el panel de administración.
+    const [existingMember, existingRequest, pendingNameRequests] = await Promise.all([
+      db.member.findFirst({
+        where: { OR: [{ dni }, { email }] },
+        select: { memberNumber: true, firstName: true, lastName: true }
+      }),
+      db.enrollmentRequest.findFirst({
+        where: {
+          status: "PENDING",
+          OR: [{ dni }, { email }]
+        },
+        select: { firstName: true, lastName: true }
+      }),
+      db.enrollmentRequest.findMany({
+        where: { status: "PENDING" },
+        select: { firstName: true, lastName: true }
+      })
+    ])
+
+    if (existingMember) {
+      return { success: false, error: "Ya existe un socio registrado con esos datos. Si se trata de una reincorporación, comunicate con Tesorería." }
+    }
+    if (existingRequest) {
+      return { success: false, error: "Ya existe una solicitud de inscripción pendiente con esos datos." }
+    }
+    if (pendingNameRequests.some(pending => arePotentialSamePerson(firstName, lastName, pending.firstName, pending.lastName))) {
+      return { success: false, error: "Ya existe una solicitud de inscripción pendiente con un nombre coincidente. Si se trata de una reincorporación, comunicate con Tesorería." }
+    }
 
     // 3. Procesar carga de comprobante de pago
     let paymentProofUrl = ""
@@ -95,8 +124,13 @@ import bcrypt from "bcrypt"
 import { sendEnrollmentApprovedEmail } from "@/lib/emails"
 import { revalidatePath } from "next/cache"
 
-export async function approveEnrollmentRequest(requestId: string) {
+export async function approveEnrollmentRequest(requestId: string, allowDuplicate = false) {
   try {
+    const session = await auth()
+    if (!session?.user || !ENROLLMENT_MANAGEMENT_ROLES.includes(session.user.role)) {
+      return { success: false, error: "No autorizado." }
+    }
+
     const request = await db.enrollmentRequest.findUnique({
       where: { id: requestId }
     })
@@ -105,10 +139,8 @@ export async function approveEnrollmentRequest(requestId: string) {
       return { success: false, error: "La solicitud no existe o ya fue procesada." }
     }
 
-    // 1. Verificar si ya existe un socio con este DNI
-    const existingDni = await db.member.findUnique({
-      where: { dni: request.dni }
-    })
+    // Los identificadores exactos son un bloqueo duro, incluso si se intenta forzar la aprobación.
+    const existingDni = await db.member.findUnique({ where: { dni: request.dni } })
     if (existingDni) {
       return { success: false, error: "Ya existe un socio registrado en el padrón con el DNI de esta solicitud." }
     }
@@ -119,6 +151,35 @@ export async function approveEnrollmentRequest(requestId: string) {
     })
     if (existingMemberEmail) {
       return { success: false, error: "Ya existe un socio registrado en el padrón con el correo electrónico de esta solicitud." }
+    }
+
+    const nameMatches = (await db.member.findMany({
+      select: { memberNumber: true, firstName: true, lastName: true, status: true, dni: true }
+    })).filter(member => arePotentialSamePerson(
+      request.firstName,
+      request.lastName,
+      member.firstName,
+      member.lastName
+    ))
+
+    if (nameMatches.length > 0 && !allowDuplicate) {
+      const duplicateCheckNotes = nameMatches
+        .map(member => `Socio ${member.memberNumber}: ${member.firstName} ${member.lastName} (${member.status})`)
+        .join("; ")
+      await db.enrollmentRequest.update({
+        where: { id: requestId },
+        data: { duplicateCheckStatus: "REVIEW_REQUIRED", duplicateCheckNotes }
+      })
+      return {
+        success: false,
+        requiresDuplicateReview: true,
+        duplicateMatches: nameMatches.map(member => ({
+          memberNumber: member.memberNumber,
+          name: `${member.firstName} ${member.lastName}`,
+          status: member.status
+        })),
+        error: "Encontramos un socio con el mismo nombre y apellido. Revisá si es una reincorporación antes de aprobar."
+      }
     }
 
     // 2. Verificar si ya existe un usuario con este correo para evitar colisión de unique constraint
@@ -202,7 +263,14 @@ export async function approveEnrollmentRequest(requestId: string) {
 
       await tx.enrollmentRequest.update({
         where: { id: requestId },
-        data: { status: "APPROVED" }
+        data: {
+          status: "APPROVED",
+          duplicateCheckStatus: nameMatches.length > 0 ? "OVERRIDDEN" : null,
+          duplicateReviewedAt: nameMatches.length > 0 ? new Date() : null,
+          duplicateCheckNotes: nameMatches.length > 0
+            ? nameMatches.map(member => `Socio ${member.memberNumber}: ${member.firstName} ${member.lastName} (${member.status})`).join("; ")
+            : null
+        }
       })
 
       createdMember = member
@@ -228,6 +296,11 @@ export async function approveEnrollmentRequest(requestId: string) {
 
 export async function rejectEnrollmentRequest(requestId: string) {
   try {
+    const session = await auth()
+    if (!session?.user || !ENROLLMENT_MANAGEMENT_ROLES.includes(session.user.role)) {
+      return { success: false, error: "No autorizado." }
+    }
+
     const request = await db.enrollmentRequest.findUnique({
       where: { id: requestId }
     })

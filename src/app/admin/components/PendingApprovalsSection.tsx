@@ -85,7 +85,12 @@ export function PendingApprovalsSection({
     if (!confirm("¿Aprobar esta solicitud y dar de alta al socio? Se enviará correo con sus credenciales.")) return
     setProcessingId(id)
     try {
-      const res = await approveEnrollmentRequest(id)
+      let res = await approveEnrollmentRequest(id)
+      if (!res.success && "requiresDuplicateReview" in res && res.requiresDuplicateReview) {
+        const matches = (res.duplicateMatches || []).map(match => `• Socio ${match.memberNumber}: ${match.name} (${match.status})`).join("\n")
+        if (!confirm(`${res.error}\n\n${matches}\n\n¿Confirmás que querés aprobar igualmente esta solicitud?`)) return
+        res = await approveEnrollmentRequest(id, true)
+      }
       if (res.success) {
         toast.success("Socio dado de alta exitosamente.")
         setEnrollments(prev => prev.filter(s => s.id !== id))

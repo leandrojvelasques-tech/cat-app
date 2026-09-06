@@ -107,6 +107,11 @@ export function calculateMemberStatus(member: any, now: Date = new Date()): Calc
   const unpaidMonths = expectedMonths.filter(em => !hasPaid(em.month, em.year))
   const debtMonths = unpaidMonths.length
 
+  // Un alta posterior al último mes exigible todavía no tiene cuotas vencidas.
+  if (debtMonths === 0) {
+    return 'AL DIA'
+  }
+
   // 2. EN MORA: puede deber una o dos cuotas y conserva sus beneficios.
   if (debtMonths > 0 && debtMonths < 3) {
     return 'EN MORA'
@@ -175,6 +180,38 @@ export function cleanDNI(dni?: string | null): string {
     return trimmed
   }
   return trimmed.replace(/[\.\s-]/g, "")
+}
+
+/** Normalizes a person's name for duplicate detection, ignoring case and accents. */
+export function normalizePersonName(value?: string | null): string {
+  return (value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleUpperCase("es-AR")
+    .replace(/[^A-Z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ")
+}
+
+export function normalizePersonNamePair(firstName?: string | null, lastName?: string | null): string {
+  return normalizePersonName(`${firstName || ""} ${lastName || ""}`)
+}
+
+export function arePotentialSamePerson(
+  firstNameA?: string | null,
+  lastNameA?: string | null,
+  firstNameB?: string | null,
+  lastNameB?: string | null
+): boolean {
+  const firstA = normalizePersonName(firstNameA)
+  const firstB = normalizePersonName(firstNameB)
+  const lastA = normalizePersonName(lastNameA)
+  const lastB = normalizePersonName(lastNameB)
+  if (!firstA || !firstB || !lastA || lastA !== lastB) return false
+  if (normalizePersonNamePair(firstNameA, lastNameA) === normalizePersonNamePair(firstNameB, lastNameB)) return true
+
+  const firstTokensA = new Set(firstA.split(" "))
+  return firstB.split(" ").some(token => firstTokensA.has(token))
 }
 
 /**

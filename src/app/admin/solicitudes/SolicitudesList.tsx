@@ -30,7 +30,12 @@ export function SolicitudesList({ initialSolicitudes }: { initialSolicitudes: Re
     if (!confirm("¿Aprobar esta solicitud y dar de alta al socio? Se le enviará un email con sus credenciales de acceso.")) return
     setProcessingId(id)
     try {
-      const res = await approveEnrollmentRequest(id)
+      let res = await approveEnrollmentRequest(id)
+      if (!res.success && "requiresDuplicateReview" in res && res.requiresDuplicateReview) {
+        const matches = (res.duplicateMatches || []).map(match => `• Socio ${match.memberNumber}: ${match.name} (${match.status})`).join("\n")
+        if (!confirm(`${res.error}\n\n${matches}\n\n¿Confirmás que querés aprobar igualmente esta solicitud?`)) return
+        res = await approveEnrollmentRequest(id, true)
+      }
       if (res.success) {
         toast.success("Socio dado de alta exitosamente.")
         setSolicitudes(solicitudes.filter(s => s.id !== id))

@@ -582,6 +582,9 @@ model EnrollmentRequest {
   comment         String?
   paymentProofUrl String
   status          String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  duplicateCheckStatus String? // REVIEW_REQUIRED, OVERRIDDEN
+  duplicateCheckNotes  String?
+  duplicateReviewedAt   DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
