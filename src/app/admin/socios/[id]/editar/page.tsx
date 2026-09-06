@@ -175,6 +175,7 @@ export default async function EditarSocioPage(props: any) {
                 <option value="RENUNCIA" className="bg-zinc-900 text-white">Renuncia</option>
                 <option value="FALLECIMIENTO" className="bg-zinc-900 text-white">Fallecimiento</option>
                 <option value="BAJA_ADMINISTRATIVA" className="bg-zinc-900 text-white">Baja administrativa</option>
+                <option value="DUPLICATE" className="bg-zinc-900 text-white">Socio duplicado</option>
               </select>
               <p className="text-xs text-zinc-500">Se utiliza únicamente cuando el estado societario es Baja.</p>
             </div>}

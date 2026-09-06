@@ -34,7 +34,7 @@ export default async function ArchivoSociosPage({
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight text-white/90">Archivo de Socios</h1>
-        <p className="text-zinc-400 mt-1">Historial de socios dados de baja (fallecimiento, renuncia o baja administrativa).</p>
+        <p className="text-zinc-400 mt-1">Historial de socios dados de baja (fallecimiento, renuncia, baja administrativa o duplicado).</p>
       </div>
 
       <SociosFilters />

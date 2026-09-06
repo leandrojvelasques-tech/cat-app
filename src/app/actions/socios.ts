@@ -220,10 +220,16 @@ export async function changeMemberStatus(memberId: string, status: string) {
 }
 
 export async function deactivateMember(memberId: string, status: string, notes?: string) {
-  if (!['RESIGNED', 'DECEASED', 'ADMINISTRATIVE'].includes(status)) {
+  if (!['RESIGNED', 'DECEASED', 'ADMINISTRATIVE', 'DUPLICATE'].includes(status)) {
     throw new Error("El motivo de baja no es válido.")
   }
-  const bajaReason = status === "DECEASED" ? "FALLECIMIENTO" : status === "ADMINISTRATIVE" ? "BAJA_ADMINISTRATIVA" : "RENUNCIA"
+  const bajaReason = status === "DECEASED"
+    ? "FALLECIMIENTO"
+    : status === "ADMINISTRATIVE"
+      ? "BAJA_ADMINISTRATIVA"
+      : status === "DUPLICATE"
+        ? "DUPLICATE"
+        : "RENUNCIA"
   await db.member.update({
     where: { id: memberId },
     data: { 
@@ -306,7 +312,7 @@ export async function updateMember(id: string, formData: FormData) {
   if (!['ACTIVO', 'HONORARIO', 'BAJA'].includes(societaryStatus)) {
     throw new Error("Estado societario inválido.")
   }
-  if (isBaja && !['RENUNCIA', 'FALLECIMIENTO', 'BAJA_ADMINISTRATIVA'].includes(bajaReason)) {
+  if (isBaja && !['RENUNCIA', 'FALLECIMIENTO', 'BAJA_ADMINISTRATIVA', 'DUPLICATE'].includes(bajaReason)) {
     throw new Error("Una baja debe tener un motivo válido.")
   }
   if (!isBaja && !isHonorary && !['AL DIA', 'EN MORA', 'SUSPENDIDO'].includes(debtStatus)) {

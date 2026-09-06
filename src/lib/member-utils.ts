@@ -137,6 +137,7 @@ export function getMemberBajaReason(member: any): string | null {
   if (member.bajaReason === 'FALLECIMIENTO') return "Fallecimiento"
   if (member.bajaReason === 'RENUNCIA') return "Renuncia"
   if (member.bajaReason === 'BAJA_ADMINISTRATIVA') return "Decisión Administrativa"
+  if (member.bajaReason === 'DUPLICATE') return "Socio Duplicado"
   if (member.status === "DECEASED") return "Fallecimiento"
   if (member.status === "RESIGNED") return "Renuncia"
   if (member.status === "DUPLICATE") return "Socio Duplicado"
