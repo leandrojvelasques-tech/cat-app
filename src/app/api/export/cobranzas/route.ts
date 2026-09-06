@@ -79,6 +79,7 @@ export async function GET(req: NextRequest) {
         type === "event" || type === "all" ? {} : { id: "none" },
       ],
       paymentStatus: "PAID",
+      amountPaid: { gt: 0 },
     },
     include: { member: true, event: true, recordedBy: true },
     orderBy: { createdAt: "desc" },

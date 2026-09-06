@@ -78,7 +78,8 @@ export default async function CobranzasPage({
         } : {},
         type === 'event' || type === 'all' ? {} : { id: 'none' }
       ],
-      paymentStatus: 'PAID'
+      paymentStatus: 'PAID',
+      amountPaid: { gt: 0 }
     },
     include: {
       member: true,

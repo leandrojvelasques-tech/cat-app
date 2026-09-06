@@ -22,7 +22,7 @@ export default async function CajaPage({ params }: { params: Promise<{ id: strin
 
   // Fetch all event registrations with payment info  
   const registrations = await db.eventRegistration.findMany({
-    where: { eventId: id },
+    where: { eventId: id, amountPaid: { gt: 0 } },
     include: { member: { select: { id: true, firstName: true, lastName: true, memberNumber: true } } }
   }) as any[]
 
