@@ -220,7 +220,11 @@ function renderFeeReminderTemplate(
     .split(/\n\s*\n/)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean)
-    .map((paragraph) => `<p style="margin: 0 0 16px;">${escapeHtml(paragraph).replace(/\n/g, "<br/>")}</p>`)
+    .map((paragraph) => {
+      const standaloneBlock = blockMarkers.get(paragraph)
+      if (standaloneBlock) return standaloneBlock
+      return `<p style="margin: 0 0 16px;">${escapeHtml(paragraph).replace(/\n/g, "<br/>")}</p>`
+    })
     .join("")
 
   return Array.from(blockMarkers.entries()).reduce(
