@@ -1,4 +1,7 @@
 import { db } from "@/lib/db"
+import { getDayName, getNextEventDate, isEventCurrentlyActive } from "@/lib/event-utils"
+import { getCurrentFeeAmount } from "@/lib/fee-utils"
+import { DEFAULT_FEE_REMINDER_TEMPLATE } from "@/lib/email-templates"
 
 export const EMAIL_FROM_COBRANZAS = "Cobranzas - Centro Amigos del Tango <cobranzas@centroamigosdeltango.com>"
 export const EMAIL_FROM_SOCIOS = "Socios - Centro Amigos del Tango <socios@centroamigosdeltango.com>"
@@ -167,6 +170,158 @@ function escapeHtml(value: string): string {
     "'": "&#039;",
     '"': "&quot;",
   })[character] || character)
+}
+
+const FEE_REMINDER_TIME_ZONE = "America/Argentina/Buenos_Aires"
+
+function formatCurrency(value: number): string {
+  return value.toLocaleString("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    maximumFractionDigits: 0,
+  })
+}
+
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
+function replaceTemplateToken(template: string, token: string, replacement: string): string {
+  return template.split(token).join(replacement)
+}
+
+function renderFeeReminderTemplate(
+  template: string,
+  values: Record<string, string>,
+  htmlBlocks: Record<string, string>,
+): string {
+  const templateIncludesHtml = /<\s*[a-z][^>]*>/i.test(template)
+  const blockMarkers = new Map<string, string>()
+  let rendered = template
+
+  for (const [token, value] of Object.entries(values)) {
+    rendered = replaceTemplateToken(rendered, token, escapeHtml(value))
+  }
+
+  Object.entries(htmlBlocks).forEach(([token, html], index) => {
+    const marker = `__CAT_FEE_REMINDER_BLOCK_${index}__`
+    rendered = replaceTemplateToken(rendered, token, marker)
+    blockMarkers.set(marker, html)
+  })
+
+  if (templateIncludesHtml) {
+    for (const [marker, html] of blockMarkers) {
+      rendered = replaceTemplateToken(rendered, marker, html)
+    }
+    return rendered
+  }
+
+  const paragraphs = rendered
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => `<p style="margin: 0 0 16px;">${escapeHtml(paragraph).replace(/\n/g, "<br/>")}</p>`)
+    .join("")
+
+  return Array.from(blockMarkers.entries()).reduce(
+    (result, [marker, html]) => replaceTemplateToken(result, marker, html),
+    paragraphs,
+  )
+}
+
+type FeeReminderBenefit = {
+  title: string
+  description: string
+  badge: string | null
+}
+
+type FeeReminderEvent = {
+  id: string
+  title: string
+  startDate: Date
+  endDate: Date | null
+  location: string | null
+  milongaLocation: string | null
+  milongaStart: Date | null
+  isRecurring: boolean
+  recurrenceDay: number | null
+  recurrenceTime: string | null
+}
+
+function formatEventDate(date: Date): string {
+  return capitalize(date.toLocaleDateString("es-AR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: FEE_REMINDER_TIME_ZONE,
+  }))
+}
+
+function formatEventTime(event: FeeReminderEvent): string | null {
+  if (event.isRecurring && event.recurrenceTime) return event.recurrenceTime
+  if (!event.milongaStart) return null
+  return event.milongaStart.toLocaleTimeString("es-AR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: FEE_REMINDER_TIME_ZONE,
+  })
+}
+
+function formatRecurringDay(dayIndex: number | null): string {
+  const dayName = (getDayName(dayIndex) || "días programados").toLowerCase()
+  return `Todos los ${dayName.endsWith("s") ? dayName : `${dayName}s`}`
+}
+
+function buildFeeReminderBenefitsHtml(benefits: FeeReminderBenefit[]): string {
+  if (benefits.length === 0) {
+    return `<p style="margin: 0; color: #6f756f;">No hay beneficios activos cargados en este momento.</p>`
+  }
+
+  return `
+    <ul style="margin: 0; padding: 0; list-style: none;">
+      ${benefits.map((benefit) => `
+        <li style="margin: 0 0 10px; padding: 13px 15px; border: 1px solid #e6e2d8; border-radius: 10px; background: #f8f7f3;">
+          <strong style="display: block; margin-bottom: 3px; color: #303a32; font-size: 14px;">${escapeHtml(benefit.title)}</strong>
+          <span style="display: block; color: #6f756f; font-size: 13px; line-height: 1.45;">${escapeHtml(benefit.description)}</span>
+        </li>
+      `).join("")}
+    </ul>
+  `
+}
+
+function buildFeeReminderEventsHtml(events: FeeReminderEvent[], referenceDate: Date, monthEnd: Date): string {
+  const upcomingEvents = events
+    .filter((event) => isEventCurrentlyActive(event, referenceDate))
+    .map((event) => ({
+      event,
+      nextDate: event.isRecurring ? getNextEventDate(event, referenceDate) : new Date(event.startDate),
+    }))
+    .filter(({ nextDate }) => nextDate >= referenceDate && nextDate <= monthEnd)
+    .sort((a, b) => a.nextDate.getTime() - b.nextDate.getTime() || a.event.title.localeCompare(b.event.title, "es"))
+
+  if (upcomingEvents.length === 0) {
+    return `<p style="margin: 0; color: #6f756f;">No hay actividades programadas para lo que queda del mes.</p>`
+  }
+
+  return `
+    <ul style="margin: 0; padding: 0; list-style: none;">
+      ${upcomingEvents.map(({ event }) => {
+        const schedule = event.isRecurring
+          ? formatRecurringDay(event.recurrenceDay)
+          : formatEventDate(new Date(event.startDate))
+        const time = formatEventTime(event)
+        const location = event.location || event.milongaLocation
+        const details = [schedule, time, location].filter(Boolean).join(" · ")
+
+        return `
+          <li style="margin: 0 0 10px; padding: 13px 15px; border: 1px solid #e6e2d8; border-radius: 10px; background: #f8f7f3;">
+            <strong style="display: block; margin-bottom: 3px; color: #303a32; font-size: 14px;">${escapeHtml(event.title)}</strong>
+            <span style="display: block; color: #6f756f; font-size: 13px; line-height: 1.45;">${escapeHtml(details)}</span>
+          </li>
+        `
+      }).join("")}
+    </ul>
+  `
 }
 
 async function sendNovedadEmail(
@@ -389,50 +544,91 @@ export async function sendEnrollmentApprovedEmail(
   })
 }
 
-// 4. Recordatorio Vencimiento de Cuota (Día 1 de cada mes)
+// 4. Recordatorio Vencimiento de Cuota
 export async function sendFeeReminderEmail(
   member: { id: string; firstName: string; lastName: string; email: string | null },
   unpaidMonths: string[],
   amount: number
 ) {
   if (!member.email) return false
-  
-  const subject = "Recordatorio de Pago de Cuota Social — Centro Amigos del Tango"
-  const setting = await db.setting.findUnique({ where: { key: "msg_recordatorio" } })
-  
-  let body = setting?.value || `
-    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
-      <h2>Hola {nombre},</h2>
-      <p>Te recordamos de manera amable que ya está disponible para abonar la cuota social del mes en curso.</p>
-      <p>El valor de la cuota mensual actual es de <strong>${amount.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}</strong>, pagadero entre los días 1 y 5 del mes.</p>
-      {detalle_deuda}
-      <p>En caso de que ya hayas realizado el pago, por favor responde a este correo adjuntando el comprobante para que podamos realizar el ajuste en el sistema.</p>
-      <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
-      <p style="font-size: 11px; color: #888;">Centro Amigos del Tango</p>
-    </div>
-  `
 
-  let debtDetailsHtml = ""
-  if (unpaidMonths.length > 0) {
-    debtDetailsHtml = `
-      <div style="background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 8px; margin: 20px 0;">
-        <p style="margin: 0 0 10px 0;"><strong>Registramos los siguientes períodos pendientes de pago:</strong></p>
-        <ul style="margin: 0; padding-left: 20px;">
-          ${unpaidMonths.map(m => `<li>${m}</li>`).join("")}
-        </ul>
+  const [setting, dueDaySetting, configuredAmount, benefits, events] = await Promise.all([
+    db.setting.findUnique({ where: { key: "msg_recordatorio" } }),
+    db.setting.findUnique({ where: { key: "vencimiento_dia" } }),
+    getCurrentFeeAmount(),
+    db.memberBenefit.findMany({
+      where: { isActive: true },
+      orderBy: [{ order: "asc" }, { createdAt: "desc" }],
+      select: { title: true, description: true, badge: true },
+    }),
+    db.event.findMany({
+      where: {
+        isPublic: true,
+        status: "OPEN",
+        startDate: { lte: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59, 999) },
+        OR: [
+          {
+            isRecurring: true,
+            OR: [{ endDate: null }, { endDate: { gte: new Date() } }],
+          },
+          {
+            isRecurring: false,
+            startDate: { gte: new Date() },
+          },
+        ],
+      },
+      orderBy: { startDate: "asc" },
+      select: {
+        id: true,
+        title: true,
+        startDate: true,
+        endDate: true,
+        location: true,
+        milongaLocation: true,
+        milongaStart: true,
+        isRecurring: true,
+        recurrenceDay: true,
+        recurrenceTime: true,
+      },
+    }),
+  ])
+
+  const referenceDate = new Date()
+  const monthEnd = new Date(referenceDate.getFullYear(), referenceDate.getMonth() + 1, 0, 23, 59, 59, 999)
+  const monthLabel = capitalize(referenceDate.toLocaleDateString("es-AR", { month: "long", timeZone: FEE_REMINDER_TIME_ZONE }))
+  const dueDay = dueDaySetting?.value || "10"
+  const feeAmount = configuredAmount > 0 ? configuredAmount : amount
+  const debtDetailsHtml = unpaidMonths.length > 0
+    ? `
+      <div style="margin: 0 0 16px; padding: 14px 16px; border: 1px solid #ead9ba; border-radius: 10px; background: #fffaf0; color: #6f5b3c;">
+        <strong style="display: block; margin-bottom: 6px;">Períodos pendientes registrados:</strong>
+        <span>${unpaidMonths.map((month) => escapeHtml(month)).join(" · ")}</span>
       </div>
     `
-  }
+    : ""
 
-  body = body
-    .replace(/{nombre}/g, `${member.firstName} ${member.lastName}`)
-    .replace(/{detalle_deuda}/g, debtDetailsHtml)
+  const body = renderFeeReminderTemplate(
+    setting?.value || DEFAULT_FEE_REMINDER_TEMPLATE,
+    {
+      "{nombre}": `${member.firstName} ${member.lastName}`,
+      "{mes}": monthLabel,
+      "{dia_vencimiento}": dueDay,
+      "{monto_cuota}": formatCurrency(feeAmount),
+    },
+    {
+      "{detalle_deuda}": debtDetailsHtml,
+      "{beneficios}": buildFeeReminderBenefitsHtml(benefits),
+      "{eventos_mes}": buildFeeReminderEventsHtml(events, referenceDate, monthEnd),
+    },
+  )
+
+  const subject = `Cuota social de ${monthLabel.toLowerCase()}: vence el día ${dueDay}`
 
   return sendEmail({
     to: member.email,
     from: EMAIL_FROM_COBRANZAS,
     subject,
-    html: body,
+    html: buildEmailLayout(body),
     memberId: member.id,
     type: "DEBT_REMINDER",
   })

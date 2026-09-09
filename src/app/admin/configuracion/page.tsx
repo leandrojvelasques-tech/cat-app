@@ -9,6 +9,7 @@ import { getFeeHistory, FeePeriod } from "@/lib/fee-utils"
 import { getAuditLogs, recordAuditLog } from "@/lib/audit-utils"
 import { seedDefaultBenefitsIfEmpty } from "@/app/actions/beneficios"
 import { EmailTemplateField } from "./EmailTemplateField"
+import { DEFAULT_FEE_REMINDER_TEMPLATE } from "@/lib/email-templates"
 
 
 async function getSetting(key: string, defaultValue: string = "") {
@@ -194,7 +195,7 @@ export default async function SettingsPage() {
   const feeHistory = await getFeeHistory()
   const auditLogs = await getAuditLogs()
   
-  const msgRecordatorio = await getSetting("msg_recordatorio", "Estimado socio, le recordamos que su cuota del mes está próxima a vencer. ¡Gracias por su colaboración!")
+  const msgRecordatorio = await getSetting("msg_recordatorio", DEFAULT_FEE_REMINDER_TEMPLATE)
   const msgVencida = await getSetting("msg_vencida", "Estimado socio, su cuota registra una demora. Le agradeceríamos regularizar su situación para seguir apoyando al Centro.")
   
   const msgPagoCuota = await getSetting("msg_pago_confirmado_cuota", "¡Gracias por su pago! Su comprobante ha sido registrado. Estado de cuenta: {estado}.")
@@ -545,7 +546,7 @@ export default async function SettingsPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <EmailTemplateField name="msg_recordatorio" label="Recordatorio de vencimiento" value={msgRecordatorio} rows={3} accent="gold" />
+              <EmailTemplateField name="msg_recordatorio" label="Recordatorio de vencimiento" value={msgRecordatorio} rows={15} variables="{nombre}, {mes}, {dia_vencimiento}, {monto_cuota}, {detalle_deuda}, {beneficios}, {eventos_mes}" accent="gold" />
               <EmailTemplateField name="msg_vencida" label="Cuota vencida" value={msgVencida} rows={3} accent="wine" />
               <EmailTemplateField name="msg_solicitud_inscripcion" label="Solicitud de inscripción recibida" value={msgSolicitudInscripcion} rows={4} variables="{nombre}" accent="blue" />
               <EmailTemplateField name="msg_baja" label="Notificación de baja de socio" value={msgBaja} rows={4} variables="{nombre}, {socio}, {fecha}" accent="wine" />

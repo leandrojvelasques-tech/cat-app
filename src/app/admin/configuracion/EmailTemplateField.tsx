@@ -22,6 +22,12 @@ const samples: Record<string, string> = {
   "{evento}": "Noche de Milonga",
   "{opcion}": "Entrada socio",
   "{monto}": "$ 12.000",
+  "{mes}": "septiembre",
+  "{dia_vencimiento}": "10",
+  "{monto_cuota}": "$ 7.000",
+  "{detalle_deuda}": "",
+  "{beneficios}": "• Descuento en clases de tango · Academia Swing\n• Acceso gratuito a las milongas tradicionales del CAT",
+  "{eventos_mes}": "• Milonga Tinta Verde · sábado 12 de septiembre\n• Milonga Mosca Blanca · todos los martes\n• Elementango · todos los jueves\n• Milonga de Garufa · todos los viernes\n• Matemilonguero El Recodo · todos los domingos",
   "{fecha}": "15/09/2026",
   "{lugar}": "Sede Central CAT",
 }
