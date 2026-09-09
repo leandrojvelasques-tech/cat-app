@@ -2,6 +2,13 @@
 
 import { db } from "@/lib/db"
 import { sendEmail } from "@/lib/emails"
+import {
+  buildEmailLayout,
+  buildFeeReminderBenefitsHtml,
+  buildFeeReminderEventsHtml,
+  renderFeeReminderTemplate,
+} from "@/lib/emails"
+import { getCurrentFeeAmount } from "@/lib/fee-utils"
 import { calculateMemberStatus } from "@/lib/member-utils"
 
 export async function sendBatchEmail(
@@ -24,6 +31,10 @@ export async function sendBatchEmail(
   let skippedCount = 0
 
   const now = new Date()
+  const usesFeeReminderTokens = /\{(mes|dia_vencimiento|monto_cuota|detalle_deuda|beneficios|eventos_mes)\}/.test(`${subject} ${bodyTemplate}`)
+  const feeReminderContext = usesFeeReminderTokens
+    ? await loadFeeReminderContext(now)
+    : null
 
   for (const memberId of memberIds) {
     try {
@@ -54,15 +65,37 @@ export async function sendBatchEmail(
         ? debtList.join(", ") 
         : "Sin deuda"
 
-      let htmlBody = bodyTemplate
-        .replace(/{nombre}/g, `${member.firstName} ${member.lastName}`)
-        .replace(/{nro_socio}/g, member.memberNumber)
-        .replace(/{dni}/g, member.dni)
-        .replace(/{estado}/g, calculatedStatus)
-        .replace(/{deuda}/g, debtDetailsHtml)
-        .replace(/{deuda_texto}/g, debtText)
+      const monthLabel = now.toLocaleDateString("es-AR", { month: "long", timeZone: "America/Argentina/Buenos_Aires" })
+      const feeReminderValues: Record<string, string> = feeReminderContext ? {
+        "{nombre}": `${member.firstName} ${member.lastName}`,
+        "{mes}": monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1),
+        "{dia_vencimiento}": feeReminderContext.dueDay,
+        "{monto_cuota}": feeReminderContext.feeAmount.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }),
+      } : {
+        "{nombre}": `${member.firstName} ${member.lastName}`,
+      }
+      const htmlBody = feeReminderContext
+        ? renderFeeReminderTemplate(
+            bodyTemplate,
+            feeReminderValues,
+            {
+              "{detalle_deuda}": debtDetailsHtml,
+              "{beneficios}": buildFeeReminderBenefitsHtml(feeReminderContext.benefits),
+              "{eventos_mes}": buildFeeReminderEventsHtml(feeReminderContext.events, now, feeReminderContext.monthEnd),
+            },
+          )
+        : bodyTemplate
+            .replace(/{nombre}/g, `${member.firstName} ${member.lastName}`)
+            .replace(/{nro_socio}/g, member.memberNumber)
+            .replace(/{dni}/g, member.dni)
+            .replace(/{estado}/g, calculatedStatus)
+            .replace(/{deuda}/g, debtDetailsHtml)
+            .replace(/{deuda_texto}/g, debtText)
 
-      const finalHtml = `
+      const renderedSubject = subject
+        .replace(/{mes}/g, monthLabel)
+        .replace(/{dia_vencimiento}/g, feeReminderContext?.dueDay || "10")
+      const finalHtml = feeReminderContext ? buildEmailLayout(htmlBody) : `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; line-height: 1.6;">
           <div style="border-bottom: 2px solid #1B2621; padding-bottom: 15px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
             <span style="color: #A6702E; font-size: 20px; font-weight: bold; font-family: serif;">Centro Amigos del Tango</span>
@@ -79,7 +112,7 @@ export async function sendBatchEmail(
 
       await sendEmail({
         to: member.email,
-        subject: subject,
+        subject: renderedSubject,
         html: finalHtml,
         memberId: member.id,
         type: "BATCH_COMMUNICATION",
@@ -94,6 +127,44 @@ export async function sendBatchEmail(
   }
 
   return { success: true, sentCount, skippedCount }
+}
+
+async function loadFeeReminderContext(referenceDate: Date) {
+  const monthEnd = new Date(referenceDate.getFullYear(), referenceDate.getMonth() + 1, 0, 23, 59, 59, 999)
+  const [dueDaySetting, configuredAmount, benefits, events] = await Promise.all([
+    db.setting.findUnique({ where: { key: "vencimiento_dia" } }),
+    getCurrentFeeAmount(),
+    db.memberBenefit.findMany({
+      where: { isActive: true },
+      orderBy: [{ order: "asc" }, { createdAt: "desc" }],
+      select: { title: true, description: true, badge: true },
+    }),
+    db.event.findMany({
+      where: {
+        isPublic: true,
+        status: "OPEN",
+        startDate: { lte: monthEnd },
+        OR: [
+          { isRecurring: true, OR: [{ endDate: null }, { endDate: { gte: referenceDate } }] },
+          { isRecurring: false, startDate: { gte: referenceDate } },
+        ],
+      },
+      orderBy: { startDate: "asc" },
+      select: {
+        id: true, title: true, startDate: true, endDate: true, location: true,
+        milongaLocation: true, milongaStart: true, isRecurring: true,
+        recurrenceDay: true, recurrenceTime: true,
+      },
+    }),
+  ])
+
+  return {
+    dueDay: dueDaySetting?.value || "10",
+    feeAmount: configuredAmount,
+    benefits,
+    events,
+    monthEnd,
+  }
 }
 
 function getMemberDebtDetails(member: any, referenceDate: Date = new Date()) {

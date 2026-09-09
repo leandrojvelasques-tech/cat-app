@@ -26,3 +26,42 @@ Un abrazo,
 
 Tesorería
 Centro Amigos del Tango`
+
+export type BatchEmailTemplate = {
+  key: "custom" | "msg_recordatorio" | "msg_vencida" | "msg_mora"
+  label: string
+  subject: string
+  body: string
+  variables: readonly string[]
+}
+
+export const BATCH_EMAIL_TEMPLATE_DEFINITIONS = [
+  {
+    key: "custom" as const,
+    label: "Mensaje personalizado",
+    subject: "",
+    settingKey: null,
+    variables: ["{nombre}", "{nro_socio}", "{estado}", "{deuda}", "{deuda_texto}"],
+  },
+  {
+    key: "msg_recordatorio" as const,
+    label: "Recordatorio de vencimiento",
+    subject: "Cuota social de {mes}: vence el día {dia_vencimiento}",
+    settingKey: "msg_recordatorio",
+    variables: ["{nombre}", "{mes}", "{dia_vencimiento}", "{monto_cuota}", "{detalle_deuda}", "{beneficios}", "{eventos_mes}"],
+  },
+  {
+    key: "msg_vencida" as const,
+    label: "Cuota vencida",
+    subject: "Recordatorio de cuota pendiente — Centro Amigos del Tango",
+    settingKey: "msg_vencida",
+    variables: ["{nombre}", "{estado}", "{deuda}", "{deuda_texto}"],
+  },
+  {
+    key: "msg_mora" as const,
+    label: "Notificación de morosidad",
+    subject: "Suspensión temporal de beneficios por mora — CAT",
+    settingKey: "msg_mora",
+    variables: ["{nombre}", "{estado}", "{deuda}", "{deuda_texto}"],
+  },
+] as const

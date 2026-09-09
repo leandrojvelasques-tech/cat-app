@@ -112,7 +112,7 @@ export function getBaseUrl(): string {
 }
 
 // Helper para convertir texto plano de plantillas en un correo HTML institucional elegante
-function buildEmailLayout(contentHtml: string) {
+export function buildEmailLayout(contentHtml: string) {
   return `
     <div style="background-color: #f4f4f5; padding: 30px 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
       <div style="max-width: 600px; margin: 0 auto; bg-color: #ffffff; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #e4e4e7;">
@@ -190,7 +190,7 @@ function replaceTemplateToken(template: string, token: string, replacement: stri
   return template.split(token).join(replacement)
 }
 
-function renderFeeReminderTemplate(
+export function renderFeeReminderTemplate(
   template: string,
   values: Record<string, string>,
   htmlBlocks: Record<string, string>,
@@ -276,7 +276,7 @@ function formatRecurringDay(dayIndex: number | null): string {
   return `Todos los ${dayName.endsWith("s") ? dayName : `${dayName}s`}`
 }
 
-function buildFeeReminderBenefitsHtml(benefits: FeeReminderBenefit[]): string {
+export function buildFeeReminderBenefitsHtml(benefits: FeeReminderBenefit[]): string {
   if (benefits.length === 0) {
     return `<p style="margin: 0; color: #6f756f;">No hay beneficios activos cargados en este momento.</p>`
   }
@@ -293,7 +293,7 @@ function buildFeeReminderBenefitsHtml(benefits: FeeReminderBenefit[]): string {
   `
 }
 
-function buildFeeReminderEventsHtml(events: FeeReminderEvent[], referenceDate: Date, monthEnd: Date): string {
+export function buildFeeReminderEventsHtml(events: FeeReminderEvent[], referenceDate: Date, monthEnd: Date): string {
   const upcomingEvents = events
     .filter((event) => isEventCurrentlyActive(event, referenceDate))
     .map((event) => ({

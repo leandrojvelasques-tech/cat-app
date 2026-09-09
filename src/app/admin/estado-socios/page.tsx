@@ -6,6 +6,7 @@ import { getPaymentStatus } from "@/lib/member-utils"
 import { SolicitudesList } from "../solicitudes/SolicitudesList"
 import { EstadoSociosTable } from "./EstadoSociosTable"
 import { ApproveFeePaymentButton } from "../cuotas/ApproveFeePaymentButton"
+import { BATCH_EMAIL_TEMPLATE_DEFINITIONS, DEFAULT_FEE_REMINDER_TEMPLATE } from "@/lib/email-templates"
 
 export default async function EstadoSociosPage({
   searchParams,
@@ -108,6 +109,26 @@ export default async function EstadoSociosPage({
   // Calcular resumen
   const totalAlDia = filteredMembers.filter((m: any) => m.calculatedStatus === 'AL DIA').length
   const totalEnMora = filteredMembers.filter((m: any) => m.calculatedStatus === 'EN MORA').length
+
+  const batchSettings = await db.setting.findMany({
+    where: { key: { in: ["msg_recordatorio", "msg_vencida", "msg_mora"] } },
+    select: { key: true, value: true },
+  })
+  const batchSettingValues = Object.fromEntries(batchSettings.map((setting) => [setting.key, setting.value]))
+
+  const batchEmailTemplates = BATCH_EMAIL_TEMPLATE_DEFINITIONS.map((definition) => ({
+    key: definition.key,
+    label: definition.label,
+    subject: definition.subject,
+    body: definition.key === "custom"
+      ? ""
+      : definition.key === "msg_recordatorio"
+        ? batchSettingValues.msg_recordatorio || DEFAULT_FEE_REMINDER_TEMPLATE
+        : definition.key === "msg_vencida"
+          ? batchSettingValues.msg_vencida || "Estimado socio, su cuota registra una demora. Le agradeceríamos regularizar su situación para seguir apoyando al Centro."
+          : batchSettingValues.msg_mora || "Lamentamos informarle que su cuenta registra una deuda de 3 o más períodos impagos y sus beneficios han quedado suspendidos.",
+    variables: definition.variables,
+  }))
 
   // Ordenar
   filteredMembers.sort((a: any, b: any) => {
@@ -229,7 +250,7 @@ export default async function EstadoSociosPage({
 
       <EstadoSociosFilters />
 
-      <EstadoSociosTable initialMembers={serializedMembers} />
+      <EstadoSociosTable initialMembers={serializedMembers} batchEmailTemplates={batchEmailTemplates} />
     </div>
   )
 }

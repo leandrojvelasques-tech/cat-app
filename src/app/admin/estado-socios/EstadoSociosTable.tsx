@@ -6,15 +6,18 @@ import Link from "next/link"
 import { sendBatchEmail } from "@/app/actions/batch-emails"
 import { getStatusBadgeStyles } from "@/lib/member-utils"
 import { SendMemberAccessButton } from "../socios/components/SendMemberAccessButton"
+import type { BatchEmailTemplate } from "@/lib/email-templates"
 
 interface EstadoSociosTableProps {
   initialMembers: any[]
+  batchEmailTemplates: ReadonlyArray<BatchEmailTemplate>
 }
 
-export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
+export function EstadoSociosTable({ initialMembers, batchEmailTemplates }: EstadoSociosTableProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [senderEmail, setSenderEmail] = useState("socios@centroamigosdeltango.com")
+  const [selectedTemplateKey, setSelectedTemplateKey] = useState<BatchEmailTemplate["key"]>("custom")
   const [subject, setSubject] = useState("")
   const [bodyTemplate, setBodyTemplate] = useState("")
   const [isPending, startTransition] = useTransition()
@@ -165,6 +168,14 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
     setIsModalOpen(true)
   }
 
+  function handleTemplateChange(templateKey: BatchEmailTemplate["key"]) {
+    const template = batchEmailTemplates.find((item) => item.key === templateKey)
+    if (!template) return
+    setSelectedTemplateKey(templateKey)
+    setSubject(template.subject)
+    setBodyTemplate(template.body)
+  }
+
   function handleFormSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (selectedMembersWithEmail.length === 0) {
@@ -186,6 +197,7 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
           skippedCount: (res.skippedCount || 0) + selectedCountWithoutEmail
         })
         setSelectedIds([])
+        setSelectedTemplateKey("custom")
         setSubject("")
         setBodyTemplate("")
       } else {
@@ -694,6 +706,20 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
                 )}
 
                 <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-black tracking-widest text-zinc-500 ml-1">Plantilla de email</label>
+                  <select
+                    value={selectedTemplateKey}
+                    onChange={(e) => handleTemplateChange(e.target.value as BatchEmailTemplate["key"])}
+                    className="w-full bg-black/40 border border-amber-500/30 rounded-2xl px-4 py-4 text-white focus:outline-none focus:border-amber-500 transition-all font-medium"
+                  >
+                    {batchEmailTemplates.map((template) => (
+                      <option key={template.key} value={template.key}>{template.label}</option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-zinc-500 ml-1">Al elegir una plantilla se cargan su asunto y mensaje. Podés editarlos antes de enviar.</p>
+                </div>
+
+                <div className="space-y-2">
                   <label className="text-[10px] uppercase font-black tracking-widest text-zinc-500 ml-1">De (Remitente)</label>
                   <select
                     value={senderEmail}
@@ -733,11 +759,9 @@ export function EstadoSociosTable({ initialMembers }: EstadoSociosTableProps) {
                 <div className="bg-white/5 border border-white/5 p-4 rounded-2xl space-y-2">
                   <span className="text-[9px] uppercase font-black tracking-widest text-zinc-500">Variables Disponibles:</span>
                   <div className="flex flex-wrap gap-2 text-[10px]">
-                    <span className="bg-zinc-800 text-amber-500 px-2 py-1 rounded font-mono">{"{nombre}"}</span>
-                    <span className="bg-zinc-800 text-amber-500 px-2 py-1 rounded font-mono">{"{nro_socio}"}</span>
-                    <span className="bg-zinc-800 text-amber-500 px-2 py-1 rounded font-mono">{"{estado}"}</span>
-                    <span className="bg-zinc-800 text-amber-500 px-2 py-1 rounded font-mono">{"{deuda}"}</span>
-                    <span className="bg-zinc-800 text-amber-500 px-2 py-1 rounded font-mono">{"{deuda_texto}"}</span>
+                    {(batchEmailTemplates.find((template) => template.key === selectedTemplateKey)?.variables || []).map((variable) => (
+                      <span key={variable} className="bg-zinc-800 text-amber-500 px-2 py-1 rounded font-mono">{variable}</span>
+                    ))}
                   </div>
                 </div>
 
