@@ -19,13 +19,16 @@ interface SendEmailParams {
   cc?: string | string[]
   historyContent?: string
   sentBy?: string
+  campaignKey?: string
+  campaignName?: string
+  campaignPeriod?: string
 }
 
 /**
  * Función principal para enviar correos usando la API de Resend.
  * Si no está configurada la API KEY, escribe en consola y crea un registro de Communication "FAILED".
  */
-export async function sendEmail({ to, subject, html, memberId, type, from, bcc, cc, historyContent, sentBy }: SendEmailParams) {
+export async function sendEmail({ to, subject, html, memberId, type, from, bcc, cc, historyContent, sentBy, campaignKey, campaignName, campaignPeriod }: SendEmailParams) {
   const apiKey = process.env.RESEND_API_KEY
   let status = "SENT"
   
@@ -93,6 +96,9 @@ export async function sendEmail({ to, subject, html, memberId, type, from, bcc, 
           sentBy: sentBy || "SYSTEM",
           status,
           channel: "EMAIL",
+          campaignKey,
+          campaignName,
+          campaignPeriod,
         },
       })
     } catch (dbErr) {

@@ -27,6 +27,8 @@ Un abrazo,
 Tesorería
 Centro Amigos del Tango`
 
+export const MAX_BATCH_EMAIL_SIZE = 100
+
 export type BatchEmailTemplate = {
   key: "custom" | "msg_recordatorio" | "msg_vencida" | "msg_mora"
   label: string
@@ -60,7 +62,7 @@ export const BATCH_EMAIL_TEMPLATE_DEFINITIONS = [
   {
     key: "msg_mora" as const,
     label: "Notificación de morosidad",
-    subject: "Suspensión temporal de beneficios por mora — CAT",
+    subject: "Te esperamos nuevamente en el Centro Amigos del Tango",
     settingKey: "msg_mora",
     variables: ["{nombre}", "{estado}", "{deuda}", "{deuda_texto}"],
   },

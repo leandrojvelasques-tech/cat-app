@@ -10,21 +10,59 @@ import {
 } from "@/lib/emails"
 import { getCurrentFeeAmount } from "@/lib/fee-utils"
 import { calculateMemberStatus } from "@/lib/member-utils"
+import { MAX_BATCH_EMAIL_SIZE } from "@/lib/email-templates"
 
 export async function sendBatchEmail(
   memberIds: string[],
   subject: string,
   bodyTemplate: string,
-  senderEmail: string
+  senderEmail: string,
+  campaignName: string,
+  campaignPeriod: string,
 ) {
-  if (!memberIds || memberIds.length === 0) {
+  const uniqueMemberIds = Array.from(new Set(memberIds || []))
+
+  if (uniqueMemberIds.length === 0) {
     return { success: false, error: "No se seleccionaron socios." }
+  }
+  if (uniqueMemberIds.length > MAX_BATCH_EMAIL_SIZE) {
+    return { success: false, error: `Una tanda no puede superar los ${MAX_BATCH_EMAIL_SIZE} socios.` }
   }
   if (!subject || subject.trim().length === 0) {
     return { success: false, error: "El asunto del correo no puede estar vacío." }
   }
   if (!bodyTemplate || bodyTemplate.trim().length === 0) {
     return { success: false, error: "El cuerpo del mensaje no puede estar vacío." }
+  }
+  if (!campaignName || campaignName.trim().length === 0) {
+    return { success: false, error: "La campaña necesita un nombre." }
+  }
+  if (!/^\d{4}-\d{2}$/.test(campaignPeriod)) {
+    return { success: false, error: "El período de campaña debe tener el formato AAAA-MM." }
+  }
+
+  const normalizedCampaignName = campaignName.trim().slice(0, 120)
+  const campaignKey = normalizeCampaignKey(normalizedCampaignName)
+  const previousContacts = await db.communication.findMany({
+    where: {
+      memberId: { in: uniqueMemberIds },
+      type: "BATCH_COMMUNICATION",
+      campaignKey,
+      campaignPeriod,
+      status: "SENT",
+    },
+    select: { memberId: true },
+  })
+  const previouslyContactedIds = new Set(previousContacts.map((contact) => contact.memberId))
+  const pendingMemberIds = uniqueMemberIds.filter((memberId) => !previouslyContactedIds.has(memberId))
+
+  if (pendingMemberIds.length === 0) {
+    return {
+      success: true,
+      sentCount: 0,
+      skippedCount: uniqueMemberIds.length,
+      alreadyContactedCount: uniqueMemberIds.length,
+    }
   }
 
   let sentCount = 0
@@ -36,7 +74,7 @@ export async function sendBatchEmail(
     ? await loadFeeReminderContext(now)
     : null
 
-  for (const memberId of memberIds) {
+  for (const memberId of pendingMemberIds) {
     try {
       const member = await db.member.findUnique({
         where: { id: memberId },
@@ -116,7 +154,11 @@ export async function sendBatchEmail(
         html: finalHtml,
         memberId: member.id,
         type: "BATCH_COMMUNICATION",
-        from: senderEmail
+        from: senderEmail,
+        historyContent: htmlBody,
+        campaignKey,
+        campaignName: normalizedCampaignName,
+        campaignPeriod,
       })
 
       sentCount++
@@ -126,7 +168,22 @@ export async function sendBatchEmail(
     }
   }
 
-  return { success: true, sentCount, skippedCount }
+  return {
+    success: true,
+    sentCount,
+    skippedCount: skippedCount + previouslyContactedIds.size,
+    alreadyContactedCount: previouslyContactedIds.size,
+  }
+}
+
+function normalizeCampaignKey(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || "campana"
 }
 
 async function loadFeeReminderContext(referenceDate: Date) {

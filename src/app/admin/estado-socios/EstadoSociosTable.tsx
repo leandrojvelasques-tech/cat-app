@@ -6,7 +6,7 @@ import Link from "next/link"
 import { sendBatchEmail } from "@/app/actions/batch-emails"
 import { getStatusBadgeStyles } from "@/lib/member-utils"
 import { SendMemberAccessButton } from "../socios/components/SendMemberAccessButton"
-import type { BatchEmailTemplate } from "@/lib/email-templates"
+import { MAX_BATCH_EMAIL_SIZE, type BatchEmailTemplate } from "@/lib/email-templates"
 
 interface EstadoSociosTableProps {
   initialMembers: any[]
@@ -20,6 +20,9 @@ export function EstadoSociosTable({ initialMembers, batchEmailTemplates }: Estad
   const [selectedTemplateKey, setSelectedTemplateKey] = useState<BatchEmailTemplate["key"]>("custom")
   const [subject, setSubject] = useState("")
   const [bodyTemplate, setBodyTemplate] = useState("")
+  const [campaignName, setCampaignName] = useState("Reactivación de socios suspendidos")
+  const [campaignPeriod, setCampaignPeriod] = useState(() => new Date().toISOString().slice(0, 7))
+  const [contactFilter, setContactFilter] = useState<"ALL" | "NEVER" | "CONTACTED">("ALL")
   const [isPending, startTransition] = useTransition()
   const [sendResult, setSendResult] = useState<{ success: boolean; sentCount: number; skippedCount: number } | null>(null)
 
@@ -76,6 +79,10 @@ export function EstadoSociosTable({ initialMembers, batchEmailTemplates }: Estad
   }
 
   function handleSelectMember(id: string) {
+    if (!selectedIds.includes(id) && selectedIds.length >= MAX_BATCH_EMAIL_SIZE) {
+      alert(`Una tanda no puede superar los ${MAX_BATCH_EMAIL_SIZE} socios.`)
+      return
+    }
     setSelectedIds(prev => 
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     )
@@ -101,6 +108,12 @@ export function EstadoSociosTable({ initialMembers, batchEmailTemplates }: Estad
     })
   }
 
+  if (contactFilter !== "ALL") {
+    displayedMembers = displayedMembers.filter(member =>
+      contactFilter === "CONTACTED" ? hasContactInPeriod(member) : !hasContactInPeriod(member)
+    )
+  }
+
   // 2. Sort displayed members
   if (statusSort !== "NONE") {
     const order = { "AL DIA": 1, "EN MORA": 2, "INACTIVO": 3, "SUSPENDIDO": 3, "BAJA": 3 } as any
@@ -117,14 +130,15 @@ export function EstadoSociosTable({ initialMembers, batchEmailTemplates }: Estad
     })
   }
 
-  const allSelectableIds = displayedMembers.map(m => m.id)
+  const allSelectableIds = displayedMembers.filter(m => m.email).map(m => m.id)
   const isAllSelected = allSelectableIds.length > 0 && allSelectableIds.every(id => selectedIds.includes(id))
 
   function handleSelectAll() {
     if (isAllSelected) {
       setSelectedIds(prev => prev.filter(id => !allSelectableIds.includes(id)))
     } else {
-      setSelectedIds(prev => Array.from(new Set([...prev, ...allSelectableIds])))
+      const idsToAdd = allSelectableIds.filter(id => !selectedIds.includes(id)).slice(0, MAX_BATCH_EMAIL_SIZE - selectedIds.length)
+      setSelectedIds(prev => Array.from(new Set([...prev, ...idsToAdd])))
     }
   }
 
@@ -188,7 +202,9 @@ export function EstadoSociosTable({ initialMembers, batchEmailTemplates }: Estad
         selectedMembersWithEmail.map(m => m.id),
         subject,
         bodyTemplate,
-        `CAT WEB <${senderEmail}>`
+        `CAT WEB <${senderEmail}>`,
+        campaignName,
+        campaignPeriod,
       )
       if (res.success) {
         setSendResult({
@@ -200,10 +216,17 @@ export function EstadoSociosTable({ initialMembers, batchEmailTemplates }: Estad
         setSelectedTemplateKey("custom")
         setSubject("")
         setBodyTemplate("")
+        setCampaignName("Reactivación de socios suspendidos")
       } else {
         alert(res.error || "Hubo un error al enviar el lote.")
       }
     })
+  }
+
+  function hasContactInPeriod(member: any) {
+    return (member.batchEmailCommunications || []).some((communication: any) =>
+      communication.campaignPeriod === campaignPeriod && communication.status === "SENT"
+    )
   }
 
   // Export visible list to CSV (Excel compatible)
@@ -239,7 +262,7 @@ export function EstadoSociosTable({ initialMembers, batchEmailTemplates }: Estad
 
   function handleOpenMailModal() {
     if (selectedIds.length === 0) {
-      const idsWithEmail = displayedMembers.filter(m => m.email).map(m => m.id)
+      const idsWithEmail = displayedMembers.filter(m => m.email).slice(0, MAX_BATCH_EMAIL_SIZE).map(m => m.id)
       setSelectedIds(idsWithEmail)
     }
     setSendResult(null)
@@ -307,7 +330,7 @@ export function EstadoSociosTable({ initialMembers, batchEmailTemplates }: Estad
 
       {/* Filter and Actions Toolbar */}
       <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-white/5 p-4 rounded-[24px] border border-white/10 backdrop-blur-md">
-        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
           {/* Status Filter */}
           <div className="flex flex-col gap-1">
             <span className="text-[9px] uppercase font-black tracking-widest text-zinc-500 ml-1">Filtrar por Estado · varios</span>
@@ -336,6 +359,20 @@ export function EstadoSociosTable({ initialMembers, batchEmailTemplates }: Estad
               <option value="NO_EMAIL">Sin Email Cargado</option>
               <option value="NO_PHONE">Sin Teléfono Cargado</option>
               <option value="NO_CONTACT">Sin Email o Sin Teléfono</option>
+            </select>
+          </div>
+
+          {/* Campaign contact filter */}
+          <div className="flex flex-col gap-1">
+            <span className="text-[9px] uppercase font-black tracking-widest text-zinc-500 ml-1">Contacto por campaña</span>
+            <select
+              value={contactFilter}
+              onChange={(e) => setContactFilter(e.target.value as "ALL" | "NEVER" | "CONTACTED")}
+              className="bg-zinc-900 border border-white/10 rounded-xl px-4 py-2 text-xs text-zinc-300 font-bold focus:outline-none focus:border-amber-500/50 cursor-pointer"
+            >
+              <option value="ALL">Todos</option>
+              <option value="NEVER">Nunca contactados este mes</option>
+              <option value="CONTACTED">Ya contactados este mes</option>
             </select>
           </div>
         </div>
@@ -372,6 +409,7 @@ export function EstadoSociosTable({ initialMembers, batchEmailTemplates }: Estad
               <p className="text-white font-bold text-sm">Acción por lote disponible</p>
               <p className="text-amber-200 text-xs font-light">
                 {selectedIds.length} {selectedIds.length === 1 ? 'socio seleccionado' : 'socios seleccionados'}.
+                {selectedIds.length >= MAX_BATCH_EMAIL_SIZE && ` Límite de ${MAX_BATCH_EMAIL_SIZE} alcanzado.`}
                 {selectedCountWithoutEmail > 0 && ` (${selectedCountWithoutEmail} sin email).`}
               </p>
             </div>
@@ -516,6 +554,11 @@ export function EstadoSociosTable({ initialMembers, batchEmailTemplates }: Estad
                               {member.user && !member.user.lastLoginAt && <span className="text-zinc-500">Nunca ingresó</span>}
                               {member.user?.loginCount > 0 && <span className="text-zinc-600">{member.user.loginCount} ingreso(s)</span>}
                               {member.communications?.[0] && <span className="text-zinc-600">Acceso enviado: {new Date(member.communications[0].sentAt).toLocaleDateString('es-AR')}</span>}
+                              {member.batchEmailCommunications?.[0] && (
+                                <span className={member.batchEmailCommunications[0].status === "SENT" ? "text-emerald-500/80" : "text-red-400/80"}>
+                                  Reactivación: {member.batchEmailCommunications[0].status === "SENT" ? "enviada" : "fallida"} ({member.batchEmailCommunications[0].campaignPeriod || "sin período"})
+                                </span>
+                              )}
                             </div>
                           )
                         })()}
@@ -620,6 +663,11 @@ export function EstadoSociosTable({ initialMembers, batchEmailTemplates }: Estad
                         )}
                       </div>
                     </div>
+                    {member.batchEmailCommunications?.[0] && (
+                      <p className={member.batchEmailCommunications[0].status === "SENT" ? "text-emerald-500/80" : "text-red-400/80"}>
+                        Última reactivación: {member.batchEmailCommunications[0].status === "SENT" ? "enviada" : "fallida"} · {member.batchEmailCommunications[0].campaignPeriod || "sin período"}
+                      </p>
+                    )}
                   </div>
                 </article>
               )
@@ -731,6 +779,31 @@ export function EstadoSociosTable({ initialMembers, batchEmailTemplates }: Estad
                     <option value="info@centroamigosdeltango.com">info@centroamigosdeltango.com</option>
                   </select>
                 </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black tracking-widest text-zinc-500 ml-1">Nombre de campaña</label>
+                    <input
+                      type="text"
+                      required
+                      value={campaignName}
+                      onChange={(e) => setCampaignName(e.target.value)}
+                      placeholder="Ej. Reactivación suspendidos"
+                      className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white placeholder:text-zinc-700 focus:outline-none focus:border-amber-500/50 transition-all font-medium"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black tracking-widest text-zinc-500 ml-1">Período de gestión</label>
+                    <input
+                      type="month"
+                      required
+                      value={campaignPeriod}
+                      onChange={(e) => setCampaignPeriod(e.target.value)}
+                      className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-4 text-white focus:outline-none focus:border-amber-500/50 transition-all font-medium"
+                    />
+                  </div>
+                </div>
+                <p className="-mt-3 text-[10px] text-zinc-500">El sistema no volverá a enviar esta misma campaña a un socio durante el período elegido.</p>
 
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-black tracking-widest text-zinc-500 ml-1">Asunto</label>

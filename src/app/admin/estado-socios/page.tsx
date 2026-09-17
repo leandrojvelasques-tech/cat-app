@@ -71,10 +71,10 @@ export default async function EstadoSociosPage({
         },
         eventRegistrations: true,
         communications: {
-          where: { type: "TEMPORARY_ACCESS" },
+          where: { type: { in: ["TEMPORARY_ACCESS", "BATCH_COMMUNICATION"] } },
           orderBy: { sentAt: 'desc' },
-          take: 1,
-          select: { sentAt: true, status: true },
+          take: 50,
+          select: { type: true, sentAt: true, status: true, campaignName: true, campaignPeriod: true, subject: true },
         },
         user: { select: { email: true, firstLoginAt: true, lastLoginAt: true, loginCount: true, mustChangePassword: true } }
       },
@@ -93,6 +93,12 @@ export default async function EstadoSociosPage({
           orderBy: [{ periodYear: 'desc' }, { periodMonth: 'desc' }]
         },
         eventRegistrations: true,
+        communications: {
+          where: { type: "BATCH_COMMUNICATION" },
+          orderBy: { sentAt: "desc" },
+          take: 20,
+          select: { type: true, sentAt: true, status: true, campaignName: true, campaignPeriod: true, subject: true },
+        },
         user: { select: { email: true } }
       },
       orderBy: { memberNumber: "asc" }
@@ -163,10 +169,15 @@ export default async function EstadoSociosPage({
       firstLoginAt: member.user.firstLoginAt?.toISOString() || null,
       lastLoginAt: member.user.lastLoginAt?.toISOString() || null,
     } : null,
-    communications: member.communications?.map((communication: any) => ({
+    communications: member.communications?.filter((communication: any) => communication.type === "TEMPORARY_ACCESS").slice(0, 1).map((communication: any) => ({
       ...communication,
       sentAt: communication.sentAt.toISOString(),
     })) || []
+    ,
+    batchEmailCommunications: (member.communications || []).filter((communication: any) => communication.type === "BATCH_COMMUNICATION").map((communication: any) => ({
+      ...communication,
+      sentAt: communication.sentAt.toISOString(),
+    }))
   }))
 
   return (

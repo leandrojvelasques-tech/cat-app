@@ -117,9 +117,15 @@ model Communication {
   sentAt   DateTime @default(now())
   status   String   @default("SENT") // SENT, FAILED, PENDING
   channel  String   @default("EMAIL") // EMAIL, WHATSAPP, MANUAL
+  campaignKey    String?
+  campaignName   String?
+  campaignPeriod String? // YYYY-MM, used to prevent repeated contacts in the same period
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([memberId, type, campaignPeriod])
+  @@index([campaignKey, campaignPeriod, status])
 }
 
 model MembershipFee {
