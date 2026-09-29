@@ -409,14 +409,16 @@ export async function updateMemberProfile(memberId: string, formData: FormData) 
   const password = formData.get("password") as string
 
   const addressValue = formData.get("address")
+  const cityValue = formData.get("city")
   const neighborhoodValue = formData.get("neighborhood")
-  if (typeof addressValue !== "string" || typeof neighborhoodValue !== "string") {
-    throw new Error("Los datos de domicilio y barrio no son válidos")
+  if (typeof addressValue !== "string" || typeof cityValue !== "string" || typeof neighborhoodValue !== "string") {
+    throw new Error("Los datos de domicilio, ciudad y barrio no son válidos")
   }
   const address = addressValue.trim()
+  const city = cityValue.trim()
   const neighborhood = neighborhoodValue.trim()
-  if (address.length > 200 || neighborhood.length > 100) {
-    throw new Error("El domicilio o el barrio supera la longitud permitida")
+  if (address.length > 200 || city.length > 100 || neighborhood.length > 100) {
+    throw new Error("El domicilio, la ciudad o el barrio supera la longitud permitida")
   }
 
   // Actualizar datos del socio
@@ -426,6 +428,7 @@ export async function updateMemberProfile(memberId: string, formData: FormData) 
       email: email || null,
       phone: phone || null,
       address: address || null,
+      city: city || null,
       neighborhood: neighborhood || null,
       avatarUrl: avatarUrl || null
     }

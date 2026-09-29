@@ -11,6 +11,7 @@ interface EditProfileModalProps {
     id: string
     email: string | null
     phone: string | null
+    city: string | null
     address: string | null
     neighborhood: string | null
     avatarUrl: string | null
@@ -113,6 +114,22 @@ export function EditProfileModal({ member }: EditProfileModalProps) {
                     maxLength={200}
                     defaultValue={member.address || ""}
                     placeholder="Calle y número"
+                    className="w-full bg-black/40 border border-white/10 rounded-2xl pl-12 pr-4 py-3 text-white placeholder:text-zinc-700 focus:outline-none focus:border-amber-500/50 transition-all font-medium text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="profile-city" className="text-[10px] uppercase font-black tracking-widest text-zinc-500 ml-1">Ciudad</label>
+                <div className="relative">
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
+                  <input
+                    id="profile-city"
+                    name="city"
+                    type="text"
+                    maxLength={100}
+                    defaultValue={member.city || ""}
+                    placeholder="Nombre de la ciudad"
                     className="w-full bg-black/40 border border-white/10 rounded-2xl pl-12 pr-4 py-3 text-white placeholder:text-zinc-700 focus:outline-none focus:border-amber-500/50 transition-all font-medium text-sm"
                   />
                 </div>
