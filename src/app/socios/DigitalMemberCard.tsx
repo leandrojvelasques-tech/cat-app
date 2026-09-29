@@ -39,6 +39,7 @@ interface DigitalMemberCardProps {
   member: DigitalMemberCardMember
   awards: MemberAward[]
   attendedMilongas?: AttendedMilonga[]
+  attendanceYear: number
   calculatedStatus?: string
 }
 
@@ -52,6 +53,7 @@ export function DigitalMemberCard({
   member,
   awards,
   attendedMilongas = [],
+  attendanceYear,
   calculatedStatus,
 }: DigitalMemberCardProps) {
   const hasPodium = awards.some((award) => award.place <= 3)
@@ -182,6 +184,39 @@ export function DigitalMemberCard({
       </div>
 
       <footer className="relative z-10 border-t border-white/[0.07] pt-3">
+        <section
+          aria-label={`Milongas asistidas durante ${attendanceYear}`}
+          className="mb-3 rounded-2xl border border-amber-500/20 bg-amber-500/[0.06] px-4 py-3"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-amber-400/80">Milongas {attendanceYear}</p>
+              <p className="mt-0.5 text-lg font-black leading-none text-white sm:text-xl">
+                {attendedMilongas.length} <span className="text-[11px] font-semibold text-zinc-300 sm:text-xs">
+                  {attendedMilongas.length === 1 ? "milonga asistida" : "milongas asistidas"}
+                </span>
+              </p>
+            </div>
+
+            <div
+              aria-label={`${attendedMilongas.length} estrellas por asistencia`}
+              className="flex max-w-[55%] flex-wrap justify-end gap-1"
+            >
+              {Array.from({ length: Math.max(1, Math.min(attendedMilongas.length, 8)) }, (_, index) => (
+                <Star
+                  key={index}
+                  size={18}
+                  className={attendedMilongas.length > index ? "fill-amber-400 text-amber-400" : "text-zinc-700"}
+                  aria-hidden
+                />
+              ))}
+              {attendedMilongas.length > 8 && (
+                <span className="self-center pl-1 text-[10px] font-bold text-amber-300">+{attendedMilongas.length - 8}</span>
+              )}
+            </div>
+          </div>
+        </section>
+
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-zinc-600">Socio desde</p>
@@ -199,11 +234,8 @@ export function DigitalMemberCard({
           </div>
         </div>
 
-        {(attendedMilongas.length > 0 || awards.length > 0 || wasPresident) && (
+        {(awards.length > 0 || wasPresident) && (
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-white/[0.05] pt-2 text-[9px] text-zinc-500">
-            {attendedMilongas.length > 0 && (
-              <span>{attendedMilongas.length} {attendedMilongas.length === 1 ? "milonga registrada" : "milongas registradas"}</span>
-            )}
             {awards.length > 0 && <span>{awards.length} {awards.length === 1 ? "distinción" : "distinciones"}</span>}
             {wasPresident && <span className="text-amber-500/80">Ex presidente</span>}
           </div>

@@ -48,6 +48,12 @@ export default async function PortalSocioPage() {
 
   const member = userWithMember.member
   const now = new Date()
+  const attendanceYear = Number(new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Argentina/Buenos_Aires",
+    year: "numeric",
+  }).format(now))
+  const attendanceYearStart = new Date(`${attendanceYear}-01-01T00:00:00-03:00`)
+  const nextAttendanceYearStart = new Date(`${attendanceYear + 1}-01-01T00:00:00-03:00`)
   const calculatedStatus = calculateMemberStatus(member as any, now)
   const isAlDia = calculatedStatus === 'AL DIA'
 
@@ -58,7 +64,16 @@ export default async function PortalSocioPage() {
   const attendedRegistrations = await db.eventRegistration.findMany({
     where: {
       memberId: member.id,
-      attended: true
+      attended: true,
+      event: {
+        is: {
+          hasMilonga: true,
+          startDate: {
+            gte: attendanceYearStart,
+            lt: nextAttendanceYearStart,
+          },
+        },
+      },
     },
     include: {
       event: { select: { id: true, title: true, startDate: true } }
@@ -124,6 +139,7 @@ export default async function PortalSocioPage() {
           member={member}
           awards={[]}
           attendedMilongas={attendedMilongas}
+          attendanceYear={attendanceYear}
           calculatedStatus={calculatedStatus}
         />
       </section>
