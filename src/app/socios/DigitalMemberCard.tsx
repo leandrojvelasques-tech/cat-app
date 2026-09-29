@@ -18,6 +18,10 @@ export interface DigitalMemberCardMember {
   lastName: string
   memberNumber: string | number
   dni: string
+  email?: string | null
+  address?: string | null
+  city?: string | null
+  neighborhood?: string | null
   type?: string | null
   debtStatus?: string | null
   joinDate: Date | string
@@ -63,7 +67,7 @@ export function DigitalMemberCard({
   return (
     <article
       aria-label={`Carnet digital de ${member.firstName} ${member.lastName}`}
-      className={`relative mx-auto flex h-[500px] w-full max-w-[360px] flex-col overflow-hidden rounded-[30px] border px-5 py-[18px] shadow-2xl sm:h-auto sm:max-w-[900px] sm:aspect-[1.72/1] sm:px-8 sm:py-7 ${
+      className={`relative mx-auto flex min-h-[500px] w-full max-w-[360px] flex-col overflow-hidden rounded-[30px] border px-5 py-[18px] shadow-2xl sm:max-w-[900px] sm:aspect-[1.72/1] sm:px-8 sm:py-7 ${
         isHonorario
           ? "border-amber-500/40 bg-gradient-to-br from-zinc-900 via-amber-950/35 to-yellow-950/25 shadow-amber-900/20"
           : isChampion
@@ -153,6 +157,25 @@ export function DigitalMemberCard({
             <div>
               <dt className="text-[8px] font-semibold uppercase tracking-[0.15em] text-zinc-600">Categoría</dt>
               <dd className="mt-1 text-sm font-medium capitalize text-zinc-300 sm:text-base">{memberType}</dd>
+            </div>
+          </dl>
+
+          <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-white/[0.07] pt-3 text-left sm:max-w-xl sm:grid-cols-3">
+            <div className="col-span-2 sm:col-span-3">
+              <dt className="text-[8px] font-semibold uppercase tracking-[0.15em] text-zinc-600">Domicilio</dt>
+              <dd className="mt-0.5 break-words text-[11px] font-medium text-zinc-300">{member.address || "No registrado"}</dd>
+            </div>
+            <div>
+              <dt className="text-[8px] font-semibold uppercase tracking-[0.15em] text-zinc-600">Ciudad</dt>
+              <dd className="mt-0.5 break-words text-[11px] font-medium text-zinc-300">{member.city || "No registrada"}</dd>
+            </div>
+            <div>
+              <dt className="text-[8px] font-semibold uppercase tracking-[0.15em] text-zinc-600">Barrio</dt>
+              <dd className="mt-0.5 break-words text-[11px] font-medium text-zinc-300">{member.neighborhood || "No registrado"}</dd>
+            </div>
+            <div className="col-span-2 sm:col-span-1">
+              <dt className="text-[8px] font-semibold uppercase tracking-[0.15em] text-zinc-600">Correo electrónico</dt>
+              <dd className="mt-0.5 break-all text-[11px] font-medium text-zinc-300">{member.email || "No registrado"}</dd>
             </div>
           </dl>
         </div>

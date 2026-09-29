@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
-import { X, Save, Phone, Mail, Loader2, Edit3, Lock } from "lucide-react"
+import { X, Save, Phone, Mail, MapPin, Loader2, Edit3, Lock } from "lucide-react"
 import { updateMemberProfile } from "@/app/actions/socios"
 import { AvatarFormInput } from "@/components/AvatarFormInput"
 
@@ -11,6 +11,8 @@ interface EditProfileModalProps {
     id: string
     email: string | null
     phone: string | null
+    address: string | null
+    neighborhood: string | null
     avatarUrl: string | null
   }
 }
@@ -95,6 +97,38 @@ export function EditProfileModal({ member }: EditProfileModalProps) {
                     type="tel"
                     defaultValue={member.phone || ""}
                     placeholder="+54 297 ..."
+                    className="w-full bg-black/40 border border-white/10 rounded-2xl pl-12 pr-4 py-3 text-white placeholder:text-zinc-700 focus:outline-none focus:border-amber-500/50 transition-all font-medium text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="profile-address" className="text-[10px] uppercase font-black tracking-widest text-zinc-500 ml-1">Domicilio</label>
+                <div className="relative">
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
+                  <input
+                    id="profile-address"
+                    name="address"
+                    type="text"
+                    maxLength={200}
+                    defaultValue={member.address || ""}
+                    placeholder="Calle y número"
+                    className="w-full bg-black/40 border border-white/10 rounded-2xl pl-12 pr-4 py-3 text-white placeholder:text-zinc-700 focus:outline-none focus:border-amber-500/50 transition-all font-medium text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="profile-neighborhood" className="text-[10px] uppercase font-black tracking-widest text-zinc-500 ml-1">Barrio</label>
+                <div className="relative">
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
+                  <input
+                    id="profile-neighborhood"
+                    name="neighborhood"
+                    type="text"
+                    maxLength={100}
+                    defaultValue={member.neighborhood || ""}
+                    placeholder="Nombre del barrio"
                     className="w-full bg-black/40 border border-white/10 rounded-2xl pl-12 pr-4 py-3 text-white placeholder:text-zinc-700 focus:outline-none focus:border-amber-500/50 transition-all font-medium text-sm"
                   />
                 </div>

@@ -11,6 +11,7 @@ interface SocioAccordionSectionsProps {
     email: string | null
     phone: string | null
     address: string | null
+    neighborhood: string | null
     fees: Array<{
       id: string
       periodYear: number
@@ -156,7 +157,8 @@ export function SocioAccordionSections({ member, isAlDia }: SocioAccordionSectio
                 { label: "DNI / Documento", value: member.dni },
                 { label: "Correo Electrónico", value: member.email || "No registrado" },
                 { label: "Teléfono Móvil", value: member.phone || "No registrado" },
-                { label: "Dirección", value: member.address || "No registrada" }
+                { label: "Domicilio", value: member.address || "No registrado" },
+                { label: "Barrio", value: member.neighborhood || "No registrado" }
               ].map((item, i) => (
                 <div key={i} className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
                   <span className="text-[9px] uppercase font-black tracking-widest text-zinc-500">{item.label}</span>
